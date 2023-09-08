@@ -88,24 +88,26 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 		},
 	)
 
+	image := fmt.Sprintf("%s/%s:%s", option.RegistryName, option.Name, option.Tag)
 	if option.WithPush {
 		secret := client.SetSecret("password", option.WithRegistryPassword)
+		
 		ref, err := container.
 			WithRegistryAuth(option.RegistryName, option.WithRegistryUsername, secret).
 			Publish(
 				ctx,
-				fmt.Sprintf("%s:%s", option.Name, option.Tag),
+				image,
 			)
 
 		if err != nil {
-			return errors.Wrapf(err, "Error when push image %s:%s", option.Name, option.Tag)
+			return errors.Wrapf(err, "Error when push image %s", image)
 		}
 
 		log.Infof("Published image to :%s", ref)
 	} else {
 		_, err = container.Stdout(ctx)
 		if err != nil {
-			return errors.Wrapf(err, "Error when build image %s:%s", option.Name, option.Tag)
+			return errors.Wrapf(err, "Error when build image %s", image)
 		}
 	}
 
