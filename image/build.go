@@ -105,7 +105,7 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 
 		log.Infof("Published image to :%s", ref)
 	} else {
-		_, err = container.Export(ctx, fmt.Sprintf("dist/%s.tar", image))
+		_, err = container.Export(ctx, "dist/image.tar")
 		if err != nil {
 			return errors.Wrapf(err, "Error when build image %s", image)
 		}
