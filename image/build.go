@@ -15,12 +15,23 @@ import (
 )
 
 type BuildImageOption struct {
-	WithLint    bool   `default:"true"`
-	WithProxy   bool   `default:"true"`
-	WithPush    bool   `default:"false"`
-	Name        string `validate:"required"`
-	Tag         string `default:"latest"`
-	PathContext string `default:"."`
+	WithLint             bool   `default:"true"`
+	WithProxy            bool   `default:"true"`
+	WithPush             bool   `default:"false"`
+	WithRegistryUsername string `validate:"validateRegistryAuth"`
+	WithRegistryPassword string `validate:"validateRegistryAuth"`
+	RegistryName         string `validate:"required"`
+	Name                 string `validate:"required"`
+	Tag                  string `default:"latest"`
+	PathContext          string `default:"."`
+}
+
+func (h BuildImageOption) ValidateRegistryAuth(val string) bool {
+	if h.WithPush && val == "" {
+		return false
+	}
+
+	return true
 }
 
 func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOption) (err error) {
@@ -81,10 +92,13 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 		)
 
 	if option.WithPush {
-		ref, err := container.Publish(
-			ctx,
-			fmt.Sprintf("%s:%s", option.Name, option.Tag),
-		)
+		secret := client.SetSecret("password", option.WithRegistryPassword)
+		ref, err := container.
+			WithRegistryAuth(option.RegistryName, option.WithRegistryUsername, secret).
+			Publish(
+				ctx,
+				fmt.Sprintf("%s:%s", option.Name, option.Tag),
+			)
 
 		if err != nil {
 			return errors.Wrapf(err, "Error when push image %s:%s", option.Name, option.Tag)

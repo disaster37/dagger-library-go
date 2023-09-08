@@ -24,9 +24,10 @@ func TestBuildImage(t *testing.T) {
 	defer client.Close()
 
 	buildOption := &BuildImageOption{
-		Name:        "test",
-		Tag:         "test",
-		PathContext: "testdata",
+		RegistryName: "docker.io",
+		Name:         "test",
+		Tag:          "test",
+		PathContext:  "testdata",
 	}
 
 	err = BuildImage(ctx, client, buildOption)
