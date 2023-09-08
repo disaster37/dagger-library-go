@@ -1,0 +1,1 @@
+FROM ghcr.io/hadolint/hadolint:latest-alpine
