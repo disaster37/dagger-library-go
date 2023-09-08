@@ -82,14 +82,11 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 	}
 
 	// build using Dockerfile
-	container := client.
-		Container().
-		Build(
-			contextDir,
-			dagger.ContainerBuildOpts{
-				BuildArgs: args,
-			},
-		)
+	container := contextDir.DockerBuild(
+		dagger.DirectoryDockerBuildOpts{
+			BuildArgs: args,
+		},
+	)
 
 	if option.WithPush {
 		secret := client.SetSecret("password", option.WithRegistryPassword)
