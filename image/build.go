@@ -23,7 +23,7 @@ type BuildImageOption struct {
 	PathContext string `default:"."`
 }
 
-func BuildImage(ctx context.Context, client dagger.Client, option *BuildImageOption) (err error) {
+func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOption) (err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
