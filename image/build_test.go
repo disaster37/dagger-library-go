@@ -29,6 +29,6 @@ func TestBuildImage(t *testing.T) {
 		PathContext: "testdata",
 	}
 
-	err = BuildImage(ctx, *client, buildOption)
+	err = BuildImage(ctx, client, buildOption)
 	assert.NoError(t, err)
 }

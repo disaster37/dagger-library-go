@@ -43,7 +43,7 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 			From("ghcr.io/hadolint/hadolint:latest-alpine").
 			WithDirectory("/project", client.Host().Directory(option.PathContext)).
 			WithWorkdir("/project").
-			WithExec(helper.ForgeCommand("/bin/hadolint Dockerfile")).
+			WithExec(helper.ForgeCommand("/bin/hadolint --failure-threshold error Dockerfile")).
 			Stdout(ctx)
 
 		if err != nil {
