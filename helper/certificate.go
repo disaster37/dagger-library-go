@@ -30,7 +30,7 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 		panic(err)
 	}
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{Filters: filters.NewArgs(filters.KeyValuePair{
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Filters: filters.NewArgs(filters.KeyValuePair{
 		Key:   "name",
 		Value: "dagger-engine",
 	})})
