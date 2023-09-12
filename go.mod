@@ -8,6 +8,7 @@ require (
 	github.com/creasty/defaults v1.7.0
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/gookit/validate v1.5.1
+	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.2
 )
@@ -34,7 +35,6 @@ require (
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
 	github.com/opencontainers/runc v1.1.9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

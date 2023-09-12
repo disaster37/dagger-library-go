@@ -8,6 +8,7 @@ import (
 
 	"emperror.dev/errors"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
@@ -53,7 +54,6 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 	}
 	defer cli.Close()
 
-	
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Filters: filters.NewArgs(filters.KeyValuePair{
 		Key:   "name",
 		Value: "dagger-engine",
@@ -63,10 +63,24 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 		return errors.Wrap(err, "Error when list containers")
 	}
 
-	for _, container := range containers {
-		logrus.Infof("Inject %s on container %s", caPath, container.ID)
-		if err = cli.CopyToContainer(ctx, container.ID, dstDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false, CopyUIDGID: false}); err != nil {
-			return errors.Wrapf(err, "Error when inject %s on container %s", caPath, container.ID)
+	for _, c := range containers {
+
+		// Check if file already exist on container
+		stats, err := cli.ContainerStatPath(ctx, c.ID, dstPath)
+		if err != nil {
+			return errors.Wrapf(err, "Error when stats certificat on container %s", c.ID)
+		}
+		if stats.Name != "" {
+			logrus.Infof("File %s already exist on container %s", dstPath, c.ID)
+			continue
+		}
+
+		logrus.Infof("Inject %s on container %s", caPath, c.ID)
+		if err = cli.CopyToContainer(ctx, c.ID, dstDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false, CopyUIDGID: false}); err != nil {
+			return errors.Wrapf(err, "Error when inject %s on container %s", caPath, c.ID)
+		}
+		if err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{}); err != nil {
+			return errors.Wrapf(err, "Error whe restart container %s", c.ID)
 		}
 	}
 
