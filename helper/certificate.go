@@ -25,7 +25,7 @@ func WithCustomCa(ctx context.Context, caPath string, opts ...dagger.ClientOpt) 
 		return nil, err
 	}
 
-	if os.Getenv("_DAGGER_RUNNER_HOST") != "" {
+	if os.Getenv("_DAGGER_RUNNER_HOST") != "" || caPath == "" {
 		return clientDagger, nil
 	}
 
