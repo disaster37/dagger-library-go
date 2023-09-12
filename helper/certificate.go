@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/sirupsen/logrus"
 )
 
 // WithCustomCa permit to inject CA certificat on dagger-engine if manager by dagger cli
@@ -40,6 +41,7 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 	}
 
 	for _, container := range containers {
+		logrus.Infof("Inject %s on container %s", caPath, container.ID)
 		cli.CopyToContainer(ctx, container.ID, fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(caPath)), f, types.CopyToContainerOptions{})
 	}
 
