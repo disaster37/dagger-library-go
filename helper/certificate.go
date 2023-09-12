@@ -66,13 +66,13 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 	for _, c := range containers {
 
 		// Check if file already exist on container
-		stats, err := cli.ContainerStatPath(ctx, c.ID, dstPath)
+		_, err := cli.ContainerStatPath(ctx, c.ID, dstPath)
 		if err != nil {
+			if client.IsErrNotFound(err) {
+				logrus.Infof("File %s already exist on container %s", dstPath, c.ID)
+				continue
+			}
 			return errors.Wrapf(err, "Error when stats certificat on container %s", c.ID)
-		}
-		if stats.Name != "" {
-			logrus.Infof("File %s already exist on container %s", dstPath, c.ID)
-			continue
 		}
 
 		logrus.Infof("Inject %s on container %s", caPath, c.ID)
