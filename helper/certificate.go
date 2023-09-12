@@ -42,7 +42,9 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 
 	for _, container := range containers {
 		logrus.Infof("Inject %s on container %s", caPath, container.ID)
-		cli.CopyToContainer(ctx, container.ID, fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(caPath)), f, types.CopyToContainerOptions{})
+		if err = cli.CopyToContainer(ctx, container.ID, fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(caPath)), f, types.CopyToContainerOptions{}); err != nil {
+			return errors.Wrapf(err, "Error when inject %s on container %s", caPath, container.ID)
+		}
 	}
 
 	return nil
