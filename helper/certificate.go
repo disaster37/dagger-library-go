@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"emperror.dev/errors"
 	"github.com/docker/docker/api/types"
@@ -16,16 +17,16 @@ import (
 )
 
 // WithCustomCa permit to inject CA certificat on dagger-engine if manager by dagger cli
-func WithCustomCa(ctx context.Context, caPath string) (isInject bool, err error) {
+func WithCustomCa(ctx context.Context, caPath string) (err error) {
 
 	if os.Getenv("_DAGGER_RUNNER_HOST") != "" {
-		return false, nil
+		return nil
 	}
 
 	// Read ca file
 	f, err := os.Open(caPath)
 	if err != nil {
-		return false, errors.Wrapf(err, "Error when open file %s", caPath)
+		return errors.Wrapf(err, "Error when open file %s", caPath)
 	}
 	defer f.Close()
 
@@ -34,16 +35,16 @@ func WithCustomCa(ctx context.Context, caPath string) (isInject bool, err error)
 	dstInfo := archive.CopyInfo{Path: dstPath}
 	srcInfo, err := archive.CopyInfoSourcePath(caPath, true)
 	if err != nil {
-		return false, err
+		return err
 	}
 	srcArchive, err := archive.TarResource(srcInfo)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer srcArchive.Close()
 	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer preparedArchive.Close()
 
@@ -60,7 +61,7 @@ func WithCustomCa(ctx context.Context, caPath string) (isInject bool, err error)
 	})})
 
 	if err != nil {
-		return false, errors.Wrap(err, "Error when list containers")
+		return errors.Wrap(err, "Error when list containers")
 	}
 
 	for _, c := range containers {
@@ -68,24 +69,24 @@ func WithCustomCa(ctx context.Context, caPath string) (isInject bool, err error)
 		// Check if file already exist on container
 		stats, err := cli.ContainerStatPath(ctx, c.ID, dstPath)
 		if err != nil && !client.IsErrNotFound(err) {
-			return false, errors.Wrapf(err, "Error when stats certificat on container %s", c.ID)
+			return errors.Wrapf(err, "Error when stats certificat on container %s", c.ID)
 		}
 		if stats.Name != "" {
 			logrus.Infof("File %s already exist on container %s", dstPath, c.ID)
-			return false, nil
+			continue
 		}
 
 		logrus.Infof("Inject %s on container %s", caPath, c.ID)
 		if err = cli.CopyToContainer(ctx, c.ID, dstDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false, CopyUIDGID: false}); err != nil {
-			return false, errors.Wrapf(err, "Error when inject %s on container %s", caPath, c.ID)
+			return errors.Wrapf(err, "Error when inject %s on container %s", caPath, c.ID)
 		}
 		if err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{}); err != nil {
-			return false, errors.Wrapf(err, "Error whe restart container %s", c.ID)
+			return errors.Wrapf(err, "Error whe restart container %s", c.ID)
 		}
-
-		return true, nil
 	}
 
-	return false, nil
+	time.Sleep(10 * time.Second)
+
+	return nil
 
 }
