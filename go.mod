@@ -16,7 +16,9 @@ require (
 	github.com/99designs/gqlgen v0.17.31 // indirect
 	github.com/Khan/genqlient v0.6.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/Microsoft/hcsshim v0.11.0 // indirect
 	github.com/adrg/xdg v0.4.0 // indirect
+	github.com/containerd/containerd v1.7.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -25,11 +27,15 @@ require (
 	github.com/gookit/filter v1.2.0 // indirect
 	github.com/gookit/goutil v0.6.12 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/moby/patternmatcher v0.6.0 // indirect
+	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
+	github.com/opencontainers/runc v1.1.9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.6 // indirect

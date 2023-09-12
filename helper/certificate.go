@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,17 +21,39 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 		return nil
 	}
 
+	// Read ca file
 	f, err := os.Open(caPath)
 	if err != nil {
 		return errors.Wrapf(err, "Error when open file %s", caPath)
 	}
 	defer f.Close()
 
+	// Prepare archive to upload it on container
+	dstPath := fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(caPath))
+	dstInfo := archive.CopyInfo{Path: dstPath}
+	srcInfo, err := archive.CopyInfoSourcePath(caPath, true)
+	if err != nil {
+		return err
+	}
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		return err
+	}
+	defer srcArchive.Close()
+	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	if err != nil {
+		return err
+	}
+	defer preparedArchive.Close()
+
+	// Open docker connection
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		panic(err)
 	}
+	defer cli.Close()
 
+	
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Filters: filters.NewArgs(filters.KeyValuePair{
 		Key:   "name",
 		Value: "dagger-engine",
@@ -42,7 +65,7 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 
 	for _, container := range containers {
 		logrus.Infof("Inject %s on container %s", caPath, container.ID)
-		if err = cli.CopyToContainer(ctx, container.ID, fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(caPath)), f, types.CopyToContainerOptions{}); err != nil {
+		if err = cli.CopyToContainer(ctx, container.ID, dstDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false, CopyUIDGID: false}); err != nil {
 			return errors.Wrapf(err, "Error when inject %s on container %s", caPath, container.ID)
 		}
 	}
