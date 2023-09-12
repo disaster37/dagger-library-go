@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"dagger.io/dagger"
 	"emperror.dev/errors"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -17,16 +18,22 @@ import (
 )
 
 // WithCustomCa permit to inject CA certificat on dagger-engine if manager by dagger cli
-func WithCustomCa(ctx context.Context, caPath string) (err error) {
+func WithCustomCa(ctx context.Context, caPath string, opts ...dagger.ClientOpt) (clientDagger *dagger.Client, err error) {
+
+	clientDagger, err = dagger.Connect(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
 
 	if os.Getenv("_DAGGER_RUNNER_HOST") != "" {
-		return nil
+		return clientDagger, nil
 	}
 
 	// Read ca file
 	f, err := os.Open(caPath)
 	if err != nil {
-		return errors.Wrapf(err, "Error when open file %s", caPath)
+		clientDagger.Close()
+		return nil, errors.Wrapf(err, "Error when open file %s", caPath)
 	}
 	defer f.Close()
 
@@ -35,23 +42,27 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 	dstInfo := archive.CopyInfo{Path: dstPath}
 	srcInfo, err := archive.CopyInfoSourcePath(caPath, true)
 	if err != nil {
-		return err
+		clientDagger.Close()
+		return nil, err
 	}
 	srcArchive, err := archive.TarResource(srcInfo)
 	if err != nil {
-		return err
+		clientDagger.Close()
+		return nil, err
 	}
 	defer srcArchive.Close()
 	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
 	if err != nil {
-		return err
+		clientDagger.Close()
+		return nil, err
 	}
 	defer preparedArchive.Close()
 
 	// Open docker connection
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		panic(err)
+		clientDagger.Close()
+		return nil, err
 	}
 	defer cli.Close()
 
@@ -61,15 +72,18 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 	})})
 
 	if err != nil {
-		return errors.Wrap(err, "Error when list containers")
+		clientDagger.Close()
+		return nil, errors.Wrap(err, "Error when list containers")
 	}
 
+	isUploaded := false
 	for _, c := range containers {
 
 		// Check if file already exist on container
 		stats, err := cli.ContainerStatPath(ctx, c.ID, dstPath)
 		if err != nil && !client.IsErrNotFound(err) {
-			return errors.Wrapf(err, "Error when stats certificat on container %s", c.ID)
+			clientDagger.Close()
+			return nil, errors.Wrapf(err, "Error when stats certificat on container %s", c.ID)
 		}
 		if stats.Name != "" {
 			logrus.Infof("File %s already exist on container %s", dstPath, c.ID)
@@ -78,15 +92,28 @@ func WithCustomCa(ctx context.Context, caPath string) (err error) {
 
 		logrus.Infof("Inject %s on container %s", caPath, c.ID)
 		if err = cli.CopyToContainer(ctx, c.ID, dstDir, preparedArchive, types.CopyToContainerOptions{AllowOverwriteDirWithFile: false, CopyUIDGID: false}); err != nil {
-			return errors.Wrapf(err, "Error when inject %s on container %s", caPath, c.ID)
+			clientDagger.Close()
+			return nil, errors.Wrapf(err, "Error when inject %s on container %s", caPath, c.ID)
 		}
 		if err = cli.ContainerRestart(ctx, c.ID, container.StopOptions{}); err != nil {
-			return errors.Wrapf(err, "Error whe restart container %s", c.ID)
+			clientDagger.Close()
+			return nil, errors.Wrapf(err, "Error whe restart container %s", c.ID)
+		}
+		isUploaded = true
+
+		break
+	}
+
+	if isUploaded {
+		time.Sleep(5 * time.Second)
+		// Reconnect to dagger
+		clientDagger.Close()
+		clientDagger, err = dagger.Connect(ctx, opts...)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	time.Sleep(10 * time.Second)
-
-	return nil
+	return clientDagger, nil
 
 }
