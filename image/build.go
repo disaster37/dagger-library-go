@@ -9,6 +9,7 @@ import (
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/helper"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 
 	"github.com/creasty/defaults"
 	"github.com/gookit/validate"
@@ -34,6 +35,64 @@ func (h BuildImageOption) ValidateRegistryAuth(val string) bool {
 	return true
 }
 
+// GetBuildCommand permit to get the command spec to add on cli
+func GetBuildCommand(registryName, imageName string) *cli.Command {
+	return &cli.Command{
+		Name:  "buildImage",
+		Usage: "Build the docker image",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "tag",
+				Usage: "The image tag",
+				Value: "staging",
+			},
+			&cli.BoolFlag{
+				Name:  "push",
+				Usage: "Push image on registry",
+				Value: true,
+			},
+			&cli.StringFlag{
+				Name:     "registry-username",
+				Usage:    "The username to connect on registry",
+				Required: false,
+				EnvVars:  []string{"REGISTRY_USERNAME"},
+			},
+			&cli.StringFlag{
+				Name:     "registry-password",
+				Usage:    "The password to connect on registry",
+				Required: false,
+				EnvVars:  []string{"REGISTRY_PASSWORD"},
+			},
+			&cli.StringFlag{
+				Name:    "registry-cert-path",
+				Usage:   "The cert full path to connect on internal registry",
+				Value:   "",
+				EnvVars: []string{"REGISTRY_CERT_PATH"},
+			},
+		},
+		Action: func(c *cli.Context) (err error) {
+			// initialize Dagger client
+			client, err := helper.WithCustomCa(c.Context, c.String("registry-cert-path"), dagger.WithLogOutput(os.Stdout))
+			if err != nil {
+				panic(err)
+			}
+			defer client.Close()
+
+			buildOption := &BuildImageOption{
+				RegistryName:         registryName,
+				Name:                 imageName,
+				Tag:                  c.String("tag"),
+				WithPush:             c.Bool("push"),
+				WithRegistryUsername: c.String("registry-username"),
+				WithRegistryPassword: c.String("registry-password"),
+			}
+
+			return BuildImage(c.Context, client, buildOption)
+		},
+	}
+}
+
+// BuildImage permit to build image
 func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOption) (err error) {
 
 	if err = defaults.Set(option); err != nil {
@@ -105,7 +164,7 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 
 		log.Infof("Published image to :%s", ref)
 	} else {
-		_, err = container.Export(ctx, "dist/image.tar")
+		_, err = container.Export(ctx, "/dev/null")
 		if err != nil {
 			return errors.Wrapf(err, "Error when build image %s", image)
 		}

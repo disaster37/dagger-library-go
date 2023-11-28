@@ -8,9 +8,16 @@ require (
 	github.com/creasty/defaults v1.7.0
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/gookit/validate v1.5.1
-	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
+	github.com/urfave/cli/v2 v2.24.4
+)
+
+require (
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 )
 
 require (
