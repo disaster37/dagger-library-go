@@ -49,7 +49,6 @@ func GetBuildCommand(registryName, imageName string) *cli.Command {
 			&cli.BoolFlag{
 				Name:  "push",
 				Usage: "Push image on registry",
-				Value: true,
 			},
 			&cli.StringFlag{
 				Name:     "registry-username",
