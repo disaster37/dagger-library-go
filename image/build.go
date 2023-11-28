@@ -123,19 +123,42 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 	// Compute build args
 	var args []dagger.BuildArg
 	if option.WithProxy {
-		args = []dagger.BuildArg{
-			{
+		args = make([]dagger.BuildArg, 0)
+		if os.Getenv("HTTP_PROXY") != "" {
+			args = append(args, dagger.BuildArg{
 				Name:  "HTTP_PROXY",
 				Value: os.Getenv("HTTP_PROXY"),
-			},
-			{
+			})
+		}
+		if os.Getenv("HTTPS_PROXY") != "" {
+			args = append(args, dagger.BuildArg{
 				Name:  "HTTPS_PROXY",
 				Value: os.Getenv("HTTPS_PROXY"),
-			},
-			{
+			})
+		}
+		if os.Getenv("NO_PROXY") != "" {
+			args = append(args, dagger.BuildArg{
 				Name:  "NO_PROXY",
 				Value: os.Getenv("NO_PROXY"),
-			},
+			})
+		}
+		if os.Getenv("http_proxy") != "" {
+			args = append(args, dagger.BuildArg{
+				Name:  "HTTP_PROXY",
+				Value: os.Getenv("http_proxy"),
+			})
+		}
+		if os.Getenv("https_proxy") != "" {
+			args = append(args, dagger.BuildArg{
+				Name:  "HTTPS_PROXY",
+				Value: os.Getenv("https_proxy"),
+			})
+		}
+		if os.Getenv("no_proxy") != "" {
+			args = append(args, dagger.BuildArg{
+				Name:  "NO_PROXY",
+				Value: os.Getenv("no_proxy"),
+			})
 		}
 	}
 
