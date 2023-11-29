@@ -184,7 +184,7 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 			return errors.Wrapf(err, "Error when push image %s", image)
 		}
 
-		log.Infof("Published image to :%s", ref)
+		log.Infof("Published image to: %s", ref)
 	} else {
 		_, err = container.Export(ctx, "/dev/null")
 		if err != nil {
