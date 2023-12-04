@@ -13,7 +13,7 @@ import (
 )
 
 type HelmGenerateOption struct {
-	WithProxy   bool   `default:"true"`
+	WithProxy   bool   `default:"false"`
 	PathContext string `default:"."`
 }
 
