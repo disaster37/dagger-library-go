@@ -13,7 +13,7 @@ import (
 )
 
 type HelmGenerateOption struct {
-	WithProxy   bool   `default:"false"`
+	WithProxy   bool   `default:"true"`
 	PathContext string `default:"."`
 }
 
@@ -69,12 +69,13 @@ func GenerateHelmSchema(ctx context.Context, client *dagger.Client, option *Helm
 	_, err = container.
 		WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project").
+		WithExec(helper.ForgeCommand("env")).
 		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm")).
 		WithExec(helper.ForgeCommand("readme-generator -s values.schema.json")).
 		Stdout(ctx)
 
 	if err != nil {
-		return errors.Wrap(err, "Error when lint helm chart")
+		return errors.Wrap(err, "Error when generate helm schema")
 	}
 
 	return nil
