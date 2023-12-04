@@ -20,7 +20,7 @@ type HelmGenerateOption struct {
 // GetBuildCommand permit to get the command spec to add on cli
 func GetGenerateSchemaCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "genearteHelmSchema",
+		Name:  "generateHelmSchema",
 		Usage: "Generate the helm schema",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
