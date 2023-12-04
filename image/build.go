@@ -68,6 +68,11 @@ func GetBuildCommand(registryName, imageName string) *cli.Command {
 				Value:   "",
 				EnvVars: []string{"REGISTRY_CERT_PATH"},
 			},
+			&cli.StringFlag{
+				Name:  "path",
+				Usage: "The path context to build image",
+				Value: ".",
+			},
 		},
 		Action: func(c *cli.Context) (err error) {
 			// initialize Dagger client
@@ -84,6 +89,7 @@ func GetBuildCommand(registryName, imageName string) *cli.Command {
 				WithPush:             c.Bool("push"),
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
+				PathContext:          c.String("path"),
 			}
 
 			return BuildImage(c.Context, client, buildOption)
