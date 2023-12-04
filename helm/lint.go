@@ -104,7 +104,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 			From("alpine/helm:latest").
 			WithDirectory("/project", client.Host().Directory(option.PathContext)).
 			WithWorkdir("/project").
-			WithExec(helper.ForgeCommand("helm lint .")).
+			WithExec(helper.ForgeCommand("lint .")).
 			Stdout(ctx)
 
 		if err != nil {
