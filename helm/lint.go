@@ -79,6 +79,7 @@ func GetBuildCommand(registryName string) *cli.Command {
 				WithPush:             c.Bool("push"),
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
+				PathContext:          c.String("path"),
 			}
 
 			return BuildHelm(c.Context, client, buildOption)

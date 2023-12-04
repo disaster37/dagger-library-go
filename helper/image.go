@@ -7,7 +7,24 @@ import (
 )
 
 func WithProxy(c *dagger.Container) *dagger.Container {
-	return c.WithEnvVariable("HTTP_PROXY", os.Getenv("HTTP_PROXY")).
-		WithEnvVariable("HTTPS_PROXY", os.Getenv("HTTPS_PROXY")).
-		WithEnvVariable("NO_PROXY", os.Getenv("NO_PROXY"))
+	if os.Getenv("HTTP_PROXY") != "" {
+		c.WithEnvVariable("HTTP_PROXY", os.Getenv("HTTP_PROXY"))
+	}
+	if os.Getenv("HTTPS_PROXY") != "" {
+		c.WithEnvVariable("HTTPS_PROXY", os.Getenv("HTTPS_PROXY"))
+	}
+	if os.Getenv("NO_PROXY") != "" {
+		c.WithEnvVariable("NO_PROXY", os.Getenv("NO_PROXY"))
+	}
+	if os.Getenv("http_proxy") != "" {
+		c.WithEnvVariable("HTTP_PROXY", os.Getenv("http_proxy"))
+	}
+	if os.Getenv("https_proxy") != "" {
+		c.WithEnvVariable("HTTPS_PROXY", os.Getenv("https_proxy"))
+	}
+	if os.Getenv("no_proxy") != "" {
+		c.WithEnvVariable("NO_PROXY", os.Getenv("no_proxy"))
+	}
+
+	return c
 }
