@@ -121,7 +121,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	container := client.
 		Container().
 		From("alpine/helm:latest").
-		WithMountedFile("/etc/ssl/certs/ca-bundle.crt", client.Host().File("/etc/ssl/certs/ca-bundle.crt")).
+		WithDirectory("/tmp/test", client.Host().Directory("/etc/ssl/certs")).
 		//WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
 
@@ -133,6 +133,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		if option.RegistryUrl == "" || option.RepositoryName == "" {
 			return errors.New("You need to set the registry URL and repository name")
 		}
+		container = container.WithEntrypoint([]string{"/bin/sh", "-c"}).WithExec([]string{"ls -al /tmp/test"})
 
 		// Login to registry
 		if option.WithRegistryUsername != "" && option.WithRegistryPassword != "" {
