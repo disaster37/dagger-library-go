@@ -2,6 +2,7 @@ package helm
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"dagger.io/dagger"
@@ -19,7 +20,7 @@ type HelmBuildOption struct {
 	WithPush             bool   `default:"false"`
 	WithRegistryUsername string `validate:"validateRegistryAuth"`
 	WithRegistryPassword string `validate:"validateRegistryAuth"`
-	RegistryName         string `validate:"required"`
+	RegistryUrl          string `validate:"required"`
 	PathContext          string `default:"."`
 }
 
@@ -32,7 +33,7 @@ func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
 }
 
 // GetBuildCommand permit to get the command spec to add on cli
-func GetBuildCommand(registryName string) *cli.Command {
+func GetBuildCommand(registryUrl string) *cli.Command {
 	return &cli.Command{
 		Name:  "buildHelmCHart",
 		Usage: "Build the chart helm",
@@ -75,7 +76,7 @@ func GetBuildCommand(registryName string) *cli.Command {
 			defer client.Close()
 
 			buildOption := &HelmBuildOption{
-				RegistryName:         registryName,
+				RegistryUrl:          registryUrl,
 				WithPush:             c.Bool("push"),
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
@@ -100,16 +101,52 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 	// Lint image if needed
 	if option.WithLint {
-		_, err := client.
+		_, err = client.
 			Container().
 			From("alpine/helm:latest").
 			WithDirectory("/project", client.Host().Directory(option.PathContext)).
 			WithWorkdir("/project").
 			WithExec(helper.ForgeCommand("lint .")).
 			Stdout(ctx)
-
 		if err != nil {
 			return errors.Wrap(err, "Error when lint helm chart")
+		}
+	}
+
+	// package helm
+	_, err = client.
+		Container().
+		From("alpine/helm:latest").
+		WithDirectory("/project", client.Host().Directory(option.PathContext)).
+		WithWorkdir("/project").
+		WithExec(helper.ForgeCommand("package -u .")).
+		Stdout(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Error when package helm chart")
+	}
+
+	// push helm chart
+	if option.WithPush {
+		if option.RegistryUrl == "" {
+			return errors.New("You need to set the registry URL")
+		}
+		container := client.
+			Container().
+			From("alpine/helm:latest").
+			WithDirectory("/project", client.Host().Directory(option.PathContext)).
+			WithWorkdir("/project")
+
+		// Login to registry
+		if option.WithRegistryUsername != "" && option.WithRegistryPassword != "" {
+			container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s", option.WithRegistryUsername, option.WithRegistryPassword)))
+		}
+
+		// Push to registry
+		_, err = container.
+			WithExec(helper.ForgeCommand(fmt.Sprintf("push . oci://%s", option.RegistryUrl))).
+			Stdout(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Error when push helm chart")
 		}
 	}
 
