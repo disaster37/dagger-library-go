@@ -22,6 +22,7 @@ type HelmBuildOption struct {
 	WithRegistryUsername string `validate:"validateRegistryAuth"`
 	WithRegistryPassword string `validate:"validateRegistryAuth"`
 	RegistryUrl          string `validate:"required"`
+	RepositoryName       string `validate:"required"`
 	PathContext          string `default:"."`
 }
 
@@ -34,7 +35,7 @@ func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
 }
 
 // GetBuildCommand permit to get the command spec to add on cli
-func GetBuildCommand(registryUrl string) *cli.Command {
+func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 	return &cli.Command{
 		Name:  "buildHelmCHart",
 		Usage: "Build the chart helm",
@@ -78,6 +79,7 @@ func GetBuildCommand(registryUrl string) *cli.Command {
 
 			buildOption := &HelmBuildOption{
 				RegistryUrl:          registryUrl,
+				RepositoryName:       repositoryName,
 				WithPush:             c.Bool("push"),
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
@@ -103,7 +105,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	container := client.
 		Container().
 		From("alpine/helm:latest").
-		//WithDirectory("/etc/ssl/certs", client.Host().Directory("/etc/ssl/certs")).
+		WithDirectory("/etc/ssl/certs", client.Host().Directory("/etc/ssl/certs")).
 		WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
 
@@ -122,13 +124,13 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 	// push helm chart
 	if option.WithPush {
-		if option.RegistryUrl == "" {
-			return errors.New("You need to set the registry URL")
+		if option.RegistryUrl == "" || option.RepositoryName == "" {
+			return errors.New("You need to set the registry URL and repository name")
 		}
 
 		// Login to registry
 		if option.WithRegistryUsername != "" && option.WithRegistryPassword != "" {
-			container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s", option.WithRegistryUsername, option.WithRegistryPassword)))
+			container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s %s", option.WithRegistryUsername, option.WithRegistryPassword, option.RegistryUrl)))
 		}
 
 		// Get the current version
@@ -142,10 +144,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		}
 
 		// Push to registry
-		container = container.WithEntrypoint([]string{"/bin/sh", "-c"})
-		container = container.WithExec([]string{"'apk add --update curl'"})
-		container = container.WithExec([]string{fmt.Sprintf("'curl https://%s'", option.RegistryUrl)})
-		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s", data["version"], option.RegistryUrl)))
+		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s/%s", data["version"], option.RegistryUrl, option.RepositoryName)))
 	}
 
 	_, err = container.Stdout(ctx)
