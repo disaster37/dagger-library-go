@@ -143,7 +143,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 		// Push to registry
 		container = container.WithEntrypoint([]string{"/bin/sh", "-c"})
-		container = container.WithExec([]string{fmt.Sprintf("'curl https://%s'", option.RegistryUrl)})
+		container = container.WithExec([]string{fmt.Sprintf("'apk add --update curl && curl https://%s'", option.RegistryUrl)})
 		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s", data["version"], option.RegistryUrl)))
 	}
 
