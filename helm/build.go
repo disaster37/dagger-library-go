@@ -107,25 +107,23 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	}
 
 	// Lint image if needed
-	/*
-		if option.WithLint {
-			_, err = client.
-				Container().
-				From("alpine/helm:latest").
-				WithDirectory("/project", client.Host().Directory(option.PathContext)).
-				WithWorkdir("/project").
-				WithExec(helper.ForgeCommand("lint .")).
-				Stdout(ctx)
-			if err != nil {
-				return errors.Wrap(err, "Error when lint helm chart")
-			}
+	if option.WithLint {
+		_, err = client.
+			Container().
+			From("alpine/helm:latest").
+			WithDirectory("/project", client.Host().Directory(option.PathContext)).
+			WithWorkdir("/project").
+			WithExec(helper.ForgeCommand("lint .")).
+			Stdout(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Error when lint helm chart")
 		}
-	*/
+	}
 
 	container := client.
 		Container().
 		From("alpine/helm:latest").
-		//WithDirectory("/project", client.Host().Directory(option.PathContext)).
+		WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
 
 	if option.CaPath != "" {
@@ -133,7 +131,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		if err != nil {
 			return errors.Wrap(err, "Error when create temporary file to store CA content")
 		}
-		//defer os.Remove(caTmpFile.Name())
+		defer os.Remove(caTmpFile.Name())
 
 		caContent, err := os.ReadFile(option.CaPath)
 		if err != nil {
@@ -145,12 +143,11 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 		logrus.Infof("Create file %s", caTmpFile.Name())
 
-		//container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
 		container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(caTmpFile.Name()))
 	}
 
 	// package helm
-	//container = container.WithExec(helper.ForgeCommand("package -u ."))
+	container = container.WithExec(helper.ForgeCommand("package -u ."))
 
 	// push helm chart
 	if option.WithPush {
