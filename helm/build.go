@@ -143,7 +143,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 		// Push to registry
 		_, err = container.
-			WithExec(helper.ForgeCommand(fmt.Sprintf("push . oci://%s", option.RegistryUrl))).
+			WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-*.tgz oci://%s", option.RegistryUrl))).
 			Stdout(ctx)
 		if err != nil {
 			return errors.Wrap(err, "Error when push helm chart")
