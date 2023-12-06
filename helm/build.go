@@ -117,12 +117,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	}
 
 	// package helm
-	_, err = container.
-		WithExec(helper.ForgeCommand("package -u .")).
-		Stdout(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Error when package helm chart")
-	}
+	container = container.WithExec(helper.ForgeCommand("package -u ."))
 
 	// push helm chart
 	if option.WithPush {
@@ -132,7 +127,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 		// Login to registry
 		if option.WithRegistryUsername != "" && option.WithRegistryPassword != "" {
-			container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s", option.WithRegistryUsername, option.WithRegistryPassword)))
+			container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s", option.WithRegistryUsername, option.WithRegistryPassword)))
 		}
 
 		// Get the current version
@@ -146,12 +141,12 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		}
 
 		// Push to registry
-		_, err = container.
-			WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s", data["version"], option.RegistryUrl))).
-			Stdout(ctx)
-		if err != nil {
-			return errors.Wrap(err, "Error when push helm chart")
-		}
+		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s", data["version"], option.RegistryUrl)))
+	}
+
+	_, err = container.Stdout(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Error when package and push helm chart")
 	}
 
 	return nil
