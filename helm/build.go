@@ -100,13 +100,15 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		panic(err)
 	}
 
+	container := client.
+		Container().
+		From("alpine/helm:latest").
+		WithDirectory("/project", client.Host().Directory(option.PathContext)).
+		WithWorkdir("/project")
+
 	// Lint image if needed
 	if option.WithLint {
-		_, err = client.
-			Container().
-			From("alpine/helm:latest").
-			WithDirectory("/project", client.Host().Directory(option.PathContext)).
-			WithWorkdir("/project").
+		_, err = container.
 			WithExec(helper.ForgeCommand("lint .")).
 			Stdout(ctx)
 		if err != nil {
@@ -115,11 +117,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	}
 
 	// package helm
-	_, err = client.
-		Container().
-		From("alpine/helm:latest").
-		WithDirectory("/project", client.Host().Directory(option.PathContext)).
-		WithWorkdir("/project").
+	_, err = container.
 		WithExec(helper.ForgeCommand("package -u .")).
 		Stdout(ctx)
 	if err != nil {
@@ -131,11 +129,6 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		if option.RegistryUrl == "" {
 			return errors.New("You need to set the registry URL")
 		}
-		container := client.
-			Container().
-			From("alpine/helm:latest").
-			WithDirectory("/project", client.Host().Directory(option.PathContext)).
-			WithWorkdir("/project")
 
 		// Login to registry
 		if option.WithRegistryUsername != "" && option.WithRegistryPassword != "" {
