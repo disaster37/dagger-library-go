@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"dagger.io/dagger"
 	"emperror.dev/errors"
@@ -21,9 +22,10 @@ type HelmBuildOption struct {
 	WithPush             bool   `default:"false"`
 	WithRegistryUsername string `validate:"validateRegistryAuth"`
 	WithRegistryPassword string `validate:"validateRegistryAuth"`
-	RegistryUrl          string `validate:"required"`
-	RepositoryName       string `validate:"required"`
+	RegistryUrl          string `validate:"validateRegistryAuth"`
+	RepositoryName       string `validate:"validateRegistryAuth"`
 	PathContext          string `default:"."`
+	CaPath               string
 }
 
 func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
@@ -71,7 +73,7 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 		},
 		Action: func(c *cli.Context) (err error) {
 			// initialize Dagger client
-			client, err := helper.WithCustomCa(c.Context, c.String("registry-cert-path"), dagger.WithLogOutput(os.Stdout))
+			client, err := dagger.Connect(c.Context, dagger.WithLogOutput(os.Stdout))
 			if err != nil {
 				panic(err)
 			}
@@ -84,6 +86,7 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
 				PathContext:          c.String("path"),
+				CaPath:               c.String("registry-cert-path"),
 			}
 
 			return BuildHelm(c.Context, client, buildOption)
@@ -121,9 +124,12 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	container := client.
 		Container().
 		From("alpine/helm:latest").
-		WithDirectory("/tmp/test", client.Host().Directory("/etc/ssl/certs")).
 		//WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
+
+	if option.CaPath != "" {
+		container = container.WithFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
+	}
 
 	// package helm
 	//container = container.WithExec(helper.ForgeCommand("package -u ."))
