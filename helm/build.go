@@ -128,7 +128,22 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		WithWorkdir("/project")
 
 	if option.CaPath != "" {
-		container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
+		caTmpFile, err := os.CreateTemp("", "ca")
+		if err != nil {
+			return errors.Wrap(err, "Error when create temporary file to store ca contenf")
+		}
+		defer os.Remove(caTmpFile.Name())
+
+		caContent, err := os.ReadFile(option.CaPath)
+		if err != nil {
+			return errors.Wrap(err, "Error when read CA file")
+		}
+		if _, err = caTmpFile.Write(caContent); err != nil {
+			return errors.Wrap(err, "Error when write CA contend")
+		}
+
+		//container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
+		container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(caTmpFile.Name()))
 	}
 
 	// package helm
