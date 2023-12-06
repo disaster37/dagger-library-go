@@ -9,6 +9,7 @@ import (
 	"dagger.io/dagger"
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/helper"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 
@@ -130,9 +131,9 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	if option.CaPath != "" {
 		caTmpFile, err := os.CreateTemp("", "ca")
 		if err != nil {
-			return errors.Wrap(err, "Error when create temporary file to store ca contenf")
+			return errors.Wrap(err, "Error when create temporary file to store CA content")
 		}
-		defer os.Remove(caTmpFile.Name())
+		//defer os.Remove(caTmpFile.Name())
 
 		caContent, err := os.ReadFile(option.CaPath)
 		if err != nil {
@@ -141,6 +142,8 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		if _, err = caTmpFile.Write(caContent); err != nil {
 			return errors.Wrap(err, "Error when write CA contend")
 		}
+
+		logrus.Infof("Create file %s", caTmpFile.Name())
 
 		//container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
 		container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(caTmpFile.Name()))
