@@ -141,9 +141,8 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 			return errors.Wrap(err, "Error when decode YAML file")
 		}
 
-
 		// Push to registry
-		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("curl https://%s", option.RegistryUrl)))
+		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("apk add --update curl && curl https://%s", option.RegistryUrl)))
 		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s", data["version"], option.RegistryUrl)))
 	}
 
