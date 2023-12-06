@@ -146,7 +146,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		logrus.Infof("Create file %s", caTmpFile.Name())
 
 		//container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
-		container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(caTmpFile.Name()))
+		container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(caTmpFile.Name()))
 	}
 
 	// package helm
