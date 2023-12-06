@@ -120,11 +120,11 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		Container().
 		From("alpine/helm:latest").
 		WithMountedDirectory("/etc/ssl/certs", client.Host().Directory("/etc/ssl/certs")).
-		WithDirectory("/project", client.Host().Directory(option.PathContext)).
+		//WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
 
 	// package helm
-	container = container.WithExec(helper.ForgeCommand("package -u ."))
+	//container = container.WithExec(helper.ForgeCommand("package -u ."))
 
 	// push helm chart
 	if option.WithPush {
