@@ -9,6 +9,7 @@ import (
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/helper"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/creasty/defaults"
 	"github.com/gookit/validate"
@@ -141,9 +142,19 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 			container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s", option.WithRegistryUsername, option.WithRegistryPassword)))
 		}
 
+		// Get the current version
+		yfile, err := os.ReadFile("Chart.yaml")
+		if err != nil {
+			return errors.Wrap(err, "Error when read file Chart.yaml")
+		}
+		data := make(map[string]any)
+		if err = yaml.Unmarshal(yfile, &data); err != nil {
+			return errors.Wrap(err, "Error when decode YAML file")
+		}
+
 		// Push to registry
 		_, err = container.
-			WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-*.tgz oci://%s", option.RegistryUrl))).
+			WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s", data["version"], option.RegistryUrl))).
 			Stdout(ctx)
 		if err != nil {
 			return errors.Wrap(err, "Error when push helm chart")
