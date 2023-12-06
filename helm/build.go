@@ -128,7 +128,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		WithWorkdir("/project")
 
 	if option.CaPath != "" {
-		container = container.WithFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
+		container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(option.CaPath))
 	}
 
 	// package helm
