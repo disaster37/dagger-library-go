@@ -136,15 +136,9 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 	// push helm chart
 	if option.WithPush {
-		if option.RegistryUrl == "" || option.RepositoryName == "" {
-			return errors.New("You need to set the registry URL and repository name")
-		}
-		container = container.WithEntrypoint([]string{"/bin/sh", "-c"}).WithExec([]string{"ls -al /tmp/test && cat /tmp/test/ca-bundle.crt"})
 
 		// Login to registry
-		if option.WithRegistryUsername != "" && option.WithRegistryPassword != "" {
-			container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s %s", option.WithRegistryUsername, option.WithRegistryPassword, option.RegistryUrl)))
-		}
+		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s %s", option.WithRegistryUsername, option.WithRegistryPassword, option.RegistryUrl)))
 
 		// Get the current version
 		yfile, err := os.ReadFile("Chart.yaml")
