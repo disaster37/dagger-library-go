@@ -105,7 +105,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	container := client.
 		Container().
 		From("alpine/helm:latest").
-		WithDirectory("/etc/ssl/certs", client.Host().Directory("/etc/ssl")).
+		WithDirectory("/etc/ssl/certs", client.Host().Directory("/etc/ssl/certs")).
 		WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
 
