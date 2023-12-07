@@ -2,7 +2,9 @@ package helm
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"dagger.io/dagger"
 	"emperror.dev/errors"
@@ -16,6 +18,7 @@ type HelmCmdOption struct {
 	Cmd            string `validate:"required"`
 	KubeconfigPath string `validate:"required"`
 	WithProxy      bool   `default:"true"`
+	CaPath         string
 }
 
 // GetBuildCommand permit to get the command spec to add on cli
@@ -34,6 +37,11 @@ func GetCmdCommand() *cli.Command {
 				Usage:    "the helm command",
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:    "custom-ca-path",
+				Usage:   "The custom ca full path file",
+				EnvVars: []string{"CUSTOM_CA_PATH"},
+			},
 		},
 		Action: func(c *cli.Context) (err error) {
 			// initialize Dagger client
@@ -46,6 +54,7 @@ func GetCmdCommand() *cli.Command {
 			cmdOption := &HelmCmdOption{
 				Cmd:            c.String("cmd"),
 				KubeconfigPath: c.String("kubeconfig"),
+				CaPath:         c.String("custom-ca-path"),
 			}
 
 			return HelmCommand(c.Context, client, cmdOption)
@@ -70,6 +79,25 @@ func HelmCommand(ctx context.Context, client *dagger.Client, option *HelmCmdOpti
 
 	if option.WithProxy {
 		container = helper.WithProxy(container)
+	}
+
+	if option.CaPath != "" {
+		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
+		caTmpFile, err := os.CreateTemp("", "ca")
+		if err != nil {
+			return errors.Wrap(err, "Error when create temporary file to store CA content")
+		}
+		defer os.Remove(caTmpFile.Name())
+
+		caContent, err := os.ReadFile(option.CaPath)
+		if err != nil {
+			return errors.Wrap(err, "Error when read CA file")
+		}
+		if _, err = caTmpFile.Write(caContent); err != nil {
+			return errors.Wrap(err, "Error when write CA contend")
+		}
+
+		container = container.WithMountedFile(fmt.Sprintf("/etc/ssl/certs/%s", filepath.Base(option.CaPath)), client.Host().File(caTmpFile.Name()))
 	}
 
 	container.
