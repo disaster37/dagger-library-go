@@ -71,7 +71,7 @@ func GenerateHelmSchema(ctx context.Context, client *dagger.Client, option *Helm
 		WithWorkdir("/project").
 		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm")).
 		WithExec(helper.ForgeCommand("readme-generator -s values.schema.json --values values.yaml")).
-		Export(ctx, option.PathContext)
+		Export(ctx, "values.schema.json")
 
 	if err != nil {
 		return errors.Wrap(err, "Error when generate helm schema")
