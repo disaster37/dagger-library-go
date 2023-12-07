@@ -39,7 +39,7 @@ func GetGenerateSchemaCommand() *cli.Command {
 		},
 		Action: func(c *cli.Context) (err error) {
 			// initialize Dagger client
-			client, err := helper.WithCustomCa(c.Context, c.String("registry-cert-path"), dagger.WithLogOutput(os.Stdout))
+			client, err := dagger.Connect(c.Context, dagger.WithLogOutput(os.Stdout))
 			if err != nil {
 				panic(err)
 			}
