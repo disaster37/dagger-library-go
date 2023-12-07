@@ -59,10 +59,9 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 				EnvVars:  []string{"REGISTRY_PASSWORD"},
 			},
 			&cli.StringFlag{
-				Name:    "registry-cert-path",
-				Usage:   "The cert full path to connect on internal registry",
-				Value:   "",
-				EnvVars: []string{"REGISTRY_CERT_PATH"},
+				Name:    "custom-ca-path",
+				Usage:   "The custom ca full path file",
+				EnvVars: []string{"CUSTOM_CA_PATH"},
 			},
 			&cli.StringFlag{
 				Name:    "path",
@@ -86,7 +85,7 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
 				PathContext:          c.String("path"),
-				CaPath:               c.String("registry-cert-path"),
+				CaPath:               c.String("custom-ca-path"),
 			}
 
 			return BuildHelm(c.Context, client, buildOption)

@@ -63,10 +63,9 @@ func GetBuildCommand(registryName, imageName string) *cli.Command {
 				EnvVars:  []string{"REGISTRY_PASSWORD"},
 			},
 			&cli.StringFlag{
-				Name:    "registry-cert-path",
-				Usage:   "The cert full path to connect on internal registry",
-				Value:   "",
-				EnvVars: []string{"REGISTRY_CERT_PATH"},
+				Name:    "custom-ca-path",
+				Usage:   "The custom ca full path file",
+				EnvVars: []string{"CUSTOM_CA_PATH"},
 			},
 			&cli.StringFlag{
 				Name:  "path",
@@ -76,7 +75,7 @@ func GetBuildCommand(registryName, imageName string) *cli.Command {
 		},
 		Action: func(c *cli.Context) (err error) {
 			// initialize Dagger client
-			client, err := helper.WithCustomCa(c.Context, c.String("registry-cert-path"), dagger.WithLogOutput(os.Stdout))
+			client, err := helper.WithCustomCa(c.Context, c.String("custom-ca-path"), dagger.WithLogOutput(os.Stdout))
 			if err != nil {
 				panic(err)
 			}
