@@ -93,7 +93,7 @@ func GetGenerateReadmeCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:  "readme-file",
 				Usage: "The readme file name to generate",
-				Value: "schema.md",
+				Value: "README.md",
 			},
 		},
 		Action: func(c *cli.Context) (err error) {
