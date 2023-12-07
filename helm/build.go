@@ -127,6 +127,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		WithWorkdir("/project")
 
 	if option.CaPath != "" {
+		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
 		caTmpFile, err := os.CreateTemp("", "ca")
 		if err != nil {
 			return errors.Wrap(err, "Error when create temporary file to store CA content")
