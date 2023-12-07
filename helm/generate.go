@@ -81,8 +81,8 @@ func GenerateHelmSchema(ctx context.Context, client *dagger.Client, option *Helm
 // GetBuildCommand permit to get the command spec to add on cli
 func GetGenerateReadmeCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "generateHelmSchema",
-		Usage: "Generate the helm schema",
+		Name:  "generateHelmReadme",
+		Usage: "Generate the helm readme",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "path",
