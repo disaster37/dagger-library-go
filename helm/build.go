@@ -39,7 +39,7 @@ func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
 // GetBuildCommand permit to get the command spec to add on cli
 func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 	return &cli.Command{
-		Name:  "buildHelmCHart",
+		Name:  "buildHelmChart",
 		Usage: "Build the chart helm",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
