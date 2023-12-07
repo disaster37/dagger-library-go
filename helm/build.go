@@ -104,11 +104,13 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		panic(err)
 	}
 
+	image := fmt.Sprintf("alpine/helm:%s", helm_version)
+
 	// Lint image if needed
 	if option.WithLint {
 		_, err = client.
 			Container().
-			From("alpine/helm:latest").
+			From(image).
 			WithDirectory("/project", client.Host().Directory(option.PathContext)).
 			WithWorkdir("/project").
 			WithExec(helper.ForgeCommand("lint .")).
@@ -120,7 +122,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 
 	container := client.
 		Container().
-		From("alpine/helm:latest").
+		From(image).
 		WithDirectory("/project", client.Host().Directory(option.PathContext)).
 		WithWorkdir("/project")
 

@@ -138,9 +138,12 @@ func GenerateHelmReadme(ctx context.Context, client *dagger.Client, option *Helm
 }
 
 func getGeneratorContainer(client *dagger.Client, option *HelmGenerateOption) *dagger.Container {
+
+	image := fmt.Sprintf("node:%s", node_version)
+
 	container := client.
 		Container().
-		From("node:21-alpine")
+		From(image)
 
 	if option.WithProxy {
 		container = helper.WithProxy(container)

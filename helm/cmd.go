@@ -73,9 +73,11 @@ func HelmCommand(ctx context.Context, client *dagger.Client, option *HelmCmdOpti
 		panic(err)
 	}
 
+	image := fmt.Sprintf("alpine/helm:%s", helm_version)
+
 	container := client.
 		Container().
-		From("alpine/helm:latest")
+		From(image)
 
 	if option.WithProxy {
 		container = helper.WithProxy(container)

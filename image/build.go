@@ -112,9 +112,11 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 
 	// Lint image if needed
 	if option.WithLint {
+		image := fmt.Sprintf("ghcr.io/hadolint/hadolint:%s", hadolint_version)
+
 		_, err := client.
 			Container().
-			From("ghcr.io/hadolint/hadolint:latest-alpine").
+			From(image).
 			WithDirectory("/project", client.Host().Directory(option.PathContext)).
 			WithWorkdir("/project").
 			WithExec(helper.ForgeCommand("/bin/hadolint --failure-threshold error Dockerfile")).
