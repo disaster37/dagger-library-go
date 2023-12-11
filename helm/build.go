@@ -26,6 +26,7 @@ type HelmBuildOption struct {
 	RepositoryName       string `validate:"validateRegistryAuth"`
 	PathContext          string `default:"."`
 	CaPath               string
+	Version              string
 }
 
 func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
@@ -105,26 +106,46 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	}
 
 	image := fmt.Sprintf("alpine/helm:%s", helm_version)
+	container := client.
+		Container().
+		From(image).
+		WithDirectory("/project", client.Host().Directory(option.PathContext)).
+		WithWorkdir("/project")
+
+	// Read chart file if need to push or need to create new version
+	dataChart := make(map[string]any)
+	if option.Version != "" || option.WithPush {
+		// Read chart file
+		yfile, err := os.ReadFile("Chart.yaml")
+		if err != nil {
+			return errors.Wrap(err, "Error when read file Chart.yaml")
+		}
+
+		if err = yaml.Unmarshal(yfile, &dataChart); err != nil {
+			return errors.Wrap(err, "Error when decode YAML file")
+		}
+
+		if option.Version != "" {
+			dataChart["version"] = option.Version
+			yfile, err = yaml.Marshal(dataChart)
+			if err != nil {
+				return errors.Wrap(err, "Error when encode YAML file")
+			}
+			if err = os.WriteFile("Chart.yaml", yfile, 0644); err != nil {
+				return errors.Wrap(err, "Error when write Chart.yaml")
+			}
+		}
+	}
 
 	// Lint image if needed
 	if option.WithLint {
-		_, err = client.
-			Container().
-			From(image).
-			WithDirectory("/project", client.Host().Directory(option.PathContext)).
-			WithWorkdir("/project").
+		_, err = container.
 			WithExec(helper.ForgeCommand("lint .")).
 			Stdout(ctx)
 		if err != nil {
 			return errors.Wrap(err, "Error when lint helm chart")
 		}
 	}
-
-	container := client.
-		Container().
-		From(image).
-		WithDirectory("/project", client.Host().Directory(option.PathContext)).
-		WithWorkdir("/project")
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
@@ -152,20 +173,16 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 	if option.WithPush {
 
 		// Login to registry
-		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u %s -p %s %s", option.WithRegistryUsername, option.WithRegistryPassword, option.RegistryUrl)))
+		registryUsername := client.SetSecret("registry-username", option.WithRegistryUsername)
+		registryPassword := client.SetSecret("registry-password", option.WithRegistryPassword)
 
-		// Get the current version
-		yfile, err := os.ReadFile("Chart.yaml")
-		if err != nil {
-			return errors.Wrap(err, "Error when read file Chart.yaml")
-		}
-		data := make(map[string]any)
-		if err = yaml.Unmarshal(yfile, &data); err != nil {
-			return errors.Wrap(err, "Error when decode YAML file")
-		}
+		container = container.
+			WithSecretVariable("REGISTRY_USERNAME", registryUsername).
+			WithSecretVariable("REGISTRY_PASSWORD", registryPassword).
+			WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u REGISTRY_USERNAME -p REGISTRY_PASSWORD %s", option.RegistryUrl)))
 
 		// Push to registry
-		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s/%s", data["version"], option.RegistryUrl, option.RepositoryName)))
+		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s/%s", dataChart["version"], option.RegistryUrl, option.RepositoryName)))
 	}
 
 	_, err = container.Stdout(ctx)
