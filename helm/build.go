@@ -187,7 +187,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 			WithExec([]string{fmt.Sprintf("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)})
 
 		// Push to registry
-		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("helm push hms-%s.tgz oci://%s/%s", dataChart["version"], option.RegistryUrl, option.RepositoryName)))
+		container = container.WithExec([]string{fmt.Sprintf("helm push hms-%s.tgz oci://%s/%s", dataChart["version"], option.RegistryUrl, option.RepositoryName)})
 	}
 
 	_, err = container.Stdout(ctx)
