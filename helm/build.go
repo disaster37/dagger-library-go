@@ -183,7 +183,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		container = container.
 			WithSecretVariable("REGISTRY_USERNAME", registryUsername).
 			WithSecretVariable("REGISTRY_PASSWORD", registryPassword).
-			WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u REGISTRY_USERNAME -p REGISTRY_PASSWORD %s", option.RegistryUrl)))
+			WithExec(helper.ForgeCommand(fmt.Sprintf("registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)))
 
 		// Push to registry
 		container = container.WithExec(helper.ForgeCommand(fmt.Sprintf("push hms-%s.tgz oci://%s/%s", dataChart["version"], option.RegistryUrl, option.RepositoryName)))
