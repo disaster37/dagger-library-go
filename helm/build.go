@@ -65,10 +65,13 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 				EnvVars: []string{"CUSTOM_CA_PATH"},
 			},
 			&cli.StringFlag{
-				Name:    "path",
-				Usage:   "The path of helm chart",
-				Value:   ".",
-				EnvVars: []string{"REGISTRY_CERT_PATH"},
+				Name:  "path",
+				Usage: "The path of helm chart",
+				Value: ".",
+			},
+			&cli.StringFlag{
+				Name:  "version",
+				Usage: "The chart helm version to build",
 			},
 		},
 		Action: func(c *cli.Context) (err error) {
@@ -87,6 +90,7 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 				WithRegistryPassword: c.String("registry-password"),
 				PathContext:          c.String("path"),
 				CaPath:               c.String("custom-ca-path"),
+				Version:              c.String("version"),
 			}
 
 			return BuildHelm(c.Context, client, buildOption)
