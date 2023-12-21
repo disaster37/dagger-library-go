@@ -10,8 +10,12 @@ import (
 	"github.com/gookit/validate"
 )
 
+type LintOption struct {
+	PathContext string `default:"."`
+}
+
 // Lint permit to lint helm
-func Lint(ctx context.Context, client *dagger.Client, option *HelmBuildOption) (err error) {
+func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)

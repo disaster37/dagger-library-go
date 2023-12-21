@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"dagger.io/dagger"
+	"github.com/disaster37/dagger-library-go/helper"
 )
 
 func getHelmContainer(client *dagger.Client, path string) *dagger.Container {
@@ -14,4 +15,22 @@ func getHelmContainer(client *dagger.Client, path string) *dagger.Container {
 		From(image).
 		WithDirectory("/project", client.Host().Directory(path)).
 		WithWorkdir("/project")
+}
+
+func getGeneratorContainer(client *dagger.Client, path string, withProxy bool) *dagger.Container {
+
+	image := fmt.Sprintf("node:%s", node_version)
+
+	container := client.
+		Container().
+		From(image)
+
+	if withProxy {
+		container = helper.WithProxy(container)
+	}
+
+	return container.
+		WithDirectory("/project", client.Host().Directory(path)).
+		WithWorkdir("/project").
+		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 }
