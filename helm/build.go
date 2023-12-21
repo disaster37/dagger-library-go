@@ -16,7 +16,7 @@ import (
 	"github.com/gookit/validate"
 )
 
-type HelmBuildOption struct {
+type BuildOption struct {
 	WithProxy            bool   `default:"true"`
 	WithPush             bool   `default:"false"`
 	WithRegistryUsername string `validate:"validateRegistryAuth"`
@@ -28,7 +28,7 @@ type HelmBuildOption struct {
 	Version              string
 }
 
-func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
+func (h BuildOption) ValidateRegistryAuth(val string) bool {
 	if h.WithPush && val == "" {
 		return false
 	}
@@ -105,7 +105,7 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 			}
 			defer client.Close()
 
-			buildOption := &HelmBuildOption{
+			buildOption := &BuildOption{
 				RegistryUrl:          registryUrl,
 				RepositoryName:       repositoryName,
 				WithPush:             c.Bool("push"),
@@ -122,7 +122,7 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 }
 
 // BuildHelm permit to build helm chart
-func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOption) (err error) {
+func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) (err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)

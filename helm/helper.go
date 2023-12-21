@@ -7,6 +7,11 @@ import (
 	"github.com/disaster37/dagger-library-go/helper"
 )
 
+const (
+	helm_version string = "3.13.2"
+	node_version string = "21-alpine"
+)
+
 func getHelmContainer(client *dagger.Client, path string) *dagger.Container {
 	image := fmt.Sprintf("alpine/helm:%s", helm_version)
 
