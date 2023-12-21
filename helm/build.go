@@ -37,6 +37,30 @@ func (h HelmBuildOption) ValidateRegistryAuth(val string) bool {
 	return true
 }
 
+func InitBuildFlag(app *cli.App) {
+	flags := []cli.Flag{
+		&cli.StringFlag{
+			Name:     "registry-username",
+			Usage:    "The username to connect on registry",
+			Required: false,
+			EnvVars:  []string{"REGISTRY_USERNAME"},
+		},
+		&cli.StringFlag{
+			Name:     "registry-password",
+			Usage:    "The password to connect on registry",
+			Required: false,
+			EnvVars:  []string{"REGISTRY_PASSWORD"},
+		},
+		&cli.StringFlag{
+			Name:    "custom-ca-path",
+			Usage:   "The custom ca full path file",
+			EnvVars: []string{"CUSTOM_CA_PATH"},
+		},
+	}
+
+	app.Flags = append(app.Flags, flags...)
+}
+
 // GetBuildCommand permit to get the command spec to add on cli
 func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 	return &cli.Command{
