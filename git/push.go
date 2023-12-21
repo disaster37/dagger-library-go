@@ -45,7 +45,7 @@ func CommitAndPush(ctx context.Context, client *dagger.Client, option *GitOption
 		WithExec([]string{fmt.Sprintf("git config --global user.email %s", option.Email)}).
 		WithExec([]string{fmt.Sprintf("git config --global user.name %s", option.Author)}).
 		WithExec([]string{fmt.Sprintf("git remote set-url origin https://%s@$(git config remote.origin.url)", option.Token)}).
-		WithExec([]string{"git checkout master"}).
+		WithExec([]string{"git checkout ${git branch --no-color --show-current}"}).
 		WithExec([]string{"git add -A "}).
 		WithExec([]string{"git commit -m \"push back from pipeline\""}).
 		WithExec([]string{"git push"}).
