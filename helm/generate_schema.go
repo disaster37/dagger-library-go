@@ -68,8 +68,8 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 
 	getGeneratorContainer(client, option.PathContext, option.WithProxy).
 		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName))).
-		Directory(".").
-		Export(ctx, option.PathContext)
+		File(option.FileName).
+		Export(ctx, option.FileName)
 
 	if err != nil {
 		return errors.Wrap(err, "Error when generate helm schema")

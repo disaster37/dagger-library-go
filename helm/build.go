@@ -121,6 +121,10 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 	}
 }
 
+func UpdateChartVersion(path string, version string) {
+
+}
+
 // BuildHelm permit to build helm chart
 func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) (err error) {
 
@@ -132,7 +136,17 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		panic(err)
 	}
 
-	container := getHelmContainer(client, option.PathContext)
+	// Update chart version
+	_, err = getYQContainer(client, option.PathContext).
+		WithExec(
+			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
+			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
+		).
+		File("Chart.yaml").
+		Export(ctx, "Chart.yaml")
+	if err != nil {
+		panic(err)
+	}
 
 	// Read chart file if need to push or need to create new version
 	dataChart := make(map[string]any)
@@ -146,24 +160,9 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		if err = yaml.Unmarshal(yfile, &dataChart); err != nil {
 			return errors.Wrap(err, "Error when decode YAML file")
 		}
+	}
 
-		if option.Version != "" {
-			dataChart["version"] = option.Version
-			yfile, err = yaml.Marshal(dataChart)
-			if err != nil {
-				return errors.Wrap(err, "Error when encode YAML file")
-			}
-			if err = os.WriteFile("Chart.yaml", yfile, 0644); err != nil {
-				return errors.Wrap(err, "Error when write Chart.yaml")
-			}
-		}
-	}
-	chartFilePath := fmt.Sprintf("%s/%s", option.PathContext, "Chart.yaml")
-	chartFile, err := client.Host().File(chartFilePath).Sync(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Error when force sync Chart.yaml")
-	}
-	container = container.WithFile(chartFilePath, chartFile)
+	container := getHelmContainer(client, option.PathContext)
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
@@ -201,7 +200,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 			WithExec([]string{fmt.Sprintf("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)})
 
 		// Push to registry
-		container = container.WithExec([]string{fmt.Sprintf("helm push %s-%s.tgz oci://%s/%s", dataChart["name"], dataChart["version"], option.RegistryUrl, option.RepositoryName)})
+		container = container.WithExec([]string{fmt.Sprintf("helm push %s-%s.tgz oci://%s/%s", dataChart["name"], option.Version, option.RegistryUrl, option.RepositoryName)})
 	}
 
 	_, err = container.Stdout(ctx)
