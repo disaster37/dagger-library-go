@@ -23,6 +23,11 @@ func InitDaggerApp() *cli.App {
 			Name:  "ci",
 			Usage: "Run dagger from CI tools",
 		},
+		&cli.StringFlag{
+			Name:    "tag",
+			Usage:   "The current git tag",
+			EnvVars: []string{"TAG"},
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
