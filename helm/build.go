@@ -156,6 +156,9 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 			}
 		}
 	}
+	if _, err = client.Host().File(fmt.Sprintf("%s/%s", option.PathContext, "Chart.yaml")).Sync(ctx); err != nil {
+		return errors.Wrap(err, "Error when force sync Chart.taml")
+	}
 
 	container := getHelmContainer(client, option.PathContext)
 
