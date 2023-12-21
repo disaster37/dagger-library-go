@@ -16,7 +16,7 @@ import (
 type GenerateDocumentationOption struct {
 	WithProxy   bool   `default:"true"`
 	PathContext string `default:"."`
-	FileName    string `default:"values.schema.json"`
+	FileName    string `default:"README.md"`
 }
 
 // GetBuildCommand permit to get the command spec to add on cli
