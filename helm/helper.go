@@ -13,7 +13,7 @@ func getHelmContainer(client *dagger.Client, path string) *dagger.Container {
 	return client.
 		Container().
 		From(image).
-		WithDirectory("/project", client.Host().Directory(path)).
+		WithDirectory("/project", client.Host().Directory(path, dagger.HostDirectoryOpts{Exclude: []string{"ci"}})).
 		WithWorkdir("/project")
 }
 
@@ -30,7 +30,7 @@ func getGeneratorContainer(client *dagger.Client, path string, withProxy bool) *
 	}
 
 	return container.
-		WithDirectory("/project", client.Host().Directory(path)).
+		WithDirectory("/project", client.Host().Directory(path, dagger.HostDirectoryOpts{Exclude: []string{"ci"}})).
 		WithWorkdir("/project").
 		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 }
