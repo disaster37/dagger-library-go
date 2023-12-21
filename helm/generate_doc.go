@@ -13,14 +13,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type GenerateReadmeOption struct {
+type GenerateDocumentationOption struct {
 	WithProxy   bool   `default:"true"`
 	PathContext string `default:"."`
 	FileName    string `default:"values.schema.json"`
 }
 
 // GetBuildCommand permit to get the command spec to add on cli
-func GetGenerateReadmeCommand() *cli.Command {
+func GetGenerateDocumentationCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "generateHelmReadme",
 		Usage: "Generate the helm readme",
@@ -45,18 +45,18 @@ func GetGenerateReadmeCommand() *cli.Command {
 			}
 			defer client.Close()
 
-			generateOption := &GenerateReadmeOption{
+			generateOption := &GenerateDocumentationOption{
 				PathContext: c.String("path"),
 				FileName:    c.String("readme-file"),
 			}
 
-			return GenerateHelmReadme(c.Context, client, generateOption)
+			return GenerateDocumentation(c.Context, client, generateOption)
 		},
 	}
 }
 
 // BuildHelm permit to build helm chart
-func GenerateHelmReadme(ctx context.Context, client *dagger.Client, option *GenerateReadmeOption) (err error) {
+func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *GenerateDocumentationOption) (err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
@@ -77,5 +77,3 @@ func GenerateHelmReadme(ctx context.Context, client *dagger.Client, option *Gene
 
 	return nil
 }
-
-

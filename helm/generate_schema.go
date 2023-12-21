@@ -50,13 +50,13 @@ func GetGenerateSchemaCommand() *cli.Command {
 				FileName:    c.String("schema-file"),
 			}
 
-			return GenerateHelmSchema(c.Context, client, generateOption)
+			return GenerateSchema(c.Context, client, generateOption)
 		},
 	}
 }
 
 // BuildHelm permit to build helm chart
-func GenerateHelmSchema(ctx context.Context, client *dagger.Client, option *GenerateSchemaOption) (err error) {
+func GenerateSchema(ctx context.Context, client *dagger.Client, option *GenerateSchemaOption) (err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
