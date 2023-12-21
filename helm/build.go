@@ -132,8 +132,6 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		panic(err)
 	}
 
-	container := getHelmContainer(client, option.PathContext)
-
 	// Read chart file if need to push or need to create new version
 	dataChart := make(map[string]any)
 	if option.Version != "" || option.WithPush {
@@ -158,6 +156,8 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 			}
 		}
 	}
+
+	container := getHelmContainer(client, option.PathContext)
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
