@@ -132,6 +132,8 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		panic(err)
 	}
 
+	container := getHelmContainer(client, option.PathContext)
+
 	// Read chart file if need to push or need to create new version
 	dataChart := make(map[string]any)
 	if option.Version != "" || option.WithPush {
@@ -156,11 +158,12 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 			}
 		}
 	}
-	if _, err = client.Host().File(fmt.Sprintf("%s/%s", option.PathContext, "Chart.yaml")).Sync(ctx); err != nil {
+	chartFilePath := fmt.Sprintf("%s/%s", option.PathContext, "Chart.yaml")
+	chartFile, err := client.Host().File(chartFilePath).Sync(ctx)
+	if err != nil {
 		return errors.Wrap(err, "Error when force sync Chart.taml")
 	}
-
-	container := getHelmContainer(client, option.PathContext)
+	container = container.WithFile(chartFilePath, chartFile)
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
