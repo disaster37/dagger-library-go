@@ -137,11 +137,12 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 	}
 
 	// Update chart version
-	_, err = getYQContainer(client, option.PathContext).
+	yqContainer := getYQContainer(client, option.PathContext).
 		WithExec(
 			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
-		).
+		)
+	_, err = yqContainer.
 		File("Chart.yaml").
 		Export(ctx, "Chart.yaml")
 	if err != nil {
@@ -162,7 +163,8 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		}
 	}
 
-	container := getHelmContainer(client, option.PathContext)
+	container := getHelmContainer(client, option.PathContext).
+		WithFile("Chart.yaml", yqContainer.File("Chart.yaml"))
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink
