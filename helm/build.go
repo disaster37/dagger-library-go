@@ -17,7 +17,6 @@ import (
 )
 
 type HelmBuildOption struct {
-	WithLint             bool   `default:"true"`
 	WithProxy            bool   `default:"true"`
 	WithPush             bool   `default:"false"`
 	WithRegistryUsername string `validate:"validateRegistryAuth"`
@@ -133,12 +132,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 		panic(err)
 	}
 
-	image := fmt.Sprintf("alpine/helm:%s", helm_version)
-	container := client.
-		Container().
-		From(image).
-		WithDirectory("/project", client.Host().Directory(option.PathContext)).
-		WithWorkdir("/project")
+	container := getHelmContainer(client, option.PathContext)
 
 	// Read chart file if need to push or need to create new version
 	dataChart := make(map[string]any)
@@ -162,16 +156,6 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *HelmBuildOpti
 			if err = os.WriteFile("Chart.yaml", yfile, 0644); err != nil {
 				return errors.Wrap(err, "Error when write Chart.yaml")
 			}
-		}
-	}
-
-	// Lint image if needed
-	if option.WithLint {
-		_, err = container.
-			WithExec(helper.ForgeCommand("lint .")).
-			Stdout(ctx)
-		if err != nil {
-			return errors.Wrap(err, "Error when lint helm chart")
 		}
 	}
 
