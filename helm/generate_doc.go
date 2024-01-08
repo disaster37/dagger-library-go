@@ -69,7 +69,7 @@ func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *G
 	getGeneratorContainer(client, option.PathContext, option.WithProxy).
 		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName))).
 		File(option.FileName).
-		Export(ctx, option.FileName)
+		Export(ctx, fmt.Sprintf("%s/%s", option.PathContext, option.FileName))
 
 	if err != nil {
 		return errors.Wrap(err, "Error when generate helm readme")
