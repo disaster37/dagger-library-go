@@ -66,7 +66,7 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 		panic(err)
 	}
 
-	getGeneratorContainer(client, option.PathContext, option.WithProxy).
+	_, err = getGeneratorContainer(client, option.PathContext, option.WithProxy).
 		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName))).
 		File(option.FileName).
 		Export(ctx, fmt.Sprintf("%s/%s", option.PathContext, option.FileName))
