@@ -7,7 +7,6 @@ import (
 
 	"dagger.io/dagger"
 	"emperror.dev/errors"
-	"github.com/disaster37/dagger-library-go/helper"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 
@@ -56,67 +55,6 @@ func InitBuildFlag(app *cli.App) {
 	}
 
 	app.Flags = append(app.Flags, flags...)
-}
-
-// GetBuildCommand permit to get the command spec to add on cli
-func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
-	return &cli.Command{
-		Name:  "buildImage",
-		Usage: "Build the docker image",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "tag",
-				Usage: "The image tag",
-				Value: "staging",
-			},
-			&cli.BoolFlag{
-				Name:  "push",
-				Usage: "Push image on registry",
-			},
-			&cli.StringFlag{
-				Name:     "registry-username",
-				Usage:    "The username to connect on registry",
-				Required: false,
-				EnvVars:  []string{"REGISTRY_USERNAME"},
-			},
-			&cli.StringFlag{
-				Name:     "registry-password",
-				Usage:    "The password to connect on registry",
-				Required: false,
-				EnvVars:  []string{"REGISTRY_PASSWORD"},
-			},
-			&cli.StringFlag{
-				Name:    "custom-ca-path",
-				Usage:   "The custom ca full path file",
-				EnvVars: []string{"CUSTOM_CA_PATH"},
-			},
-			&cli.StringFlag{
-				Name:  "path",
-				Usage: "The path context to build image",
-				Value: ".",
-			},
-		},
-		Action: func(c *cli.Context) (err error) {
-			// initialize Dagger client
-			client, err := helper.WithCustomCa(c.Context, c.String("custom-ca-path"), dagger.WithLogOutput(os.Stdout))
-			if err != nil {
-				panic(err)
-			}
-			defer client.Close()
-
-			buildOption := &BuildImageOption{
-				RegistryUrl:          registryUrl,
-				RepositoryName:       repositoryName,
-				WithPush:             c.Bool("push"),
-				WithRegistryUsername: c.String("registry-username"),
-				WithRegistryPassword: c.String("registry-password"),
-				PathContext:          c.String("path"),
-				Version:              c.String("version"),
-			}
-
-			return BuildImage(c.Context, client, buildOption)
-		},
-	}
 }
 
 // BuildImage permit to build image

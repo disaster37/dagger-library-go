@@ -11,7 +11,6 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/helper"
 	"github.com/gookit/validate"
-	"github.com/urfave/cli/v2"
 )
 
 type HelmCmdOption struct {
@@ -19,47 +18,6 @@ type HelmCmdOption struct {
 	KubeconfigPath string `validate:"required"`
 	WithProxy      bool   `default:"true"`
 	CaPath         string
-}
-
-// GetBuildCommand permit to get the command spec to add on cli
-func GetCmdCommand() *cli.Command {
-	return &cli.Command{
-		Name:  "helm",
-		Usage: "Run helm command",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "kubeconfig",
-				Usage:   "The kube config path",
-				EnvVars: []string{"KUBECONFIG"},
-			},
-			&cli.StringFlag{
-				Name:     "cmd",
-				Usage:    "the helm command",
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:    "custom-ca-path",
-				Usage:   "The custom ca full path file",
-				EnvVars: []string{"CUSTOM_CA_PATH"},
-			},
-		},
-		Action: func(c *cli.Context) (err error) {
-			// initialize Dagger client
-			client, err := dagger.Connect(c.Context, dagger.WithLogOutput(os.Stdout))
-			if err != nil {
-				panic(err)
-			}
-			defer client.Close()
-
-			cmdOption := &HelmCmdOption{
-				Cmd:            c.String("cmd"),
-				KubeconfigPath: c.String("kubeconfig"),
-				CaPath:         c.String("custom-ca-path"),
-			}
-
-			return HelmCommand(c.Context, client, cmdOption)
-		},
-	}
 }
 
 // HelmCommand permit to run any helm command

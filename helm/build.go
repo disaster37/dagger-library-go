@@ -60,67 +60,6 @@ func InitBuildFlag(app *cli.App) {
 	app.Flags = append(app.Flags, flags...)
 }
 
-// GetBuildCommand permit to get the command spec to add on cli
-func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
-	return &cli.Command{
-		Name:  "buildHelmChart",
-		Usage: "Build the chart helm",
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:  "push",
-				Usage: "Push chart on registry",
-			},
-			&cli.StringFlag{
-				Name:     "registry-username",
-				Usage:    "The username to connect on registry",
-				Required: false,
-				EnvVars:  []string{"REGISTRY_USERNAME"},
-			},
-			&cli.StringFlag{
-				Name:     "registry-password",
-				Usage:    "The password to connect on registry",
-				Required: false,
-				EnvVars:  []string{"REGISTRY_PASSWORD"},
-			},
-			&cli.StringFlag{
-				Name:    "custom-ca-path",
-				Usage:   "The custom ca full path file",
-				EnvVars: []string{"CUSTOM_CA_PATH"},
-			},
-			&cli.StringFlag{
-				Name:  "path",
-				Usage: "The path of helm chart",
-				Value: ".",
-			},
-			&cli.StringFlag{
-				Name:  "version",
-				Usage: "The chart helm version to build",
-			},
-		},
-		Action: func(c *cli.Context) (err error) {
-			// initialize Dagger client
-			client, err := dagger.Connect(c.Context, dagger.WithLogOutput(os.Stdout))
-			if err != nil {
-				panic(err)
-			}
-			defer client.Close()
-
-			buildOption := &BuildOption{
-				RegistryUrl:          registryUrl,
-				RepositoryName:       repositoryName,
-				WithPush:             c.Bool("push"),
-				WithRegistryUsername: c.String("registry-username"),
-				WithRegistryPassword: c.String("registry-password"),
-				PathContext:          c.String("path"),
-				CaPath:               c.String("custom-ca-path"),
-				Version:              c.String("version"),
-			}
-
-			return BuildHelm(c.Context, client, buildOption)
-		},
-	}
-}
-
 // BuildHelm permit to build helm chart
 func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) (err error) {
 
