@@ -121,10 +121,6 @@ func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 	}
 }
 
-func UpdateChartVersion(path string, version string) {
-
-}
-
 // BuildHelm permit to build helm chart
 func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) (err error) {
 

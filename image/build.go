@@ -16,15 +16,14 @@ import (
 )
 
 type BuildImageOption struct {
-	WithLint             bool   `default:"true"`
 	WithProxy            bool   `default:"true"`
 	WithPush             bool   `default:"false"`
 	WithRegistryUsername string `validate:"validateRegistryAuth"`
 	WithRegistryPassword string `validate:"validateRegistryAuth"`
-	RegistryName         string `validate:"required"`
-	Name                 string `validate:"required"`
-	Tag                  string `default:"latest"`
+	RegistryUrl          string `validate:"validateRegistryAuth"`
+	RepositoryName       string `validate:"validateRegistryAuth"`
 	PathContext          string `default:"."`
+	Version              string
 }
 
 func (h BuildImageOption) ValidateRegistryAuth(val string) bool {
@@ -35,8 +34,32 @@ func (h BuildImageOption) ValidateRegistryAuth(val string) bool {
 	return true
 }
 
+func InitBuildFlag(app *cli.App) {
+	flags := []cli.Flag{
+		&cli.StringFlag{
+			Name:     "registry-username",
+			Usage:    "The username to connect on registry",
+			Required: false,
+			EnvVars:  []string{"REGISTRY_USERNAME"},
+		},
+		&cli.StringFlag{
+			Name:     "registry-password",
+			Usage:    "The password to connect on registry",
+			Required: false,
+			EnvVars:  []string{"REGISTRY_PASSWORD"},
+		},
+		&cli.StringFlag{
+			Name:    "custom-ca-path",
+			Usage:   "The custom ca full path file",
+			EnvVars: []string{"CUSTOM_CA_PATH"},
+		},
+	}
+
+	app.Flags = append(app.Flags, flags...)
+}
+
 // GetBuildCommand permit to get the command spec to add on cli
-func GetBuildCommand(registryName, imageName string) *cli.Command {
+func GetBuildCommand(registryUrl string, repositoryName string) *cli.Command {
 	return &cli.Command{
 		Name:  "buildImage",
 		Usage: "Build the docker image",
@@ -82,42 +105,18 @@ func GetBuildCommand(registryName, imageName string) *cli.Command {
 			defer client.Close()
 
 			buildOption := &BuildImageOption{
-				RegistryName:         registryName,
-				Name:                 imageName,
-				Tag:                  c.String("tag"),
+				RegistryUrl:          registryUrl,
+				RepositoryName:       repositoryName,
 				WithPush:             c.Bool("push"),
 				WithRegistryUsername: c.String("registry-username"),
 				WithRegistryPassword: c.String("registry-password"),
 				PathContext:          c.String("path"),
+				Version:              c.String("version"),
 			}
 
 			return BuildImage(c.Context, client, buildOption)
 		},
 	}
-}
-
-func InitBuildFlag(app *cli.App) {
-	flags := []cli.Flag{
-		&cli.StringFlag{
-			Name:     "registry-username",
-			Usage:    "The username to connect on registry",
-			Required: false,
-			EnvVars:  []string{"REGISTRY_USERNAME"},
-		},
-		&cli.StringFlag{
-			Name:     "registry-password",
-			Usage:    "The password to connect on registry",
-			Required: false,
-			EnvVars:  []string{"REGISTRY_PASSWORD"},
-		},
-		&cli.StringFlag{
-			Name:    "custom-ca-path",
-			Usage:   "The custom ca full path file",
-			EnvVars: []string{"CUSTOM_CA_PATH"},
-		},
-	}
-
-	app.Flags = append(app.Flags, flags...)
 }
 
 // BuildImage permit to build image
@@ -133,23 +132,6 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 
 	// get build context directory
 	contextDir := client.Host().Directory(option.PathContext)
-
-	// Lint image if needed
-	if option.WithLint {
-		image := fmt.Sprintf("ghcr.io/hadolint/hadolint:%s", hadolint_version)
-
-		_, err := client.
-			Container().
-			From(image).
-			WithDirectory("/project", client.Host().Directory(option.PathContext)).
-			WithWorkdir("/project").
-			WithExec(helper.ForgeCommand("/bin/hadolint --failure-threshold error Dockerfile")).
-			Stdout(ctx)
-
-		if err != nil {
-			return errors.Wrap(err, "Error when lint Dockerfile")
-		}
-	}
 
 	// Compute build args
 	var args []dagger.BuildArg
@@ -200,12 +182,12 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 		},
 	)
 
-	image := fmt.Sprintf("%s/%s:%s", option.RegistryName, option.Name, option.Tag)
+	image := fmt.Sprintf("%s/%s:%s", option.RegistryUrl, option.RepositoryName, option.Version)
 	if option.WithPush {
 		secret := client.SetSecret("password", option.WithRegistryPassword)
 
 		ref, err := container.
-			WithRegistryAuth(option.RegistryName, option.WithRegistryUsername, secret).
+			WithRegistryAuth(option.RegistryUrl, option.WithRegistryUsername, secret).
 			Publish(
 				ctx,
 				image,
