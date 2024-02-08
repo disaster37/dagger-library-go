@@ -18,7 +18,7 @@ type GenerateDocumentationOption struct {
 }
 
 // GenerateDocumentation permit to generate helm documentation
-func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *GenerateDocumentationOption) (container *dagger.Container, err error) {
+func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *GenerateDocumentationOption) (files map[string]*dagger.File, err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
@@ -28,7 +28,7 @@ func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *G
 		panic(err)
 	}
 
-	container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+	container := getGeneratorContainer(client, option.PathContext, option.WithProxy).
 		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName)))
 
 	_, err = container.
@@ -39,5 +39,9 @@ func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *G
 		return nil, errors.Wrap(err, "Error when generate helm readme")
 	}
 
-	return container, nil
+	files = map[string]*dagger.File{
+		option.FileName: container.File(option.FileName),
+	}
+
+	return files, nil
 }

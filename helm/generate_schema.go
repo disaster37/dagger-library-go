@@ -18,7 +18,7 @@ type GenerateSchemaOption struct {
 }
 
 // GenerateSchema permit to generate helm schema
-func GenerateSchema(ctx context.Context, client *dagger.Client, option *GenerateSchemaOption) (container *dagger.Container, err error) {
+func GenerateSchema(ctx context.Context, client *dagger.Client, option *GenerateSchemaOption) (files map[string]*dagger.File, err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
@@ -28,7 +28,7 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 		panic(err)
 	}
 
-	container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+	container := getGeneratorContainer(client, option.PathContext, option.WithProxy).
 		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName)))
 
 	_, err = container.
@@ -39,5 +39,9 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 		return nil, errors.Wrap(err, "Error when generate helm schema")
 	}
 
-	return container, nil
+	files = map[string]*dagger.File{
+		option.FileName: container.File(option.FileName),
+	}
+
+	return files, nil
 }
