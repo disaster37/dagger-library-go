@@ -26,6 +26,7 @@ type BuildOption struct {
 	PathContext          string `default:"."`
 	CaPath               string
 	Version              string
+	WithFiles            map[string]*dagger.File
 }
 
 func (h BuildOption) ValidateRegistryAuth(val string) bool {
@@ -100,6 +101,10 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 
 	container := getHelmContainer(client, option.PathContext).
 		WithFile("Chart.yaml", yqContainer.File("Chart.yaml"))
+
+	for fileName, file := range option.WithFiles {
+		container = container.WithFile(fileName, file)
+	}
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink

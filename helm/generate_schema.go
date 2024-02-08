@@ -17,8 +17,8 @@ type GenerateSchemaOption struct {
 	FileName    string `default:"values.schema.json"`
 }
 
-// BuildHelm permit to build helm chart
-func GenerateSchema(ctx context.Context, client *dagger.Client, option *GenerateSchemaOption) (err error) {
+// GenerateSchema permit to generate helm schema
+func GenerateSchema(ctx context.Context, client *dagger.Client, option *GenerateSchemaOption) (container *dagger.Container, err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
@@ -28,14 +28,16 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 		panic(err)
 	}
 
-	_, err = getGeneratorContainer(client, option.PathContext, option.WithProxy).
-		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName))).
+	container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName)))
+
+	_, err = container.
 		File(option.FileName).
 		Export(ctx, fmt.Sprintf("%s/%s", option.PathContext, option.FileName))
 
 	if err != nil {
-		return errors.Wrap(err, "Error when generate helm schema")
+		return nil, errors.Wrap(err, "Error when generate helm schema")
 	}
 
-	return nil
+	return container, nil
 }

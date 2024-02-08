@@ -17,8 +17,8 @@ type GenerateDocumentationOption struct {
 	FileName    string `default:"README.md"`
 }
 
-// BuildHelm permit to build helm chart
-func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *GenerateDocumentationOption) (err error) {
+// GenerateDocumentation permit to generate helm documentation
+func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *GenerateDocumentationOption) (container *dagger.Container, err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
@@ -28,14 +28,16 @@ func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *G
 		panic(err)
 	}
 
-	_, err = getGeneratorContainer(client, option.PathContext, option.WithProxy).
-		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName))).
+	container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName)))
+
+	_, err = container.
 		File(option.FileName).
 		Export(ctx, fmt.Sprintf("%s/%s", option.PathContext, option.FileName))
 
 	if err != nil {
-		return errors.Wrap(err, "Error when generate helm readme")
+		return nil, errors.Wrap(err, "Error when generate helm readme")
 	}
 
-	return nil
+	return container, nil
 }

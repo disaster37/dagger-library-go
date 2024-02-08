@@ -12,6 +12,7 @@ import (
 
 type LintOption struct {
 	PathContext string `default:"."`
+	WithFiles   map[string]*dagger.File
 }
 
 // Lint permit to lint helm
@@ -25,8 +26,14 @@ func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err e
 		panic(err)
 	}
 
-	_, err = getHelmContainer(client, option.PathContext).
-		WithExec(helper.ForgeCommand("lint .")).
+	container := getHelmContainer(client, option.PathContext).
+		WithExec(helper.ForgeCommand("lint ."))
+
+	for fileName, file := range option.WithFiles {
+		container = container.WithFile(fileName, file)
+	}
+
+	_, err = container.
 		Stdout(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Error when lint helm chart")
