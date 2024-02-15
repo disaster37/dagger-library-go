@@ -22,6 +22,7 @@ type BuildImageOption struct {
 	RegistryUrl          string `validate:"validateRegistryAuth"`
 	RepositoryName       string `validate:"validateRegistryAuth"`
 	PathContext          string `default:"."`
+	Dockerfile           string `default:"Dockerfile"`
 	Version              string
 }
 
@@ -116,7 +117,8 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 	// build using Dockerfile
 	container := contextDir.DockerBuild(
 		dagger.DirectoryDockerBuildOpts{
-			BuildArgs: args,
+			BuildArgs:  args,
+			Dockerfile: option.Dockerfile,
 		},
 	)
 
