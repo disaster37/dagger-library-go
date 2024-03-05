@@ -15,6 +15,7 @@ type GenerateDocumentationOption struct {
 	WithProxy   bool   `default:"true"`
 	PathContext string `default:"."`
 	FileName    string `default:"README.md"`
+	ConfigFile  string
 }
 
 // GenerateDocumentation permit to generate helm documentation
@@ -28,8 +29,14 @@ func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *G
 		panic(err)
 	}
 
-	container := getGeneratorContainer(client, option.PathContext, option.WithProxy).
-		WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName)))
+	var container *dagger.Container
+	if option.ConfigFile == "" {
+		container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName)))
+	} else {
+		container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -r %s --values values.yaml", option.ConfigFile, option.FileName)))
+	}
 
 	_, err = container.
 		File(option.FileName).
