@@ -2,6 +2,7 @@ package image
 
 import (
 	"context"
+	"fmt"
 
 	"dagger.io/dagger"
 	"emperror.dev/errors"
@@ -12,6 +13,7 @@ import (
 
 type LintOption struct {
 	PathContext string `default:"."`
+	Dockerfile  string `default:"Dockerfile"`
 }
 
 // Lint permit to lint helm
@@ -26,7 +28,7 @@ func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err e
 	}
 
 	_, err = getHadolintContainer(client, option.PathContext).
-		WithExec(helper.ForgeCommand("/bin/hadolint --failure-threshold error Dockerfile")).
+		WithExec(helper.ForgeCommand(fmt.Sprintf("/bin/hadolint --failure-threshold error %s", option.Dockerfile))).
 		Stdout(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Error when lint Dockerfile")
