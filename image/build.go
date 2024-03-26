@@ -60,7 +60,7 @@ func InitBuildFlag(app *cli.App) {
 }
 
 // BuildImage permit to build image
-func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOption) (err error) {
+func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOption) (container *dagger.Container, err error) {
 
 	if err = defaults.Set(option); err != nil {
 		panic(err)
@@ -119,7 +119,7 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 	}
 
 	// build using Dockerfile
-	container := contextDir.DockerBuild(
+	container = contextDir.DockerBuild(
 		dagger.DirectoryDockerBuildOpts{
 			BuildArgs:  args,
 			Dockerfile: option.Dockerfile,
@@ -138,16 +138,16 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 			)
 
 		if err != nil {
-			return errors.Wrapf(err, "Error when push image %s", image)
+			return nil, errors.Wrapf(err, "Error when push image %s", image)
 		}
 
 		log.Infof("Published image to: %s", ref)
 	} else {
 		_, err = container.Export(ctx, "/dev/null")
 		if err != nil {
-			return errors.Wrapf(err, "Error when build image %s", image)
+			return nil, errors.Wrapf(err, "Error when build image %s", image)
 		}
 	}
 
-	return nil
+	return container, nil
 }
