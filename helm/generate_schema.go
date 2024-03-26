@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"dagger.io/dagger"
-	"emperror.dev/errors"
 	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/helper"
 	"github.com/gookit/validate"
@@ -36,14 +35,6 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 	} else {
 		container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
 			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -s %s --values values.yaml", option.ConfigFile, option.FileName)))
-	}
-
-	_, err = container.
-		File(option.FileName).
-		Export(ctx, fmt.Sprintf("%s/%s", option.PathContext, option.FileName))
-
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when generate helm schema")
 	}
 
 	files = map[string]*dagger.File{

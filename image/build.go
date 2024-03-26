@@ -24,6 +24,7 @@ type BuildImageOption struct {
 	PathContext          string `default:"."`
 	Dockerfile           string `default:"Dockerfile"`
 	Version              string
+	ExtraDirectories     map[string]*dagger.Directory
 }
 
 func (h BuildImageOption) ValidateRegistryAuth(val string) bool {
@@ -71,6 +72,9 @@ func BuildImage(ctx context.Context, client *dagger.Client, option *BuildImageOp
 
 	// get build context directory
 	contextDir := client.Host().Directory(option.PathContext)
+	for path, extraDir := range option.ExtraDirectories {
+		contextDir = contextDir.WithDirectory(path, extraDir)
+	}
 
 	// Compute build args
 	var args []dagger.BuildArg

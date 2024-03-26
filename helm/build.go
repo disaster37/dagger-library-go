@@ -78,12 +78,6 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
 		)
-	_, err = yqContainer.
-		File("Chart.yaml").
-		Export(ctx, "Chart.yaml")
-	if err != nil {
-		panic(err)
-	}
 
 	// Read chart file if need to push or need to create new version
 	dataChart := make(map[string]any)
