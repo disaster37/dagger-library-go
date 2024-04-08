@@ -120,7 +120,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 	}
 
 	// package helm
-	container = container.WithExec([]string{"dependency update"})
+	container = container.WithExec(helper.ForgeCommand("dependency update"))
 	container = container.WithExec(helper.ForgeCommand("package -u ."))
 
 	// push helm chart
