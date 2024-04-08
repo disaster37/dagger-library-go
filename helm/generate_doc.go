@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"dagger.io/dagger"
+	"emperror.dev/errors"
 	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/helper"
 	"github.com/gookit/validate"
@@ -37,8 +38,13 @@ func GenerateDocumentation(ctx context.Context, client *dagger.Client, option *G
 			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -r %s --values values.yaml", option.ConfigFile, option.FileName)))
 	}
 
+	readmeFile := container.File(option.FileName)
+	if _, err = readmeFile.Export(ctx, fmt.Sprintf("%s/%s", option.PathContext, option.FileName)); err != nil {
+		return nil, errors.Wrap(err, "Error when generate helm readme")
+	}
+
 	files = map[string]*dagger.File{
-		option.FileName: container.File(option.FileName),
+		option.FileName: readmeFile,
 	}
 
 	return files, nil
