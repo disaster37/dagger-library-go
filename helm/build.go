@@ -93,7 +93,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		}
 	}
 
-	container := getHelmContainer(client, option.PathContext).
+	container := getHelmContainer(client, option.PathContext, option.WithProxy).
 		WithFile("Chart.yaml", yqContainer.File("Chart.yaml"))
 
 	for fileName, file := range option.WithFiles {

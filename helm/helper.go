@@ -13,12 +13,18 @@ const (
 	yq_version   string = "4.35.2"
 )
 
-func getHelmContainer(client *dagger.Client, path string) *dagger.Container {
+func getHelmContainer(client *dagger.Client, path string, withProxy bool) *dagger.Container {
 	image := fmt.Sprintf("alpine/helm:%s", helm_version)
 
-	return client.
+	container := client.
 		Container().
-		From(image).
+		From(image)
+
+	if withProxy {
+		container = helper.WithProxy(container)
+	}
+
+	return container.
 		WithDirectory("/project", client.Host().Directory(path, dagger.HostDirectoryOpts{Exclude: []string{"ci"}})).
 		WithWorkdir("/project")
 }

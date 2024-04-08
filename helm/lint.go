@@ -26,7 +26,7 @@ func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err e
 		panic(err)
 	}
 
-	container := getHelmContainer(client, option.PathContext).
+	container := getHelmContainer(client, option.PathContext, false).
 		WithExec(helper.ForgeCommand("lint ."))
 
 	for fileName, file := range option.WithFiles {
