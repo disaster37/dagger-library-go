@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	helm_version string = "3.13.2"
+	helm_version string = "3.14.3"
 	node_version string = "21-alpine"
 	yq_version   string = "4.35.2"
 )
