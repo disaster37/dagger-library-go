@@ -11,6 +11,7 @@ import (
 )
 
 type LintOption struct {
+	WithProxy   bool   `default:"true"`
 	PathContext string `default:"."`
 	WithFiles   map[string]*dagger.File
 }
@@ -26,7 +27,8 @@ func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err e
 		panic(err)
 	}
 
-	container := getHelmContainer(client, option.PathContext, false).
+	container := getHelmContainer(client, option.PathContext, option.WithProxy).
+		WithExec(helper.ForgeCommand("dependency update")).
 		WithExec(helper.ForgeCommand("lint ."))
 
 	for fileName, file := range option.WithFiles {
