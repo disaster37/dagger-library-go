@@ -83,7 +83,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 	dataChart := make(map[string]any)
 	if option.Version != "" || option.WithPush {
 		// Read chart file
-		yfile, err := os.ReadFile("Chart.yaml")
+		yfile, err := os.ReadFile(fmt.Sprintf("%s/Chart.yaml", option.PathContext))
 		if err != nil {
 			return errors.Wrap(err, "Error when read file Chart.yaml")
 		}
