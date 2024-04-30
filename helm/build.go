@@ -121,6 +121,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 
 	// package helm
 	container = container.WithExec(helper.ForgeCommand("ls -al /etc/ssl/certs/"))
+	container = container.WithExec(helper.ForgeCommand("exit 2"))
 	container = container.WithExec(helper.ForgeCommand("dependency update"))
 	container = container.WithExec(helper.ForgeCommand("package -u ."))
 
