@@ -5,9 +5,6 @@ import (
 	"github.com/disaster37/dagger-library-go/helper"
 )
 
-const (
-	yq_version string = "4.35.2"
-)
 
 func getHelmContainer(client *dagger.Client, withImage string, path string, withProxy bool) *dagger.Container {
 
