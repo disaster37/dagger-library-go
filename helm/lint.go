@@ -18,6 +18,7 @@ type LintOption struct {
 	PathContext string `default:"."`
 	WithFiles   map[string]*dagger.File
 	CaPath      string
+	WithImage   string `default:"alpine/helm:3.14.3"`
 }
 
 // Lint permit to lint helm
@@ -31,7 +32,7 @@ func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err e
 		panic(err)
 	}
 
-	container := getHelmContainer(client, option.PathContext, option.WithProxy)
+	container := getHelmContainer(client, option.WithImage, option.PathContext, option.WithProxy)
 
 	if option.CaPath != "" {
 		// Copy the certificate in temporary folder because of the are issue with buildkit when file is symlink

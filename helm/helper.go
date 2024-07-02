@@ -8,17 +8,14 @@ import (
 )
 
 const (
-	helm_version string = "3.14.3"
-	node_version string = "21-alpine"
-	yq_version   string = "4.35.2"
+	yq_version string = "4.35.2"
 )
 
-func getHelmContainer(client *dagger.Client, path string, withProxy bool) *dagger.Container {
-	image := fmt.Sprintf("alpine/helm:%s", helm_version)
+func getHelmContainer(client *dagger.Client, withImage string, path string, withProxy bool) *dagger.Container {
 
 	container := client.
 		Container().
-		From(image)
+		From(withImage)
 
 	if withProxy {
 		container = helper.WithProxy(container)
@@ -29,13 +26,11 @@ func getHelmContainer(client *dagger.Client, path string, withProxy bool) *dagge
 		WithWorkdir("/project")
 }
 
-func getGeneratorContainer(client *dagger.Client, path string, withProxy bool) *dagger.Container {
-
-	image := fmt.Sprintf("node:%s", node_version)
+func getGeneratorContainer(client *dagger.Client, withImage string, path string, withProxy bool) *dagger.Container {
 
 	container := client.
 		Container().
-		From(image)
+		From(withImage)
 
 	if withProxy {
 		container = helper.WithProxy(container)

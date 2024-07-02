@@ -27,6 +27,7 @@ type BuildOption struct {
 	CaPath               string
 	Version              string
 	WithFiles            map[string]*dagger.File
+	WithImage            string `default:"alpine/helm:3.14.3"`
 }
 
 func (h BuildOption) ValidateRegistryAuth(val string) bool {
@@ -93,7 +94,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 		}
 	}
 
-	container := getHelmContainer(client, option.PathContext, option.WithProxy).
+	container := getHelmContainer(client, option.WithImage, option.PathContext, option.WithProxy).
 		WithFile("Chart.yaml", yqContainer.File("Chart.yaml"))
 
 	for fileName, file := range option.WithFiles {

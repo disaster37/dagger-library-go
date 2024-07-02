@@ -18,6 +18,7 @@ type HelmCmdOption struct {
 	KubeconfigPath string `validate:"required"`
 	WithProxy      bool   `default:"true"`
 	CaPath         string
+	WithImage      string `default:"alpine/helm:3.14.3"`
 }
 
 // HelmCommand permit to run any helm command
@@ -31,11 +32,9 @@ func HelmCommand(ctx context.Context, client *dagger.Client, option *HelmCmdOpti
 		panic(err)
 	}
 
-	image := fmt.Sprintf("alpine/helm:%s", helm_version)
-
 	container := client.
 		Container().
-		From(image)
+		From(option.WithImage)
 
 	if option.WithProxy {
 		container = helper.WithProxy(container)

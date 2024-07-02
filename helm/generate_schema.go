@@ -16,6 +16,7 @@ type GenerateSchemaOption struct {
 	PathContext string `default:"."`
 	FileName    string `default:"values.schema.json"`
 	ConfigFile  string
+	WithImage   string `default:"node:21-alpine"`
 }
 
 // GenerateSchema permit to generate helm schema
@@ -31,10 +32,10 @@ func GenerateSchema(ctx context.Context, client *dagger.Client, option *Generate
 
 	var container *dagger.Container
 	if option.ConfigFile == "" {
-		container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+		container = getGeneratorContainer(client, option.WithImage, option.PathContext, option.WithProxy).
 			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName)))
 	} else {
-		container = getGeneratorContainer(client, option.PathContext, option.WithProxy).
+		container = getGeneratorContainer(client, option.WithImage, option.PathContext, option.WithProxy).
 			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -s %s --values values.yaml", option.ConfigFile, option.FileName)))
 	}
 
