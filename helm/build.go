@@ -28,6 +28,7 @@ type BuildOption struct {
 	Version              string
 	WithFiles            map[string]*dagger.File
 	WithImage            string `default:"alpine/helm:3.14.3"`
+	WithYQImage          string `default:"mikefarah/yq:4.35.2"`
 }
 
 func (h BuildOption) ValidateRegistryAuth(val string) bool {
@@ -74,7 +75,7 @@ func BuildHelm(ctx context.Context, client *dagger.Client, option *BuildOption) 
 	}
 
 	// Update chart version
-	yqContainer := getYQContainer(client, option.PathContext).
+	yqContainer := getYQContainer(client, option.WithYQImage, option.PathContext).
 		WithExec(
 			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},

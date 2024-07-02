@@ -1,8 +1,6 @@
 package helm
 
 import (
-	"fmt"
-
 	"dagger.io/dagger"
 	"github.com/disaster37/dagger-library-go/helper"
 )
@@ -42,12 +40,10 @@ func getGeneratorContainer(client *dagger.Client, withImage string, path string,
 		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 }
 
-func getYQContainer(client *dagger.Client, path string) *dagger.Container {
-	image := fmt.Sprintf("mikefarah/yq:%s", yq_version)
-
+func getYQContainer(client *dagger.Client, withImage string, path string) *dagger.Container {
 	return client.
 		Container().
-		From(image).
+		From(withImage).
 		WithDirectory("/project", client.Host().Directory(path, dagger.HostDirectoryOpts{Exclude: []string{"ci"}})).
 		WithWorkdir("/project")
 }
