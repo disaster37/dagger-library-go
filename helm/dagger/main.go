@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"emperror.dev/errors"
 	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/helm/dagger/internal/dagger"
 	"github.com/disaster37/dagger-library-go/helper"
@@ -45,7 +44,7 @@ type LintOption struct {
 	WithImage string `default:"alpine/helm:3.14.3"`
 }
 
-func (m *Helm) GenerateSchema(ctx context.Context, source *dagger.Directory, withImage *string, withProxy *bool) (stdout string, err error) {
+func (m *Helm) GenerateSchema(ctx context.Context, source *dagger.Directory, withImage *string, withProxy *bool) (schemaFile *dagger.File, err error) {
 
 	option := &GenerateSchemaOption{
 		Source: source,
@@ -58,11 +57,11 @@ func (m *Helm) GenerateSchema(ctx context.Context, source *dagger.Directory, wit
 	}
 
 	if err = defaults.Set(option); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if err = validate.Struct(option).ValidateErr(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var container *dagger.Container
@@ -74,15 +73,12 @@ func (m *Helm) GenerateSchema(ctx context.Context, source *dagger.Directory, wit
 			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -s %s --values values.yaml", option.ConfigFile, option.FileName)))
 	}
 
-	schemaFile := container.File(option.FileName)
-	if _, err = schemaFile.Export(ctx, option.FileName); err != nil {
-		return "", errors.Wrap(err, "Error when generate helm schema")
-	}
+	schemaFile = container.File(option.FileName)
 
-	return container.Stdout(ctx)
+	return schemaFile, nil
 }
 
-func (m *Helm) GenerateDocumentation(ctx context.Context, source *dagger.Directory, withImage *string, withProxy *bool) (stdout string, err error) {
+func (m *Helm) GenerateDocumentation(ctx context.Context, source *dagger.Directory, withImage *string, withProxy *bool) (readmeFile *dagger.File, err error) {
 	option := &GenerateSchemaOption{
 		Source: source,
 	}
@@ -94,11 +90,11 @@ func (m *Helm) GenerateDocumentation(ctx context.Context, source *dagger.Directo
 	}
 
 	if err = defaults.Set(option); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if err = validate.Struct(option).ValidateErr(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var container *dagger.Container
@@ -110,12 +106,9 @@ func (m *Helm) GenerateDocumentation(ctx context.Context, source *dagger.Directo
 			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -r %s --values values.yaml", option.ConfigFile, option.FileName)))
 	}
 
-	readmeFile := container.File(option.FileName)
-	if stdout, err = readmeFile.Export(ctx, option.FileName); err != nil {
-		return "", errors.Wrap(err, "Error when generate helm readme")
-	}
+	readmeFile = container.File(option.FileName)
 
-	return container.Stdout(ctx)
+	return readmeFile, nil
 
 }
 
