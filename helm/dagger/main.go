@@ -112,7 +112,7 @@ func (m *Helm) GenerateDocumentation(ctx context.Context, source *dagger.Directo
 
 }
 
-func (m *Helm) Lint(ctx context.Context, source *dagger.Directory, withImage *string, withProxy *bool) (stdout string, err error) {
+func (m *Helm) Lint(ctx context.Context, source *dagger.Directory, withImage *string, withProxy *bool, files ...*dagger.File) (stdout string, err error) {
 
 	option := &LintOption{
 		Source: source,
@@ -132,9 +132,18 @@ func (m *Helm) Lint(ctx context.Context, source *dagger.Directory, withImage *st
 		panic(err)
 	}
 
-	return m.GetHelmContainer(ctx, option).
-		WithExec(helper.ForgeCommand("dependency update")).
-		WithExec(helper.ForgeCommand("lint .")).
+	container := m.GetHelmContainer(ctx, option)
+	for _, file := range files {
+		fileName, err := file.Name(ctx)
+		if err != nil {
+			return "", err
+		}
+		container = container.WithFile(fileName, file)
+	}
+
+	return container.
+		WithExec(helper.ForgeCommand("helm dependency update")).
+		WithExec(helper.ForgeCommand("helm lint .")).
 		Stdout(ctx)
 }
 
