@@ -16,9 +16,9 @@ type PushOption struct {
 	Source               *dagger.Directory
 	WithRegistryUsername *dagger.Secret `validate:"required"`
 	WithRegistryPassword *dagger.Secret `validate:"required"`
-	RegistryUrl          string `validate:"required"`
-	RepositoryName       string `validate:"required"`
-	Version              string `validate:"required"`
+	RegistryUrl          string         `validate:"required"`
+	RepositoryName       string         `validate:"required"`
+	Version              string         `validate:"required"`
 	WithFiles            []*dagger.File
 	WithImage            string `default:"alpine/helm:3.14.3"`
 	WithYQImage          string `default:"mikefarah/yq:4.35.2"`
@@ -85,7 +85,7 @@ func (m *Helm) Push(
 	// Update the chart version
 	chartFile = m.GetYQContainer(ctx, option.Source, option.WithYQImage).
 		WithExec(
-			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
+			[]string{"yq --inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
 		).
 		File("Chart.yaml")
