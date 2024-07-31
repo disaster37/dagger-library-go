@@ -1,0 +1,127 @@
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"emperror.dev/errors"
+	"github.com/creasty/defaults"
+	"github.com/disaster37/dagger-library-go/helm/dagger/internal/dagger"
+	"github.com/disaster37/dagger-library-go/helper"
+	"github.com/gookit/validate"
+	"gopkg.in/yaml.v3"
+)
+
+type PushOption struct {
+	Source               *dagger.Directory
+	WithRegistryUsername string `validate:"required"`
+	WithRegistryPassword string `validate:"required"`
+	RegistryUrl          string `validate:"required"`
+	RepositoryName       string `validate:"required"`
+	Version              string `validate:"required"`
+	WithFiles            []*dagger.File
+	WithImage            string `default:"alpine/helm:3.14.3"`
+	WithYQImage          string `default:"mikefarah/yq:4.35.2"`
+}
+
+// Push helm chart on registry
+// It will return the updated Chart.yaml file with the expected version
+func (m *Helm) Push(
+	ctx context.Context,
+
+	// the source directory
+	source *dagger.Directory,
+
+	// The registry username
+	withRegistryUsername string,
+
+	// The registry password
+	withRegistryPassword string,
+
+	// The registry url
+	registryUrl string,
+
+	// The repository name
+	repositoryName string,
+
+	// The version
+	version string,
+
+	// Files to inject on containers
+	// +optional
+	withFiles []*dagger.File,
+
+	// The alternative helm image
+	// +optional
+	withImage string,
+
+	// The alternative YQ image
+	// +optional
+	withYQImage string,
+
+	// The registry username
+) (file *dagger.File, err error) {
+
+	option := &PushOption{
+		Source:               source,
+		WithRegistryUsername: withRegistryUsername,
+		WithRegistryPassword: withRegistryPassword,
+		RegistryUrl:          registryUrl,
+		RepositoryName:       repositoryName,
+		Version:              version,
+		WithFiles:            withFiles,
+		WithImage:            withImage,
+		WithYQImage:          withYQImage,
+	}
+
+	if err = defaults.Set(option); err != nil {
+		return nil, err
+	}
+
+	if err = validate.Struct(option).ValidateErr(); err != nil {
+		return nil, err
+	}
+
+	// Update the chart version
+	chartFile := m.GetYQContainer(ctx, option.Source, option.WithYQImage).
+		WithExec(
+			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
+			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
+		).
+		File("Chart.yaml")
+
+	chartContends, err := chartFile.Contents(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when read chart file")
+	}
+
+	// Read chart file to get the chart name
+	dataChart := make(map[string]any)
+	if err = yaml.Unmarshal([]byte(chartContends), &dataChart); err != nil {
+		return nil, errors.Wrap(err, "Error when decode YAML file")
+	}
+	chartName := dataChart["name"].(string)
+
+	// Package and push
+	registryUsername := dag.SetSecret("registry-username", option.WithRegistryUsername)
+	registryPassword := dag.SetSecret("registry-password", option.WithRegistryPassword)
+
+	_, err = m.GetHelmContainer(ctx, option.Source, option.WithImage).
+		WithFile("Chart.yaml", chartFile).
+		WithFiles("/project", option.WithFiles).
+		WithSecretVariable("REGISTRY_USERNAME", registryUsername).
+		WithSecretVariable("REGISTRY_PASSWORD", registryPassword).
+		WithExec(helper.ForgeCommand("helm dependency update")).
+		WithExec(helper.ForgeCommand("helm package -u .")).
+		WithEntrypoint([]string{"/bin/sh", "-c"}).
+		WithExec([]string{fmt.Sprintf("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)}).
+		WithExec([]string{fmt.Sprintf("helm push %s-%s.tgz oci://%s/%s", chartName, option.Version, option.RegistryUrl, option.RepositoryName)}).
+		Stdout(ctx)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when package and push helm chart")
+	}
+
+	return chartFile, nil
+
+}

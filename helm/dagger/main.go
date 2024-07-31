@@ -16,166 +16,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 
-	"emperror.dev/errors"
-	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/helm/dagger/internal/dagger"
 	"github.com/disaster37/dagger-library-go/helper"
-	"github.com/gookit/validate"
-)
-
-const (
-	defaultGeneratorImage string = "node:21-alpine"
 )
 
 type Helm struct{}
-
-type GenerateSchemaOption struct {
-	Source     *dagger.Directory
-	FileName   string `default:"values.schema.json"`
-	ConfigFile string
-	WithImage  string `default:"node:21-alpine"`
-}
-
-type GenerateDocumentationOption struct {
-	Source     *dagger.Directory
-	FileName   string `default:"README.md"`
-	ConfigFile string
-	WithImage  string `default:"node:21-alpine"`
-}
-
-type LintOption struct {
-	Source    *dagger.Directory
-	WithImage string `default:"alpine/helm:3.14.3"`
-}
-
-func (m *Helm) GenerateSchema(
-	ctx context.Context,
-
-	// the source directory
-	source *dagger.Directory,
-
-	// the alternative image
-	// +optional
-	withImage string,
-) (schemaFile *dagger.File, err error) {
-
-	option := &GenerateSchemaOption{
-		Source:    source,
-		WithImage: withImage,
-	}
-
-	if err = defaults.Set(option); err != nil {
-		return nil, err
-	}
-
-	if err = validate.Struct(option).ValidateErr(); err != nil {
-		return nil, err
-	}
-
-	var container *dagger.Container
-	if option.ConfigFile == "" {
-		container = m.GetGeneratorContainer(ctx, option.Source, option.WithImage).
-			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -s %s --values values.yaml", option.FileName)))
-	} else {
-		container = m.GetGeneratorContainer(ctx, option.Source, option.WithImage).
-			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -s %s --values values.yaml", option.ConfigFile, option.FileName)))
-	}
-
-	schemaFile = container.File(option.FileName)
-	if _, err = schemaFile.Export(ctx, fmt.Sprintf("%s/%s", option.Source, option.FileName)); err != nil {
-		return nil, errors.Wrap(err, "Error when generate helm schema")
-	}
-
-	return schemaFile, nil
-}
-
-func (m *Helm) GenerateDocumentation(
-	ctx context.Context,
-
-	// the source directory
-	source *dagger.Directory,
-
-	// the alternative image
-	// +optional
-	withImage string,
-) (readmeFile *dagger.File, err error) {
-	option := &GenerateDocumentationOption{
-		Source:    source,
-		WithImage: withImage,
-	}
-
-	if err = defaults.Set(option); err != nil {
-		return nil, err
-	}
-
-	if err = validate.Struct(option).ValidateErr(); err != nil {
-		return nil, err
-	}
-
-	var container *dagger.Container
-	if option.ConfigFile == "" {
-		container = m.GetGeneratorContainer(ctx, option.Source, option.WithImage).
-			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -r %s --values values.yaml", option.FileName)))
-	} else {
-		container = m.GetGeneratorContainer(ctx, option.Source, option.WithImage).
-			WithExec(helper.ForgeCommand(fmt.Sprintf("readme-generator -c %s -r %s --values values.yaml", option.ConfigFile, option.FileName)))
-	}
-
-	readmeFile = container.File(option.FileName)
-	if _, err = readmeFile.Export(ctx, fmt.Sprintf("%s/%s", option.Source, option.FileName)); err != nil {
-		return nil, errors.Wrap(err, "Error when generate helm readme")
-	}
-
-	return readmeFile, nil
-
-}
-
-func (m *Helm) Lint(
-	ctx context.Context,
-
-	// the source directory
-	source *dagger.Directory,
-
-	// the alternative image
-	// +optional
-	withImage *string,
-
-	// Files to inject on containers
-	// +optional
-	files ...*dagger.File,
-) (stdout string, err error) {
-
-	option := &LintOption{
-		Source: source,
-	}
-	if withImage != nil {
-		option.WithImage = *withImage
-	}
-
-	if err = defaults.Set(option); err != nil {
-		panic(err)
-	}
-
-	if err = validate.Struct(option).ValidateErr(); err != nil {
-		panic(err)
-	}
-
-	container := m.GetHelmContainer(ctx, option)
-	for _, file := range files {
-		fileName, err := file.Name(ctx)
-		if err != nil {
-			return "", err
-		}
-		container = container.WithFile(fileName, file)
-	}
-
-	return container.
-		WithExec(helper.ForgeCommand("helm dependency update")).
-		WithExec(helper.ForgeCommand("helm lint .")).
-		Stdout(ctx)
-}
 
 func (m *Helm) GetGeneratorContainer(ctx context.Context, source *dagger.Directory, withImage string) *dagger.Container {
 	return dag.Container().
@@ -185,9 +31,16 @@ func (m *Helm) GetGeneratorContainer(ctx context.Context, source *dagger.Directo
 		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 }
 
-func (m *Helm) GetHelmContainer(ctx context.Context, params *LintOption) *dagger.Container {
+func (m *Helm) GetHelmContainer(ctx context.Context, source *dagger.Directory, withImage string) *dagger.Container {
 	return dag.Container().
-		From(params.WithImage).
-		WithDirectory("/project", params.Source).
+		From(withImage).
+		WithDirectory("/project", source).
+		WithWorkdir("/project")
+}
+
+func (m *Helm) GetYQContainer(ctx context.Context, source *dagger.Directory, withImage string) *dagger.Container {
+	return dag.Container().
+		From(withImage).
+		WithDirectory("/project", source).
 		WithWorkdir("/project")
 }
