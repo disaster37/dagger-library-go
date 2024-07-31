@@ -83,10 +83,9 @@ func (m *Helm) Push(
 	}
 
 	// Update the chart version
-	chartFile = m.GetYQContainer(ctx, option.Source, option.WithYQImage).
-		WithEntrypoint([]string{"/bin/sh", "-c"}).
+	chartFile = m.GetYqContainer(ctx, option.Source, option.WithYQImage).
 		WithExec(
-			[]string{"yq --inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
+			[]string{"yq", "--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
 		).
 		File("Chart.yaml")

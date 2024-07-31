@@ -38,7 +38,7 @@ func (m *Helm) GetHelmContainer(ctx context.Context, source *dagger.Directory, w
 		WithWorkdir("/project")
 }
 
-func (m *Helm) GetYQContainer(ctx context.Context, source *dagger.Directory, withImage string) *dagger.Container {
+func (m *Helm) GetYqContainer(ctx context.Context, source *dagger.Directory, withImage string) *dagger.Container {
 	return dag.Container().
 		From(withImage).
 		WithDirectory("/project", source).
