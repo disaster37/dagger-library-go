@@ -111,7 +111,7 @@ func (m *Helm) Push(
 		WithSecretVariable("REGISTRY_PASSWORD", withRegistryPassword).
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
-		WithExec(helper.ForgeCommand(fmt.Sprintf("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl))).
+		WithExec([]string{"sh", "-c", fmt.Sprintf("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)}).
 		WithExec(helper.ForgeCommand(fmt.Sprintf("helm push %s-%s.tgz oci://%s/%s", chartName, option.Version, option.RegistryUrl, option.RepositoryName))).
 		Stdout(ctx)
 
