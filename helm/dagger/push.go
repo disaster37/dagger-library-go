@@ -14,8 +14,8 @@ import (
 
 type PushOption struct {
 	Source               *dagger.Directory
-	WithRegistryUsername string `validate:"required"`
-	WithRegistryPassword string `validate:"required"`
+	WithRegistryUsername *dagger.Secret `validate:"required"`
+	WithRegistryPassword *dagger.Secret `validate:"required"`
 	RegistryUrl          string `validate:"required"`
 	RepositoryName       string `validate:"required"`
 	Version              string `validate:"required"`
@@ -33,10 +33,10 @@ func (m *Helm) Push(
 	source *dagger.Directory,
 
 	// The registry username
-	withRegistryUsername string,
+	withRegistryUsername *dagger.Secret,
 
 	// The registry password
-	withRegistryPassword string,
+	withRegistryPassword *dagger.Secret,
 
 	// The registry url
 	registryUrl string,
@@ -60,7 +60,7 @@ func (m *Helm) Push(
 	withYQImage string,
 
 	// The registry username
-) (file *dagger.File, err error) {
+) (chartFile *dagger.File, err error) {
 
 	option := &PushOption{
 		Source:               source,
@@ -83,7 +83,7 @@ func (m *Helm) Push(
 	}
 
 	// Update the chart version
-	chartFile := m.GetYQContainer(ctx, option.Source, option.WithYQImage).
+	chartFile = m.GetYQContainer(ctx, option.Source, option.WithYQImage).
 		WithExec(
 			[]string{"--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
@@ -103,14 +103,12 @@ func (m *Helm) Push(
 	chartName := dataChart["name"].(string)
 
 	// Package and push
-	registryUsername := dag.SetSecret("registry-username", option.WithRegistryUsername)
-	registryPassword := dag.SetSecret("registry-password", option.WithRegistryPassword)
 
 	_, err = m.GetHelmContainer(ctx, option.Source, option.WithImage).
 		WithFile("Chart.yaml", chartFile).
 		WithFiles("/project", option.WithFiles).
-		WithSecretVariable("REGISTRY_USERNAME", registryUsername).
-		WithSecretVariable("REGISTRY_PASSWORD", registryPassword).
+		WithSecretVariable("REGISTRY_USERNAME", withRegistryUsername).
+		WithSecretVariable("REGISTRY_PASSWORD", withRegistryPassword).
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
 		WithEntrypoint([]string{"/bin/sh", "-c"}).
