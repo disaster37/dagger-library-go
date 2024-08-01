@@ -38,11 +38,7 @@ func (m *Helm) GenerateSchema(
 		return nil, err
 	}
 
-	if m.baseGeneratorContainer == nil {
-		panic("Helm baseGeneratorContainer is nil")
-	}
-
-	container := m.baseGeneratorContainer.
+	container := m.BaseGeneratorContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project")
 

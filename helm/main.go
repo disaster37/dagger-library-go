@@ -21,9 +21,9 @@ import (
 )
 
 type Helm struct {
-	baseHelmContainer      *dagger.Container
-	baseGeneratorContainer *dagger.Container
-	baseYqContainer        *dagger.Container
+	BaseHelmContainer      *dagger.Container
+	BaseGeneratorContainer *dagger.Container
+	BaseYqContainer        *dagger.Container
 }
 
 func New(
@@ -45,41 +45,41 @@ func New(
 	helm := &Helm{}
 
 	if baseHelmContainer != nil {
-		helm.baseHelmContainer = baseHelmContainer
+		helm.BaseHelmContainer = baseHelmContainer
 	} else {
-		helm.baseHelmContainer = helm.BaseHelmContainer()
+		helm.BaseHelmContainer = helm.GetBaseHelmContainer()
 	}
 
 	if baseGeneratorContainer != nil {
-		helm.baseGeneratorContainer = baseGeneratorContainer
+		helm.BaseGeneratorContainer = baseGeneratorContainer
 	} else {
-		helm.baseGeneratorContainer = helm.BaseGeneratorContainer()
+		helm.BaseGeneratorContainer = helm.GetBaseGeneratorContainer()
 	}
 
 	if baseYqContainer != nil {
-		helm.baseYqContainer = baseYqContainer
+		helm.BaseYqContainer = baseYqContainer
 	} else {
-		helm.baseYqContainer = helm.BaseYqContainer()
+		helm.BaseYqContainer = helm.GetBaseYqContainer()
 	}
 
 	return helm
 }
 
 // BaseGeneratorContainer return the default image for readme-generator-for-helm
-func (m *Helm) BaseGeneratorContainer() *dagger.Container {
+func (m *Helm) GetBaseGeneratorContainer() *dagger.Container {
 	return dag.Container().
 		From("node:21-alpine").
 		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 }
 
 // BaseHelmContainer return the default image for helm
-func (m *Helm) BaseHelmContainer() *dagger.Container {
+func (m *Helm) GetBaseHelmContainer() *dagger.Container {
 	return dag.Container().
 		From("alpine/helm:3.14.3")
 }
 
 // BaseYqContainer return the default image for yq
-func (m *Helm) BaseYqContainer() *dagger.Container {
+func (m *Helm) GetBaseYqContainer() *dagger.Container {
 	return dag.Container().
 		From("mikefarah/yq:4.35.2")
 }

@@ -70,7 +70,7 @@ func (m *Helm) Push(
 	}
 
 	// Update the chart version
-	chartFile = m.baseYqContainer.
+	chartFile = m.BaseYqContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project").
 		WithExec(
@@ -93,7 +93,7 @@ func (m *Helm) Push(
 
 	// Package and push
 
-	_, err = m.baseHelmContainer.
+	_, err = m.BaseHelmContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project").
 		WithFile("Chart.yaml", chartFile).

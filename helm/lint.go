@@ -38,7 +38,7 @@ func (m *Helm) Lint(
 		panic(err)
 	}
 
-	container := m.baseHelmContainer.
+	container := m.BaseHelmContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project")
 
