@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 
+	"dagger/helm/internal/dagger"
+
 	"github.com/creasty/defaults"
-	"github.com/disaster37/dagger-library-go/helm/dagger/internal/dagger"
-	"github.com/disaster37/dagger-library-go/helper"
+	"github.com/disaster37/dagger-library-go/lib/helper"
 	"github.com/gookit/validate"
 )
 
@@ -40,7 +41,7 @@ func (m *Helm) Lint(
 	container := m.baseHelmContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project")
-		
+
 	for _, file := range withFiles {
 		fileName, err := file.Name(ctx)
 		if err != nil {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"dagger/helm/internal/dagger"
+
 	"emperror.dev/errors"
 	"github.com/creasty/defaults"
-	"github.com/disaster37/dagger-library-go/helm/dagger/internal/dagger"
-	"github.com/disaster37/dagger-library-go/helper"
+	"github.com/disaster37/dagger-library-go/lib/helper"
 	"github.com/gookit/validate"
 	"gopkg.in/yaml.v3"
 )

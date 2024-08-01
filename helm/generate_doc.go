@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/creasty/defaults"
-	"github.com/disaster37/dagger-library-go/helm/dagger/internal/dagger"
-	"github.com/disaster37/dagger-library-go/helper"
+	"dagger/helm/internal/dagger"
+	"github.com/disaster37/dagger-library-go/lib/helper"
 	"github.com/gookit/validate"
 )
 

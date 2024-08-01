@@ -17,6 +17,8 @@ package main
 import (
 	"context"
 	"dagger/git/internal/dagger"
+
+	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
 type Git struct {
