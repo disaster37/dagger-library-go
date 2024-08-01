@@ -68,7 +68,7 @@ func (m *ImageBuild) Push(
 	registryUrl string,
 ) (string, error) {
 
-	if withRegistryUsername != nil && withRegistryPassword == nil {
+	if withRegistryUsername != nil && withRegistryPassword != nil {
 		username, err := withRegistryUsername.Plaintext(ctx)
 		if err != nil {
 			return "", errors.Wrap(err, "Error when get registry username")
