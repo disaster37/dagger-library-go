@@ -10,8 +10,7 @@ import (
 )
 
 type LintOption struct {
-	Source    *dagger.Directory
-	WithImage string `default:"alpine/helm:3.14.3"`
+	Source *dagger.Directory `validate:"required"`
 }
 
 // Lint permit to lint helm chart
@@ -21,10 +20,6 @@ func (m *Helm) Lint(
 	// the source directory
 	source *dagger.Directory,
 
-	// the alternative image
-	// +optional
-	withImage *string,
-
 	// Files to inject on containers
 	// +optional
 	withFiles []*dagger.File,
@@ -32,9 +27,6 @@ func (m *Helm) Lint(
 
 	option := &LintOption{
 		Source: source,
-	}
-	if withImage != nil {
-		option.WithImage = *withImage
 	}
 
 	if err = defaults.Set(option); err != nil {
@@ -45,7 +37,10 @@ func (m *Helm) Lint(
 		panic(err)
 	}
 
-	container := m.GetHelmContainer(ctx, option.Source, option.WithImage)
+	container := m.baseHelmContainer.
+		WithDirectory("/project", source).
+		WithWorkdir("/project")
+		
 	for _, file := range withFiles {
 		fileName, err := file.Name(ctx)
 		if err != nil {

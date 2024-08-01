@@ -13,15 +13,13 @@ import (
 )
 
 type PushOption struct {
-	Source               *dagger.Directory
-	WithRegistryUsername *dagger.Secret `validate:"required"`
-	WithRegistryPassword *dagger.Secret `validate:"required"`
-	RegistryUrl          string         `validate:"required"`
-	RepositoryName       string         `validate:"required"`
-	Version              string         `validate:"required"`
+	Source               *dagger.Directory `validate:"required"`
+	WithRegistryUsername *dagger.Secret    `validate:"required"`
+	WithRegistryPassword *dagger.Secret    `validate:"required"`
+	RegistryUrl          string            `validate:"required"`
+	RepositoryName       string            `validate:"required"`
+	Version              string            `validate:"required"`
 	WithFiles            []*dagger.File
-	WithImage            string `default:"alpine/helm:3.14.3"`
-	WithYQImage          string `default:"mikefarah/yq:4.35.2"`
 }
 
 // Push helm chart on registry
@@ -50,16 +48,6 @@ func (m *Helm) Push(
 	// Files to inject on containers
 	// +optional
 	withFiles []*dagger.File,
-
-	// The alternative helm image
-	// +optional
-	withImage string,
-
-	// The alternative YQ image
-	// +optional
-	withYQImage string,
-
-	// The registry username
 ) (chartFile *dagger.File, err error) {
 
 	option := &PushOption{
@@ -70,8 +58,6 @@ func (m *Helm) Push(
 		RepositoryName:       repositoryName,
 		Version:              version,
 		WithFiles:            withFiles,
-		WithImage:            withImage,
-		WithYQImage:          withYQImage,
 	}
 
 	if err = defaults.Set(option); err != nil {
@@ -83,7 +69,9 @@ func (m *Helm) Push(
 	}
 
 	// Update the chart version
-	chartFile = m.GetYqContainer(ctx, option.Source, option.WithYQImage).
+	chartFile = m.baseYqContainer.
+		WithDirectory("/project", source).
+		WithWorkdir("/project").
 		WithExec(
 			[]string{"yq", "--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
@@ -104,15 +92,17 @@ func (m *Helm) Push(
 
 	// Package and push
 
-	_, err = m.GetHelmContainer(ctx, option.Source, option.WithImage).
+	_, err = m.baseHelmContainer.
+		WithDirectory("/project", source).
+		WithWorkdir("/project").
 		WithFile("Chart.yaml", chartFile).
 		WithFiles("/project", option.WithFiles).
 		WithSecretVariable("REGISTRY_USERNAME", withRegistryUsername).
 		WithSecretVariable("REGISTRY_PASSWORD", withRegistryPassword).
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
-		WithExec([]string{"sh", "-c", fmt.Sprintf("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)}).
-		WithExec(helper.ForgeCommand(fmt.Sprintf("helm push %s-%s.tgz oci://%s/%s", chartName, option.Version, option.RegistryUrl, option.RepositoryName))).
+		WithExec(helper.ForgeScript("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)).
+		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, option.Version, option.RegistryUrl, option.RepositoryName)).
 		Stdout(ctx)
 
 	if err != nil {
