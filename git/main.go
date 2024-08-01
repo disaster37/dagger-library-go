@@ -22,7 +22,7 @@ import (
 )
 
 type Git struct {
-	baseContainer *dagger.Container
+	BaseContainer *dagger.Container
 }
 
 // Default contsructor
@@ -33,16 +33,16 @@ func New(
 ) *Git {
 	git := &Git{}
 	if baseContainer != nil {
-		git.baseContainer = baseContainer
+		git.BaseContainer = baseContainer
 	} else {
-		git.baseContainer = git.BaseContainer()
+		git.BaseContainer = git.GetBaseContainer()
 	}
 
 	return git
 }
 
 // BaseContainer permit to get the base container
-func (m *Git) BaseContainer() *dagger.Container {
+func (m *Git) GetBaseContainer() *dagger.Container {
 	return dag.Container().
 		From("alpine:latest").
 		WithExec(helper.ForgeCommand("apk install --update git")).
@@ -57,7 +57,7 @@ func (m *Git) SetConfig(
 	// The git email
 	email string,
 ) *Git {
-	m.baseContainer = m.baseContainer.
+	m.BaseContainer = m.BaseContainer.
 		WithExec(helper.ForgeCommandf("git config --global user.name %s", username)).
 		WithExec(helper.ForgeCommandf("git config --global user.email %s", email))
 	return m
@@ -74,7 +74,7 @@ func (m *Git) CommitAndPush(
 	message string,
 ) (string, error) {
 
-	return m.baseContainer.
+	return m.BaseContainer.
 		WithExec(helper.ForgeCommand("git add -A ")).
 		WithExec(helper.ForgeScript(
 			`
