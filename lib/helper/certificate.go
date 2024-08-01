@@ -66,7 +66,7 @@ func WithCustomCa(ctx context.Context, caPath string, opts ...dagger.ClientOpt) 
 	}
 	defer cli.Close()
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Filters: filters.NewArgs(filters.KeyValuePair{
+	containers, err := cli.ContainerList(ctx, container.ListOptions{All: true, Filters: filters.NewArgs(filters.KeyValuePair{
 		Key:   "name",
 		Value: "dagger-engine",
 	})})
