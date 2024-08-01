@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/creasty/defaults"
 	"dagger/helm/internal/dagger"
+
+	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/lib/helper"
 	"github.com/gookit/validate"
 )
@@ -37,8 +38,12 @@ func (m *Helm) GenerateDocumentation(
 		return nil, err
 	}
 
+	if m.baseGeneratorContainer == nil {
+		panic("Helm baseGeneratorContainer is nil")
+	}
+
 	container := m.baseGeneratorContainer.
-		WithDirectory("/project", source).
+		WithDirectory("/project", option.Source).
 		WithWorkdir("/project")
 
 	if option.ConfigFile == "" {

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/creasty/defaults"
 	"dagger/helm/internal/dagger"
+
+	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/lib/helper"
 	"github.com/gookit/validate"
 )
@@ -35,6 +36,10 @@ func (m *Helm) GenerateSchema(
 
 	if err = validate.Struct(option).ValidateErr(); err != nil {
 		return nil, err
+	}
+
+	if m.baseGeneratorContainer == nil {
+		panic("Helm baseGeneratorContainer is nil")
 	}
 
 	container := m.baseGeneratorContainer.
