@@ -31,9 +31,9 @@ func New(
 	image := &Image{}
 
 	if baseHadolintContainer != nil {
-		baseHadolintContainer = baseHadolintContainer
+		image.BaseHadolintContainer = baseHadolintContainer
 	} else {
-		baseHadolintContainer = image.GetBaseHadolintContainer()
+		image.BaseHadolintContainer = image.GetBaseHadolintContainer()
 	}
 
 	return image

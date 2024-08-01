@@ -31,6 +31,7 @@ func (m *Image) Lint(
 	threshold string,
 ) (string, error) {
 	option := &LintOption{
+		Source:     source,
 		Dockerfile: dockerfile,
 	}
 
