@@ -1,38 +1,50 @@
-package image
+package main
 
 import (
 	"context"
-	"fmt"
+	"dagger/image/internal/dagger"
 
-	"dagger.io/dagger"
-	"emperror.dev/errors"
 	"github.com/creasty/defaults"
-	"github.com/disaster37/dagger-library-go/helper"
+	"github.com/disaster37/dagger-library-go/lib/helper"
 	"github.com/gookit/validate"
 )
 
 type LintOption struct {
-	PathContext string `default:"."`
-	Dockerfile  string `default:"Dockerfile"`
+	Source     *dagger.Directory `validate:"required"`
+	Dockerfile string            `default:"Dockerfile"`
+	Threashold string            `default:"error"`
 }
 
-// Lint permit to lint helm
-func Lint(ctx context.Context, client *dagger.Client, option *LintOption) (err error) {
+// Lint permit to lint dockerfile image
+func (m *Image) Lint(
+	ctx context.Context,
 
-	if err = defaults.Set(option); err != nil {
+	// the source directory
+	source *dagger.Directory,
+
+	// The dockerfile path
+	// +optional
+	dockerfile string,
+
+	// The failure threshold
+	// +optional
+	threshold string,
+) (string, error) {
+	option := &LintOption{
+		Dockerfile: dockerfile,
+	}
+
+	if err := defaults.Set(option); err != nil {
 		panic(err)
 	}
 
-	if err = validate.Struct(option).ValidateErr(); err != nil {
+	if err := validate.Struct(option).ValidateErr(); err != nil {
 		panic(err)
 	}
 
-	_, err = getHadolintContainer(client, option.PathContext).
-		WithExec(helper.ForgeCommand(fmt.Sprintf("/bin/hadolint --failure-threshold error %s", option.Dockerfile))).
+	return m.BaseHadolintContainer.
+		WithDirectory("/project", option.Source).
+		WithWorkdir("/project").
+		WithExec(helper.ForgeCommandf("/bin/hadolint --failure-threshold %s %s", option.Threashold, option.Dockerfile)).
 		Stdout(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Error when lint Dockerfile")
-	}
-
-	return nil
 }
