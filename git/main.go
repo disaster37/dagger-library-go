@@ -45,7 +45,7 @@ func New(
 func (m *Git) GetBaseContainer() *dagger.Container {
 	return dag.Container().
 		From("alpine:latest").
-		WithExec(helper.ForgeCommand("apk install --update git")).
+		WithExec(helper.ForgeCommand("apk add --update git")).
 		WithExec(helper.ForgeCommand("git config --global --add --bool push.autoSetupRemote true"))
 }
 
