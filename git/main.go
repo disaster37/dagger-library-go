@@ -46,7 +46,8 @@ func (m *Git) GetBaseContainer() *dagger.Container {
 	return dag.Container().
 		From("alpine:latest").
 		WithExec(helper.ForgeCommand("apk add --update git")).
-		WithExec(helper.ForgeCommand("git config --global --add --bool push.autoSetupRemote true"))
+		WithExec(helper.ForgeCommand("git config --global --add --bool push.autoSetupRemote true")).
+		WithExec(helper.ForgeCommand("git config --global --add safe.directory /project"))
 }
 
 // SetConfig permit to set git config
