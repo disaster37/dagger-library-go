@@ -75,6 +75,8 @@ func (m *Git) CommitAndPush(
 ) (string, error) {
 
 	return m.BaseContainer.
+		WithDirectory("/project", source).
+		WithWorkdir("/project").
 		WithExec(helper.ForgeCommand("git add -A ")).
 		WithExec(helper.ForgeScript(
 			`
