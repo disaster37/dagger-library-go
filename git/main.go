@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"dagger/git/internal/dagger"
+	"fmt"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -53,16 +54,36 @@ func (m *Git) GetBaseContainer() *dagger.Container {
 
 // SetConfig permit to set git config
 func (m *Git) SetConfig(
+	ctx context.Context,
+
 	// The git username
 	username string,
 
 	// The git email
 	email string,
-) *Git {
+
+	// The git base repo URL
+	// +optional
+	baseRepoUrl string,
+
+	// The git token
+	// +optional
+	token *dagger.Secret,
+) (*Git, error) {
 	m.BaseContainer = m.BaseContainer.
 		WithExec(helper.ForgeCommandf("git config --global user.name %s", username)).
 		WithExec(helper.ForgeCommandf("git config --global user.email %s", email))
-	return m
+
+	if token != nil {
+		tokenPlain, err := token.Plaintext(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when get token")
+		}
+		m.BaseContainer = m.BaseContainer.
+			WithNewFile("/.git-credentials", fmt.Sprintf(`https://%s:%s@%s`, username, tokenPlain, baseRepoUrl)).
+			WithExec(helper.ForgeCommand("git config credential.helper 'store --file /.git-credentials'"))
+	}
+	return m, nil
 }
 
 // SetRepo permit to set git repo
@@ -72,25 +93,15 @@ func (m *Git) SetRepo(
 	// the source directory
 	source *dagger.Directory,
 
-	// The git username
-	Url string,
-
 	// The git email
+	// +default="main"
 	branch string,
 
-	// The git token
-	token *dagger.Secret,
 ) (*Git, error) {
-
-	tokenPlain, err := token.Plaintext(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when get token")
-	}
 
 	m.BaseContainer = m.BaseContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project").
-		WithExec(helper.ForgeCommandf("git remote set-url origin https://%s@%s", tokenPlain, Url)).
 		WithExec(helper.ForgeCommandf("git checkout %s", branch))
 	return m, nil
 }
