@@ -81,7 +81,7 @@ func (m *Git) SetConfig(
 		}
 		m.BaseContainer = m.BaseContainer.
 			WithNewFile("/.git-credentials", fmt.Sprintf(`https://%s:%s@%s`, username, tokenPlain, baseRepoUrl)).
-			WithExec(helper.ForgeCommand("git config credential.helper 'store --file /.git-credentials'"))
+			WithExec([]string{"git", "config", "credential.helper", "store --file /.git-credentials"})
 	}
 	return m, nil
 }
