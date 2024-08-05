@@ -18,6 +18,7 @@ import (
 	"context"
 	"dagger/git/internal/dagger"
 
+	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
@@ -64,20 +65,45 @@ func (m *Git) SetConfig(
 	return m
 }
 
-// CommitAndPush permit to commit and push
-func (m *Git) CommitAndPush(
+// SetRepo permit to set git repo
+func (m *Git) SetRepo(
 	ctx context.Context,
 
 	// the source directory
 	source *dagger.Directory,
+
+	// The git username
+	Url string,
+
+	// The git email
+	branch string,
+
+	// The git token
+	token *dagger.Secret,
+) (*Git, error) {
+
+	tokenPlain, err := token.Plaintext(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when get token")
+	}
+
+	m.BaseContainer = m.BaseContainer.
+		WithDirectory("/project", source).
+		WithWorkdir("/project").
+		WithExec(helper.ForgeCommandf("git remote set-url origin https://%s@%s", tokenPlain, Url)).
+		WithExec(helper.ForgeCommandf("git checkout %s", branch))
+	return m, nil
+}
+
+// CommitAndPush permit to commit and push
+func (m *Git) CommitAndPush(
+	ctx context.Context,
 
 	// The commit message
 	message string,
 ) (string, error) {
 
 	return m.BaseContainer.
-		WithDirectory("/project", source).
-		WithWorkdir("/project").
 		WithExec(helper.ForgeCommand("git add -A ")).
 		WithExec(helper.ForgeScript(
 			`
