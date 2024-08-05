@@ -104,7 +104,7 @@ func (m *Git) CommitAndPush(
 ) (string, error) {
 
 	return m.BaseContainer.
-		WithExec(helper.ForgeCommand("git add -A ")).
+		WithExec(helper.ForgeCommand("git add -A")).
 		WithExec(helper.ForgeScript(
 			`
 if [ -n "\$(git status --untracked-files=no --porcelain)" ]; then
