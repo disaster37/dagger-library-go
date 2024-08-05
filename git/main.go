@@ -64,6 +64,7 @@ func (m *Git) SetConfig(
 
 	// The git base repo URL
 	// +optional
+	// +default="github.com"
 	baseRepoUrl string,
 
 	// The git token
