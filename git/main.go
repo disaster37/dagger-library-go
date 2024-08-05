@@ -63,6 +63,7 @@ func (m *Git) SetConfig(
 	email string,
 
 	// The git base repo URL
+	// +optional
 	// +default="github.com"
 	baseRepoUrl string,
 
