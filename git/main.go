@@ -103,7 +103,13 @@ func (m *Git) SetRepo(
 	m.BaseContainer = m.BaseContainer.
 		WithDirectory("/project", source).
 		WithWorkdir("/project").
-		WithExec(helper.ForgeCommand("git fetch --all")).
+		WithExec(helper.ForgeScript(`
+git name-rev --name-only HEAD | grep tags
+RETCODE=$?
+if [ $RETCODE -eq 0 ]; then
+	git fetch origin %s:%s
+fi
+		`, branch, branch)).
 		WithExec(helper.ForgeCommandf("git checkout %s", branch))
 	return m, nil
 }
