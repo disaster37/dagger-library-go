@@ -90,32 +90,26 @@ func (m *Helm) GetBaseYqContainer() *dagger.Container {
 func (m *Helm) WithRepository(
 	ctx context.Context,
 
+	// The repository name
+	name string,
+
 	// The repository url
-	repositoryUrl string,
+	url string,
 
 	// The repository username
 	// +optional
-	withRepositoryUsername *dagger.Secret,
+	username *dagger.Secret,
 
 	// The repository password
 	// +optional
-	withRepositoryPassword *dagger.Secret,
+	password *dagger.Secret,
 
 ) *Helm {
 
-	userId, err := withRepositoryUsername.ID(ctx)
-	if err != nil {
-		panic(err)
-	}
-	passwordId, err := withRepositoryPassword.ID(ctx)
-	if err != nil {
-		panic(err)
-	}
-
 	m.BaseHelmContainer = m.BaseHelmContainer.
-		WithSecretVariable(fmt.Sprintf("REGISTRY_USERNAME_%s", userId), withRepositoryUsername).
-		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", passwordId), withRepositoryPassword).
-		WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("REGISTRY_USERNAME_%s", fmt.Sprintf("REGISTRY_PASSWORD_%s", passwordId), repositoryUrl)))
+		WithSecretVariable(fmt.Sprintf("REGISTRY_USERNAME_%s", name), username).
+		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", name), password).
+		WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("REGISTRY_USERNAME_%s", name), fmt.Sprintf("REGISTRY_PASSWORD_%s", name), url))
 
 	return m
 }
