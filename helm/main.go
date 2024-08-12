@@ -109,7 +109,7 @@ func (m *Helm) WithRepository(
 	m.BaseHelmContainer = m.BaseHelmContainer.
 		WithSecretVariable(fmt.Sprintf("REGISTRY_USERNAME_%s", name), username).
 		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", name), password).
-		WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("REGISTRY_USERNAME_%s", name), fmt.Sprintf("REGISTRY_PASSWORD_%s", name), url))
+		WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
 
 	return m
 }
