@@ -15,7 +15,9 @@
 package main
 
 import (
+	"context"
 	"dagger/helm/internal/dagger"
+	"fmt"
 
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
@@ -82,4 +84,38 @@ func (m *Helm) GetBaseHelmContainer() *dagger.Container {
 func (m *Helm) GetBaseYqContainer() *dagger.Container {
 	return dag.Container().
 		From("mikefarah/yq:4.35.2")
+}
+
+// WithRepository permit to login on private helm repository
+func (m *Helm) WithRepository(
+	ctx context.Context,
+
+	// The repository url
+	repositoryUrl string,
+
+	// The repository username
+	// +optional
+	withRepositoryUsername *dagger.Secret,
+
+	// The repository password
+	// +optional
+	withRepositoryPassword *dagger.Secret,
+
+) *Helm {
+
+	userId, err := withRepositoryUsername.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	passwordId, err := withRepositoryPassword.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	m.BaseHelmContainer = m.BaseHelmContainer.
+		WithSecretVariable(fmt.Sprintf("REGISTRY_USERNAME_%s", userId), withRepositoryUsername).
+		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", passwordId), withRepositoryPassword).
+		WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("REGISTRY_USERNAME_%s", fmt.Sprintf("REGISTRY_PASSWORD_%s", passwordId), repositoryUrl)))
+
+	return m
 }
