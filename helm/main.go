@@ -96,6 +96,10 @@ func (m *Helm) WithRepository(
 	// The repository url
 	url string,
 
+	// Is it an OCI repository
+	// +default=false
+	isOci bool,
+
 	// The repository username
 	// +optional
 	username *dagger.Secret,
@@ -108,8 +112,12 @@ func (m *Helm) WithRepository(
 
 	m.BaseHelmContainer = m.BaseHelmContainer.
 		WithSecretVariable(fmt.Sprintf("REGISTRY_USERNAME_%s", name), username).
-		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", name), password).
-		WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
+		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", name), password)
+	if isOci {
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
+	} else {
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username %s  --password %s starburstdata %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
+	}
 
 	return m
 }
