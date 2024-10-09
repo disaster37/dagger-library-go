@@ -18,6 +18,7 @@ import (
 	"context"
 	"dagger/helm/internal/dagger"
 	"fmt"
+	"strings"
 
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
@@ -110,13 +111,15 @@ func (m *Helm) WithRepository(
 
 ) *Helm {
 
+	usernameEnv := fmt.Sprintf("REGISTRY_USERNAME_%s", strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
+	passwordEnv := fmt.Sprintf("REGISTRY_PASSWORD_%s", strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
 	m.BaseHelmContainer = m.BaseHelmContainer.
-		WithSecretVariable(fmt.Sprintf("REGISTRY_USERNAME_%s", name), username).
-		WithSecretVariable(fmt.Sprintf("REGISTRY_PASSWORD_%s", name), password)
+		WithSecretVariable(usernameEnv, username).
+		WithSecretVariable(passwordEnv, password)
 	if isOci {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", usernameEnv, passwordEnv, url))
 	} else {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username %s --password %s %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), name, url))
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username %s --password %s %s %s", usernameEnv, passwordEnv, name, url))
 	}
 
 	return m
