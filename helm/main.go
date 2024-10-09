@@ -117,9 +117,9 @@ func (m *Helm) WithRepository(
 		WithSecretVariable(usernameEnv, username).
 		WithSecretVariable(passwordEnv, password)
 	if isOci {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", usernameEnv, passwordEnv, url))
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u ${%s} -p ${%s} %s", usernameEnv, passwordEnv, url))
 	} else {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username %s --password %s %s %s", usernameEnv, passwordEnv, name, url))
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username ${%s} --password ${%s} %s %s", usernameEnv, passwordEnv, name, url))
 	}
 
 	return m
