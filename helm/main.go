@@ -116,7 +116,7 @@ func (m *Helm) WithRepository(
 	if isOci {
 		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u %s -p %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
 	} else {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username %s  --password %s starburstdata %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), url))
+		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username %s --password %s %s %s", fmt.Sprintf("$REGISTRY_USERNAME_%s", name), fmt.Sprintf("$REGISTRY_PASSWORD_%s", name), name, url))
 	}
 
 	return m

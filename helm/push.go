@@ -14,13 +14,11 @@ import (
 )
 
 type PushOption struct {
-	Source               *dagger.Directory `validate:"required"`
-	WithRegistryUsername *dagger.Secret    `validate:"required"`
-	WithRegistryPassword *dagger.Secret    `validate:"required"`
-	RegistryUrl          string            `validate:"required"`
-	RepositoryName       string            `validate:"required"`
-	Version              string            `validate:"required"`
-	WithFiles            []*dagger.File
+	Source         *dagger.Directory `validate:"required"`
+	RegistryUrl    string            `validate:"required"`
+	RepositoryName string            `validate:"required"`
+	Version        string            `validate:"required"`
+	WithFiles      []*dagger.File
 }
 
 // Push helm chart on registry
@@ -30,12 +28,6 @@ func (m *Helm) Push(
 
 	// the source directory
 	source *dagger.Directory,
-
-	// The registry username
-	withRegistryUsername *dagger.Secret,
-
-	// The registry password
-	withRegistryPassword *dagger.Secret,
 
 	// The registry url
 	registryUrl string,
@@ -52,13 +44,11 @@ func (m *Helm) Push(
 ) (chartFile *dagger.File, err error) {
 
 	option := &PushOption{
-		Source:               source,
-		WithRegistryUsername: withRegistryUsername,
-		WithRegistryPassword: withRegistryPassword,
-		RegistryUrl:          registryUrl,
-		RepositoryName:       repositoryName,
-		Version:              version,
-		WithFiles:            withFiles,
+		Source:         source,
+		RegistryUrl:    registryUrl,
+		RepositoryName: repositoryName,
+		Version:        version,
+		WithFiles:      withFiles,
 	}
 
 	if err = defaults.Set(option); err != nil {
@@ -98,11 +88,8 @@ func (m *Helm) Push(
 		WithWorkdir("/project").
 		WithFile("Chart.yaml", chartFile).
 		WithFiles("/project", option.WithFiles).
-		WithSecretVariable("REGISTRY_USERNAME", withRegistryUsername).
-		WithSecretVariable("REGISTRY_PASSWORD", withRegistryPassword).
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
-		WithExec(helper.ForgeScript("helm registry login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD %s", option.RegistryUrl)).
 		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, option.Version, option.RegistryUrl, option.RepositoryName)).
 		Stdout(ctx)
 
