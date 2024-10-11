@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"dagger/helm/internal/dagger"
 
@@ -60,20 +59,17 @@ func (m *Helm) Push(
 	}
 
 	// Update the chart version
-	chartFile = m.BaseYqContainer.
-		WithDirectory("/project", source).
-		WithWorkdir("/project").
-		WithExec(
-			[]string{"yq", "--inplace", fmt.Sprintf(".version = \"%s\"", option.Version), "Chart.yaml"},
-			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
-		).
-		File("Chart.yaml")
+	chartFile = m.UpdateChart(
+		ctx,
+		source,
+		".version",
+		option.Version,
+	)
 
 	chartContends, err := chartFile.Contents(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when read chart file")
 	}
-
 	// Read chart file to get the chart name
 	dataChart := make(map[string]any)
 	if err = yaml.Unmarshal([]byte(chartContends), &dataChart); err != nil {
