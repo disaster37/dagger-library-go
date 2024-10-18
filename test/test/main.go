@@ -1,4 +1,4 @@
-// A generated module for Image functions
+// A generated module for Test functions
 //
 // This module has been generated via dagger init and serves as a reference to
 // basic module structure as you get started with Dagger.
@@ -16,51 +16,26 @@ package main
 
 import (
 	"context"
-	"dagger/image/internal/dagger"
+	"dagger/test/internal/dagger"
 )
 
-type Image struct {
-	BaseHadolintContainer *dagger.Container
-}
+type Test struct{}
 
-func (m *Image) Echo(stringArg string) string {
+func (m *Test) Echo(stringArg string) string {
 	return stringArg
 }
 
 // Returns a container that echoes whatever string argument is provided
-func (m *Image) ContainerEcho(stringArg string) *dagger.Container {
+func (m *Test) ContainerEcho(stringArg string) *dagger.Container {
 	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
 }
 
 // Returns lines that match a pattern in the files of the provided Directory
-func (m *Image) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
+func (m *Test) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
 	return dag.Container().
 		From("alpine:latest").
 		WithMountedDirectory("/mnt", directoryArg).
 		WithWorkdir("/mnt").
 		WithExec([]string{"grep", "-R", pattern, "."}).
 		Stdout(ctx)
-}
-
-func New(
-	// base hadolint container
-	// It need contain hadolint
-	// +optional
-	baseHadolintContainer *dagger.Container,
-) *Image {
-	image := &Image{}
-
-	if baseHadolintContainer != nil {
-		image.BaseHadolintContainer = baseHadolintContainer
-	} else {
-		image.BaseHadolintContainer = image.GetBaseHadolintContainer()
-	}
-
-	return image
-}
-
-// GetBaseHadolintContainer return the default image for hadolint
-func (m *Image) GetBaseHadolintContainer() *dagger.Container {
-	return dag.Container().
-		From("ghcr.io/hadolint/hadolint:2.12.0")
 }
