@@ -29,18 +29,23 @@ func (m *Image) Build(
 
 	// Set extra build args
 	// +optional
-	buildArgs []dagger.BuildArg,
+	buildArgs []*dagger.BuildArg,
 ) *ImageBuild {
 
 	for _, directory := range withDirectories {
 		source = source.WithDirectory(fmt.Sprintf("%s", directory), directory)
 	}
 
+	ba := make([]dagger.BuildArg, 0, len(buildArgs))
+	for _, buildArg := range buildArgs {
+		ba = append(ba, *buildArg)
+	}
+
 	return &ImageBuild{
 		Container: source.DockerBuild(
 			dagger.DirectoryDockerBuildOpts{
 				Dockerfile: dockerfile,
-				BuildArgs:  buildArgs,
+				BuildArgs:  ba,
 			},
 		),
 	}
