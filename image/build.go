@@ -26,6 +26,10 @@ func (m *Image) Build(
 	// Set extra directories
 	// +optional
 	withDirectories []*dagger.Directory,
+
+	// Set extra build args
+	// +optional
+	buildArgs []dagger.BuildArg,
 ) *ImageBuild {
 
 	for _, directory := range withDirectories {
@@ -36,6 +40,7 @@ func (m *Image) Build(
 		Container: source.DockerBuild(
 			dagger.DirectoryDockerBuildOpts{
 				Dockerfile: dockerfile,
+				BuildArgs:  buildArgs,
 			},
 		),
 	}
