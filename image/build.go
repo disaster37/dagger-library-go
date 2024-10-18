@@ -9,46 +9,8 @@ import (
 )
 
 type ImageBuild struct {
+	// +private
 	Container *dagger.Container
-}
-
-// Build permit to build image from Dockerfile
-func (m *Image) Build(
-
-	// the source directory
-	source *dagger.Directory,
-
-	// The dockerfile path
-	// +optional
-	// +default="Dockerfile"
-	dockerfile string,
-
-	// Set extra directories
-	// +optional
-	withDirectories []*dagger.Directory,
-
-	// Set extra build args
-	// +optional
-	buildArgs []*dagger.BuildArg,
-) *ImageBuild {
-
-	for _, directory := range withDirectories {
-		source = source.WithDirectory(fmt.Sprintf("%s", directory), directory)
-	}
-
-	ba := make([]dagger.BuildArg, 0, len(buildArgs))
-	for _, buildArg := range buildArgs {
-		ba = append(ba, *buildArg)
-	}
-
-	return &ImageBuild{
-		Container: source.DockerBuild(
-			dagger.DirectoryDockerBuildOpts{
-				Dockerfile: dockerfile,
-				BuildArgs:  ba,
-			},
-		),
-	}
 }
 
 // GetContainer permit to get the container

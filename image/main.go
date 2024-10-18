@@ -15,31 +15,16 @@
 package main
 
 import (
-	"context"
 	"dagger/image/internal/dagger"
+	"fmt"
 )
 
 type Image struct {
+	// +private
 	BaseHadolintContainer *dagger.Container
-}
 
-func (m *Image) Echo(stringArg string) string {
-	return stringArg
-}
-
-// Returns a container that echoes whatever string argument is provided
-func (m *Image) ContainerEcho(stringArg string) *dagger.Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
-}
-
-// Returns lines that match a pattern in the files of the provided Directory
-func (m *Image) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
-	return dag.Container().
-		From("alpine:latest").
-		WithMountedDirectory("/mnt", directoryArg).
-		WithWorkdir("/mnt").
-		WithExec([]string{"grep", "-R", pattern, "."}).
-		Stdout(ctx)
+	// +private
+	BuildContainer *dagger.Container
 }
 
 func New(
@@ -47,8 +32,15 @@ func New(
 	// It need contain hadolint
 	// +optional
 	baseHadolintContainer *dagger.Container,
+
+	// The external build of container
+	// Usefull when need build args
+	// +optional
+	buildContainer *dagger.Container,
 ) *Image {
-	image := &Image{}
+	image := &Image{
+		BuildContainer: buildContainer,
+	}
 
 	if baseHadolintContainer != nil {
 		image.BaseHadolintContainer = baseHadolintContainer
@@ -63,4 +55,39 @@ func New(
 func (m *Image) GetBaseHadolintContainer() *dagger.Container {
 	return dag.Container().
 		From("ghcr.io/hadolint/hadolint:2.12.0")
+}
+
+// Build permit to build image from Dockerfile
+func (m *Image) Build(
+
+	// the source directory
+	source *dagger.Directory,
+
+	// The dockerfile path
+	// +optional
+	// +default="Dockerfile"
+	dockerfile string,
+
+	// Set extra directories
+	// +optional
+	withDirectories []*dagger.Directory,
+) *ImageBuild {
+
+	if m.BuildContainer != nil {
+		return &ImageBuild{
+			Container: m.BuildContainer,
+		}
+	}
+
+	for _, directory := range withDirectories {
+		source = source.WithDirectory(fmt.Sprintf("%s", directory), directory)
+	}
+
+	return &ImageBuild{
+		Container: source.DockerBuild(
+			dagger.DirectoryDockerBuildOpts{
+				Dockerfile: dockerfile,
+			},
+		),
+	}
 }
