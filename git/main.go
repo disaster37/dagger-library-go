@@ -110,7 +110,7 @@ if [ $RETCODE -eq 0 ]; then
 	git fetch origin %s:%s
 fi
 		`, branch, branch)).
-		WithExec(helper.ForgeCommandf("git checkout %s", branch))
+		WithExec(helper.ForgeCommandf("git pull"))
 	return m, nil
 }
 
