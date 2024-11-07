@@ -108,9 +108,10 @@ git name-rev --name-only HEAD | grep tags
 RETCODE=$?
 if [ $RETCODE -eq 0 ]; then
 	git fetch origin %s:%s
+	git checkout %s
 fi
-		`, branch, branch)).
-		WithExec(helper.ForgeCommandf("git pull"))
+		`, branch, branch, branch)).
+		WithExec(helper.ForgeCommand("git pull"))
 	return m, nil
 }
 
