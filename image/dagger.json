@@ -1,5 +1,6 @@
 {
   "name": "image",
+  "engineVersion": "v0.13.7",
   "sdk": "go",
-  "engineVersion": "v0.13.7"
+  "source": "."
 }
