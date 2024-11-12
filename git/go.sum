@@ -27,8 +27,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46t
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/disaster37/dagger-library-go/lib v0.0.0-20240801092353-d239c7d4d4ec h1:nYWlurm3AceZQVJLqJghMyuZ6wfcPOIs3crfLyBc/MQ=
-github.com/disaster37/dagger-library-go/lib v0.0.0-20240801092353-d239c7d4d4ec/go.mod h1:ypM7kaylY/N3gXw+0r1i7yoTR834fFRA5hT36c7SV6E=
+github.com/disaster37/dagger-library-go/lib v0.0.0-20241112092428-72034c7f7a75 h1:SQDG3qF4EXrNQ71n3tcxPLi3hB4VKEvOOWlthzYNGbw=
+github.com/disaster37/dagger-library-go/lib v0.0.0-20241112092428-72034c7f7a75/go.mod h1:mSQL0/RLEpROxGexvRTybYjEKsiJkXsCM8aqXkNm5EI=
 github.com/distribution/reference v0.6.0 h1:0IXCQ5g4/QMHHkarYzh5l+u8T3t73zM5QvfrDyIgxBk=
 github.com/distribution/reference v0.6.0/go.mod h1:BbU0aIcezP1/5jX/8MP0YiH4SdvB5Y4f/wlDRiLyi3E=
 github.com/docker/docker v27.1.1+incompatible h1:hO/M4MtV36kzKldqnA37IWhebRA+LnqqcqDja6kVaKY=

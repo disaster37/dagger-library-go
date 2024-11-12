@@ -2,7 +2,7 @@ module dagger/git
 
 go 1.22.5
 
-require github.com/disaster37/dagger-library-go/lib v0.0.0-20240801092353-d239c7d4d4ec
+require github.com/disaster37/dagger-library-go/lib v0.0.0-20241112092428-72034c7f7a75
 
 require (
 	github.com/99designs/gqlgen v0.17.55 // indirect
