@@ -6,6 +6,7 @@ require (
 	emperror.dev/errors v0.8.1
 	github.com/99designs/gqlgen v0.17.55
 	github.com/Khan/genqlient v0.7.0
+	github.com/coreos/go-semver v0.3.1
 	github.com/creasty/defaults v1.7.0
 	github.com/disaster37/dagger-library-go/lib v0.0.0-20240801092353-d239c7d4d4ec
 	github.com/gookit/validate v1.5.2

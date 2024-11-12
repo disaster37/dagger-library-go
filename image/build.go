@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"dagger/image/internal/dagger"
 	"fmt"
 
 	"emperror.dev/errors"
+	"github.com/coreos/go-semver/semver"
 )
 
 type ImageBuild struct {
@@ -39,6 +41,20 @@ func (m *ImageBuild) Push(
 	// The registry url
 	registryUrl string,
 ) (string, error) {
+
+	// Mitigate semver version
+	semVersion, err := semver.NewVersion(version)
+	if err == nil {
+		var buffer bytes.Buffer
+
+		fmt.Fprintf(&buffer, "%d.%d.%d", semVersion.Major, semVersion.Minor, semVersion.Patch)
+
+		if semVersion.PreRelease != "" {
+			fmt.Fprintf(&buffer, "-%s", semVersion.PreRelease)
+		}
+
+		version = buffer.String()
+	}
 
 	if withRegistryUsername != nil && withRegistryPassword != nil {
 		username, err := withRegistryUsername.Plaintext(ctx)
