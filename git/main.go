@@ -19,6 +19,7 @@ import (
 	"dagger/git/internal/dagger"
 	"fmt"
 
+	"dagger.io/dagger/dag"
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
@@ -110,8 +111,7 @@ if [ $RETCODE -eq 0 ]; then
 	git fetch origin %s:%s
 	git checkout %s
 fi
-		`, branch, branch, branch)).
-		WithExec(helper.ForgeCommand("git pull"))
+		`, branch, branch, branch))
 	return m, nil
 }
 
