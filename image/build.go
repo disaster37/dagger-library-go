@@ -52,6 +52,9 @@ func (m *ImageBuild) Push(
 		if semVersion.PreRelease != "" {
 			fmt.Fprintf(&buffer, "-%s", semVersion.PreRelease)
 		}
+		if semVersion.Metadata != "" {
+			fmt.Fprintf(&buffer, "-%s", semVersion.Metadata)
+		}
 
 		version = buffer.String()
 	}
