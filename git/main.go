@@ -16,9 +16,10 @@ package main
 
 import (
 	"context"
-	"dagger/git/internal/dagger"
+
 	"fmt"
 
+	"dagger.io/dagger"
 	"dagger.io/dagger/dag"
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
