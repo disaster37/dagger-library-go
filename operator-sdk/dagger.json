@@ -1,0 +1,23 @@
+{
+  "name": "operator-sdk",
+  "engineVersion": "v0.14.0",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "github",
+      "source": "github.com/jedevc/daggerverse/github",
+      "pin": "b2b06917e338519a04404347a105a7c3bb316472"
+    },
+    {
+      "name": "k3s",
+      "source": "github.com/marcosnils/daggerverse/k3s",
+      "pin": "833ec36632b2457862f6e3bf1f7107ad65e3e515"
+    },
+    {
+      "name": "kind",
+      "source": "github.com/aweris/daggerverse/kind",
+      "pin": "3f551863c75b6bbd7f78f64c6a51fd677b73277e"
+    }
+  ],
+  "source": "."
+}
