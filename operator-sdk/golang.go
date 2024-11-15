@@ -193,9 +193,10 @@ func (h *Golang) Test(
 ) (coverage *dagger.File, err error) {
 
 	ctr := h.Base.
-		WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest"))
+		WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest")).
+		WithExec(helper.ForgeCommandf("setup-envtest use %s -p path", withKubeversion))
 
-	stdout, err := ctr.WithExec(helper.ForgeCommandf("setup-envtest use %s -p path", withKubeversion)).Stdout(ctx)
+	stdout, err := ctr.Stdout(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when setup envtest")
 	}
