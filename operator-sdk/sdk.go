@@ -128,7 +128,7 @@ func (h *Sdk) Generate(
 
 	return h.Base.
 		WithExec(helper.ForgeCommandf("controller-gen rbac:roleName=%s %s webhook paths=\"./...\" output:crd:artifacts:config=config/crd/bases", roleName, crdSubCommand)).
-		WithExec(helper.ForgeCommand("crd clean-crd --crd-file \"config/crd/bases/*.yaml\"")).
+		WithExec([]string{"crd", "clean-crd", "--crd-file", "config/crd/bases/*.yaml"}).
 		WithExec(helper.ForgeCommand("controller-gen object:headerFile=\"hack/boilerplate.go.txt\" paths=\"./...\"")).
 		Directory("."), nil
 }
