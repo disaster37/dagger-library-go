@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -198,8 +199,8 @@ func (h *Golang) Test(
 
 	ctr := h.Base.
 		WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest")).
-		WithMountedCache("", dag.CacheVolume("envtest-k8s")).
-		WithExec(helper.ForgeCommandf("setup-envtest use %s -p path", withKubeversion))
+		WithMountedCache("/tmp/envtest", dag.CacheVolume("envtest-k8s")).
+		WithExec(helper.ForgeCommandf("setup-envtest use %s --bin-dir /tmp/envtest -p path", withKubeversion))
 
 	stdout, err := ctr.Stdout(ctx)
 	if err != nil {
@@ -273,12 +274,20 @@ func defaultImage(version string) *dagger.Container {
 }
 
 func mountCaches(ctx context.Context, base *dagger.Container) *dagger.Container {
-	goCacheEnv, _ := base.WithExec([]string{"go", "env", "GOCACHE"}).Stdout(ctx)
-	goModCacheEnv, _ := base.WithExec([]string{"go", "env", "GOMODCACHE"}).Stdout(ctx)
-	goBinCacheEnv, _ := base.WithExec([]string{"go", "env", "GOBIN"}).Stdout(ctx)
+	goEnvStdout, err := base.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
+	if err != nil {
+		panic(fmt.Sprintf("Error when get go env; %s", err.Error()))
+	}
+	var goEnv map[string]string
+	if err := json.Unmarshal([]byte(goEnvStdout), &goEnv); err != nil {
+		panic(fmt.Sprintf("Error when decode go env; %s", err.Error()))
+	}
+
+	goCacheEnv := goEnv["GOCACHE"]
+	goModCacheEnv := goEnv["GOMODCACHE"]
+	goBinCacheEnv := goEnv["GOBIN"]
 	if goBinCacheEnv == "" {
-		goPath, _ := base.WithExec([]string{"go", "env", "GOPATH"}).Stdout(ctx)
-		goBinCacheEnv = fmt.Sprintf("%s/bin", goPath)
+		goBinCacheEnv = fmt.Sprintf("%s/bin", goEnv["GOPATH"])
 	}
 
 	gomod := dag.CacheVolume("gomod")
