@@ -30,25 +30,6 @@ func New(
 	// The source directory
 	src *dagger.Directory,
 
-	// The sdk version
-	// +default="latest"
-	sdkVersion string,
-
-	// The controller gen version
-	// +default="latest"
-	controllerGenVersion string,
-
-	// The kustomize version to use
-	// +default="latest"
-	kustomizeVersion string,
-
-	// The clean CRD version to use
-	// +default="latest"
-	cleanCrdVersion string,
-
-	// The container to use with operator-sdk
-	// +optional
-	sdkContainer *dagger.Container,
 ) *OperatorSdk {
 	return &OperatorSdk{
 		Src: src,
