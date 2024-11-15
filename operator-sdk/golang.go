@@ -275,11 +275,18 @@ func defaultImage(version string) *dagger.Container {
 func mountCaches(ctx context.Context, base *dagger.Container) *dagger.Container {
 	goCacheEnv, _ := base.WithExec([]string{"go", "env", "GOCACHE"}).Stdout(ctx)
 	goModCacheEnv, _ := base.WithExec([]string{"go", "env", "GOMODCACHE"}).Stdout(ctx)
+	goBinCacheEnv, _ := base.WithExec([]string{"go", "env", "GOBIN"}).Stdout(ctx)
+	if goBinCacheEnv == "" {
+		goPath, _ := base.WithExec([]string{"go", "env", "GOPATH"}).Stdout(ctx)
+		goBinCacheEnv = fmt.Sprintf("%s/bin", goPath)
+	}
 
 	gomod := dag.CacheVolume("gomod")
 	gobuild := dag.CacheVolume("gobuild")
+	gobin := dag.CacheVolume("gobin")
 
 	return base.
 		WithMountedCache(goModCacheEnv, gomod).
-		WithMountedCache(goCacheEnv, gobuild)
+		WithMountedCache(goCacheEnv, gobuild).
+		WithMountedCache(goBinCacheEnv, gobin)
 }
