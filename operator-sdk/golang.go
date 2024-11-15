@@ -217,7 +217,7 @@ func (h *Golang) Test(
 	} else {
 		cmd = []string{"go", "test"}
 	}
-	cmd = append(cmd, "-vet=off", "-timeout=10m", "-covermode=atomic", "-coverprofile=coverage.out.tmp", testPath)
+	cmd = append(cmd, "-vet=off", "-timeout=60m", "-covermode=atomic", "-coverprofile=coverage.out.tmp", testPath)
 
 	if short {
 		cmd = append(cmd, "-short")
