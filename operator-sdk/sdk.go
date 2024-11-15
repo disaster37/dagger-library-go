@@ -93,9 +93,9 @@ func (h *Sdk) Run(
 	// The cmd to run with operator-sdk
 	// +required
 	cmd string,
-) *dagger.Directory {
+) *dagger.Container {
 
-	return h.Base.WithExec(helper.ForgeCommandf("operator-sdk %s", cmd)).Directory(".")
+	return h.Base.WithExec(helper.ForgeCommandf("operator-sdk %s", cmd))
 }
 
 func (h *Sdk) Generate(
