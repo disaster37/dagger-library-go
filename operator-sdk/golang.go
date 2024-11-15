@@ -186,6 +186,10 @@ func (h *Golang) Test(
 	// +default=true
 	withGotestsum bool,
 
+	// Path to test
+	// +optional
+	// +default="./..."
+	path string,
 	// The Kubeversion version to use
 	// +optional
 	// +default="latest"
@@ -194,6 +198,7 @@ func (h *Golang) Test(
 
 	ctr := h.Base.
 		WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest")).
+		WithMountedCache("", dag.CacheVolume("envtest-k8s")).
 		WithExec(helper.ForgeCommandf("setup-envtest use %s -p path", withKubeversion))
 
 	stdout, err := ctr.Stdout(ctx)
@@ -205,6 +210,10 @@ func (h *Golang) Test(
 		WithEnvVariable("KUBEBUILDER_ASSETS", stdout)
 
 	var cmd []string
+	testPath := "./..."
+	if path != "" {
+		testPath = path
+	}
 
 	if withGotestsum {
 		cmd = []string{"gotestsum", "--format", "testname", "--"}
@@ -212,7 +221,7 @@ func (h *Golang) Test(
 	} else {
 		cmd = []string{"go", "test"}
 	}
-	cmd = append(cmd, "-vet=off", "-timeout=10m", "-covermode=atomic", "-coverprofile=coverage.out.tmp", "./...")
+	cmd = append(cmd, "-vet=off", "-timeout=10m", "-covermode=atomic", "-coverprofile=coverage.out.tmp", testPath)
 
 	if short {
 		cmd = append(cmd, "-short")
