@@ -170,11 +170,9 @@ func (h *Golang) Test(
 	ctx context.Context,
 	// if only short running tests should be executed
 	// +optional
-	// +default=true
 	short bool,
 	// if the tests should be executed out of order
 	// +optional
-	// +default=true
 	shuffle bool,
 	// run select tests only, defined using a regex
 	// +optional
@@ -184,12 +182,9 @@ func (h *Golang) Test(
 	skip string,
 	// Run test with gotestsum
 	// +optional
-	// +default=true
 	withGotestsum bool,
-
 	// Path to test
 	// +optional
-	// +default="./..."
 	path string,
 	// The Kubeversion version to use
 	// +optional
