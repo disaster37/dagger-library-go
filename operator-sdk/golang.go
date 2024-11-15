@@ -190,7 +190,7 @@ func (h *Golang) Test(
 	// +optional
 	// +default="latest"
 	withKubeversion string,
-) (coverage *dagger.File, err error) {
+) (result *TestResult, err error) {
 
 	ctr := h.Base.
 		WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest")).
@@ -235,9 +235,10 @@ func (h *Golang) Test(
 		cmd = append(cmd, []string{"-skip", skip}...)
 	}
 
-	return ctr.WithExec(cmd).
-		WithExec(helper.ForgeScript(`cat coverage.out.tmp | grep -v "_generated.*.go" > coverage.out`)).
-		File("coverage.out"), nil
+	ctr =  ctr.WithExec(cmd).
+		WithExec(helper.ForgeScript(`cat coverage.out.tmp | grep -v "_generated.*.go" > coverage.out`))
+	
+	return NewTestResult(ctr), nil
 }
 
 // WithSource permit to update the current source on sdk container
