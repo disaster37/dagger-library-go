@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
+
+	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
 type TestResult struct {
@@ -21,5 +23,7 @@ func (h *TestResult) Stdout(ctx context.Context) (string, error) {
 }
 
 func (h *TestResult) Coverage() *dagger.File {
-	return h.Base.File("coverage.out")
+	return h.Base.
+		WithExec(helper.ForgeScript(`cat coverage.out.tmp | grep -v "_generated.*.go" > coverage.out`)).
+		File("coverage.out")
 }

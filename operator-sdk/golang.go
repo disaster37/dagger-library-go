@@ -235,9 +235,8 @@ func (h *Golang) Test(
 		cmd = append(cmd, []string{"-skip", skip}...)
 	}
 
-	ctr =  ctr.WithExec(cmd).
-		WithExec(helper.ForgeScript(`cat coverage.out.tmp | grep -v "_generated.*.go" > coverage.out`))
-	
+	ctr = ctr.WithExec(cmd)
+
 	return NewTestResult(ctr), nil
 }
 
