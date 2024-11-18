@@ -167,7 +167,12 @@ func (h *Sdk) Bundle(
 			return nil, errors.Wrap(err, "Error when decode 'PROJECT' file")
 		}
 		projectName := data["projectName"].(string)
-		ctn = ctn.WithExec(helper.ForgeCommandf("yq -yi '.spec.replaces=\"%s.v%s\"' config/manifests/bases/%s.clusterserviceversion.yaml", projectName, previousVersion, projectName))
+		ctn = ctn.WithExec([]string{
+			"yq",
+			"-yi",
+			fmt.Sprintf("spec.replaces=%s.v%s", projectName, previousVersion),
+			fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName),
+		})
 	}
 
 	var computeChannels string
