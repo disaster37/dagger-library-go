@@ -137,7 +137,7 @@ func (h *Sdk) Generate(
 func (h *Sdk) Bundle(
 	ctx context.Context,
 
-	// The OCI image name
+	// The OCI image name without the version
 	// +required
 	imageName string,
 
@@ -154,32 +154,8 @@ func (h *Sdk) Bundle(
 	previousVersion string,
 ) (*dagger.Directory, error) {
 	ctn := h.Base
-	metadata := &metadata{}
 
-	if version == "" {
-		// Get the current version
-		versionFile, err := ctn.File("version.yaml").Contents(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "You need to provide version or have version.yaml with field 'currentVersion', 'previousVersion'")
-		}
-
-		if err := yaml.Unmarshal([]byte(versionFile), metadata); err != nil {
-			return nil, errors.Wrap(err, "Error when decode version.yaml")
-		}
-
-		if metadata.CurrentVersion == "" {
-			return nil, errors.New("Your file version.yaml have not field 'currentVersion'")
-		}
-
-		if metadata.PreviousVersion == "" {
-			return nil, errors.New("Your file version.yaml have not field 'previousVersion'")
-		}
-	} else {
-		metadata.CurrentVersion = version
-		metadata.PreviousVersion = previousVersion
-	}
-
-	if metadata.PreviousVersion != "" {
+	if previousVersion != "" {
 		pFile, err := h.Base.File("PROJECT").Contents(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when read file 'PROJECT'")
@@ -199,20 +175,11 @@ func (h *Sdk) Bundle(
 		computeChannels = fmt.Sprintf("--channels=%s", channels)
 	}
 
-	ctn = ctn.WithExec(helper.ForgeCommand("operator-sdk generate kustomize manifests -q --apis-dir ./api")).
-		WithExec(helper.ForgeScript("cd config/manager && kustomize edit set image controller=%s", imageName)).
+	return ctn.WithExec(helper.ForgeCommand("operator-sdk generate kustomize manifests -q --apis-dir ./api")).
+		WithExec(helper.ForgeScript("cd config/manager && kustomize edit set image controller=%s:%s", imageName, version)).
 		WithExec(helper.ForgeScript("kustomize build config/manifests | operator-sdk generate bundle -q --overwrite --version %s %s", version, computeChannels)).
-		WithExec(helper.ForgeCommand("operator-sdk bundle validate ./bundle"))
-	if _, err := ctn.Stdout(ctx); err != nil {
-		return nil, errors.Wrap(err, "Error when call bundle")
-	}
-
-	metaFile, err := yaml.Marshal(metadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when generate file 'version.yaml'")
-	}
-
-	return ctn.Directory(".").WithNewFile("version.yaml", string(metaFile)), nil
+		WithExec(helper.ForgeCommand("operator-sdk bundle validate ./bundle")).
+		Directory("."), nil
 
 }
 
