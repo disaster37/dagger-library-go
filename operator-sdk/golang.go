@@ -135,6 +135,10 @@ func (h *Golang) Lint(
 		ctr = ctr.WithExec([]string{"bash", "-c", strings.Join(cmd, " ")})
 	}
 
+	if format == "" {
+		format = "colored-line-number"
+	}
+
 	cmd := []string{
 		"golangci-lint",
 		"run",
