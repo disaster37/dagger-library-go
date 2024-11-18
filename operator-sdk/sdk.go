@@ -27,6 +27,10 @@ func NewSdk(
 	// +optional
 	sdkVersion string,
 
+	// The opm cli version to use
+	// +optional
+	opmVersion string,
+
 	// The controller gen version to use
 	// +optional
 	controllerGenVersion string,
@@ -42,11 +46,19 @@ func NewSdk(
 ) *Sdk {
 
 	// Compute URL to download operator-sdk
-	var url string
+	var urlSdk string
 	if sdkVersion == "latest" || sdkVersion == "" {
-		url = "https://github.com/operator-framework/operator-sdk/releases/latest/download/operator-sdk_linux_amd64"
+		urlSdk = "https://github.com/operator-framework/operator-sdk/releases/latest/download/operator-sdk_linux_amd64"
 	} else {
-		url = fmt.Sprintf("https://github.com/operator-framework/operator-sdk/releases/download/%s/operator-sdk_linux_amd64", sdkVersion)
+		urlSdk = fmt.Sprintf("https://github.com/operator-framework/operator-sdk/releases/download/%s/operator-sdk_linux_amd64", sdkVersion)
+	}
+
+	// Compute URL to download opm
+	var urlOpm string
+	if opmVersion == "latest" || opmVersion == "" {
+		urlOpm = "https://github.com/operator-framework/operator-registry/releases/latest/download/linux-amd64-opm"
+	} else {
+		urlOpm = fmt.Sprintf("https://github.com/operator-framework/operator-registry/releases/download/%s/linux-amd64-opm", opmVersion)
 	}
 
 	// Compute the controllerGen version
@@ -69,7 +81,8 @@ func NewSdk(
 
 	return &Sdk{
 		Base: container.
-			WithExec(helper.ForgeCommandf("curl --fail -L %s -o /usr/bin/operator-sdk", url)).
+			WithExec(helper.ForgeCommandf("curl --fail -L %s -o /usr/bin/operator-sdk", urlSdk)).
+			WithExec(helper.ForgeCommandf("curl --fail -L %s -o /usr/bin/opm", urlOpm)).
 			WithExec(helper.ForgeCommand("chmod +x /usr/bin/operator-sdk")).
 			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
 			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
@@ -221,9 +234,4 @@ func (h *Sdk) WithSource(
 ) *Sdk {
 	h.Base = h.Base.WithDirectory(".", src)
 	return h
-}
-
-type metadata struct {
-	CurrentVersion  string `json:"currentVersion"`
-	PreviousVersion string `json:"previousVersion"`
 }

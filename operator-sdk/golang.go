@@ -75,6 +75,10 @@ func (h *Golang) Sdk(
 	// +optional
 	sdkVersion string,
 
+	// The Opm cli version to use
+	// +optional
+	opmVersion string,
+
 	// The controller gen version to use
 	// +optional
 	controllerGenVersion string,
@@ -88,7 +92,7 @@ func (h *Golang) Sdk(
 	kustomizeVersion string,
 
 ) *Sdk {
-	return NewSdk(ctx, h.Base, sdkVersion, controllerGenVersion, cleanCrdVersion, kustomizeVersion)
+	return NewSdk(ctx, h.Base, sdkVersion, opmVersion, controllerGenVersion, cleanCrdVersion, kustomizeVersion)
 }
 
 func (h *Golang) Oci() *Oci {
