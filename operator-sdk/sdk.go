@@ -171,7 +171,7 @@ func (h *Sdk) Bundle(
 		ctn = ctn.WithExec([]string{
 			"yq",
 			"-i",
-			fmt.Sprintf(".spec.replaces=%s.v%s", projectName, previousVersion),
+			fmt.Sprintf(".spec.replaces=\"%s.v%s\"", projectName, previousVersion),
 			fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName),
 		})
 	}
