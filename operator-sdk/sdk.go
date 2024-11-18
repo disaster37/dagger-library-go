@@ -73,7 +73,8 @@ func NewSdk(
 			WithExec(helper.ForgeCommand("chmod +x /usr/bin/operator-sdk")).
 			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
 			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
-			WithExec(helper.ForgeCommandf("go install %s", kustomize)),
+			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
+			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")),
 	}
 }
 
@@ -167,20 +168,12 @@ func (h *Sdk) Bundle(
 			return nil, errors.Wrap(err, "Error when decode 'PROJECT' file")
 		}
 		projectName := data["projectName"].(string)
-		ctn = ctn.WithFile(fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName), dag.Container().
-			From("mikefarah/yq").
-			WithDirectory("/workdir", h.Base.Directory(".")).
-			WithWorkdir("/workdir").
-			WithFile(".", h.Base.File(fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName))).
-			WithoutEntrypoint().
-			WithExec([]string{
-				"yq",
-				"-yi",
-				fmt.Sprintf("spec.replaces=%s.v%s", projectName, previousVersion),
-				fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName),
-			}).
-			File(fmt.Sprintf("%s.clusterserviceversion.yaml", projectName)),
-		)
+		ctn = ctn.WithExec([]string{
+			"yq",
+			"-yi",
+			fmt.Sprintf("spec.replaces=%s.v%s", projectName, previousVersion),
+			fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName),
+		})
 	}
 
 	var computeChannels string
