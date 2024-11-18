@@ -169,7 +169,6 @@ func (h *Sdk) Bundle(
 		projectName := data["projectName"].(string)
 		ctn = ctn.WithFile(fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName), dag.Container().
 			From("mikefarah/yq").
-			WithWorkdir("/src").
 			WithFile(".", h.Base.File(fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName))).
 			WithExec([]string{
 				"yq",
