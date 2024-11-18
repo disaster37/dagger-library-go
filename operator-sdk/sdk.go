@@ -172,6 +172,7 @@ func (h *Sdk) Bundle(
 			WithDirectory("/workdir", h.Base.Directory(".")).
 			WithWorkdir("/workdir").
 			WithFile(".", h.Base.File(fmt.Sprintf("config/manifests/bases/%s.clusterserviceversion.yaml", projectName))).
+			WithoutEntrypoint().
 			WithExec([]string{
 				"yq",
 				"-yi",
