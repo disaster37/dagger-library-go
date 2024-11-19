@@ -31,19 +31,15 @@ func (h *Kube) Run(
 
 	// Start k3s
 	kServer := h.K3s.Server()
-	kServer, err := kServer.Start(ctx)
+	_, err := kServer.Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
-	defer func() {
-		_, _ = kServer.Stop(ctx)
-	}()
 
 	// Install CRD on kube
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
-	_, err = h.K3s.Kubectl("version").
+	_, err = h.K3s.Kubectl("help").
 		WithFile("/tmp/crd.yaml", crdFile).
-		Terminal(dagger.ContainerTerminalOpts{Cmd: []string{"/bin/sh"}}).
 		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")).
 		Stdout(ctx)
 	if err != nil {
@@ -51,7 +47,7 @@ func (h *Kube) Run(
 	}
 
 	// Run operator as service
-	operatorService, err := h.Container.
+	_, err = h.Container.
 		WithExposedPort(8081, dagger.ContainerWithExposedPortOpts{Protocol: dagger.NetworkProtocolTcp, Description: "Health"}).
 		WithExec(helper.ForgeCommand("LOG_LEVEL=trace LOG_FORMATTER=json go run cmd/main.go")).
 		AsService().
@@ -59,9 +55,6 @@ func (h *Kube) Run(
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when run operator")
 	}
-	defer func() {
-		_, _ = operatorService.Stop(ctx)
-	}()
 
 	return h.K3s.Kns().
 		WithDirectory("/project", h.Container.Directory(".")).

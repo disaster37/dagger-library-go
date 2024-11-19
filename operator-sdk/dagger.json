@@ -4,14 +4,14 @@
   "sdk": "go",
   "dependencies": [
     {
+      "name": "k3s",
+      "source": "github.com/marcosnils/daggerverse/k3s",
+      "pin": "2f737ceb800c4cdc69c6ca7f01e1f473fac9aac9"
+    },
+    {
       "name": "github",
       "source": "github.com/jedevc/daggerverse/github",
       "pin": "b2b06917e338519a04404347a105a7c3bb316472"
-    },
-    {
-      "name": "k3s",
-      "source": "github.com/marcosnils/daggerverse/k3s@k3s/v0.1.7",
-      "pin": "833ec36632b2457862f6e3bf1f7107ad65e3e515"
     },
     {
       "name": "kind",
