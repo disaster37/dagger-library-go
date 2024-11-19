@@ -112,7 +112,7 @@ func (h *OperatorSdk) Release(
 	// +required
 	registryPassword *dagger.Secret,
 
-) (*Release, error) {
+) (*dagger.Directory, error) {
 
 	var sb strings.Builder
 	var dir *dagger.Directory
@@ -164,7 +164,7 @@ func (h *OperatorSdk) Release(
 
 	// Run bundle
 	metadata := &metadata{}
-	versionFile, err := sdk.Base.File("version.yaml").Contents(ctx)
+	versionFile, err := sdk.Container.File("version.yaml").Contents(ctx)
 	if err != nil {
 		// File not yet exist
 		metadata.CurrentVersion = "0.0.1"
@@ -209,7 +209,7 @@ func (h *OperatorSdk) Release(
 
 	// @TODO write the new version file
 
-	return NewRelease(sb.String(), dir), nil
+	return dir, nil
 
 }
 

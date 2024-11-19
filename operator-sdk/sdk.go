@@ -11,9 +11,7 @@ import (
 )
 
 type Sdk struct {
-
-	// +private
-	Base *dagger.Container
+	Container *dagger.Container
 
 	// +private
 	BinPath string
@@ -87,7 +85,7 @@ func NewSdk(
 	kustomize := fmt.Sprintf("sigs.k8s.io/kustomize/kustomize/v5@%s", kustomizeVersion)
 
 	return &Sdk{
-		Base: container.
+		Container: container.
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
 			WithExec(helper.ForgeCommandf("chmod +x %s/operator-sdk", binPath)).
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/opm", urlOpm, binPath)).
@@ -100,16 +98,11 @@ func NewSdk(
 	}
 }
 
-// Container return the container that contain the operator-sdk cli
-func (h *Sdk) Container() *dagger.Container {
-	return h.Base.WithDefaultTerminalCmd([]string{"bash"})
-}
-
 // Version display the current version of operator-sdk cli
 func (h *Sdk) Version(
 	ctx context.Context,
 ) (string, error) {
-	return h.Base.WithExec(helper.ForgeCommand("operator-sdk version")).Stdout(ctx)
+	return h.Container.WithExec(helper.ForgeCommand("operator-sdk version")).Stdout(ctx)
 }
 
 func (h *Sdk) Run(
@@ -118,7 +111,7 @@ func (h *Sdk) Run(
 	cmd string,
 ) *dagger.Container {
 
-	return h.Base.WithExec(helper.ForgeCommandf("operator-sdk %s", cmd))
+	return h.Container.WithExec(helper.ForgeCommandf("operator-sdk %s", cmd))
 }
 
 func (h *Sdk) Generate(
@@ -130,7 +123,7 @@ func (h *Sdk) Generate(
 ) (*dagger.Directory, error) {
 
 	// Read the project file to get the project name. Use it to generate roleName to avoid colision with another operators
-	pFile, err := h.Base.File("PROJECT").Contents(ctx)
+	pFile, err := h.Container.File("PROJECT").Contents(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when read file 'PROJECT'")
 	}
@@ -149,7 +142,7 @@ func (h *Sdk) Generate(
 		crdSubCommand = fmt.Sprintf("crd:crdVersions=%s,generateEmbeddedObjectMeta=true", crdSubCommand)
 	}
 
-	return h.Base.
+	return h.Container.
 		WithExec(helper.ForgeCommandf("controller-gen rbac:roleName=%s %s webhook paths=\"./...\" output:crd:artifacts:config=config/crd/bases", roleName, crdSubCommand)).
 		WithExec([]string{"crd", "clean-crd", "--crd-file", "config/crd/bases/*.yaml"}).
 		WithExec(helper.ForgeCommand("controller-gen object:headerFile=\"hack/boilerplate.go.txt\" paths=\"./...\"")).
@@ -176,10 +169,10 @@ func (h *Sdk) Bundle(
 	// +optional
 	previousVersion string,
 ) (*dagger.Directory, error) {
-	ctn := h.Base
+	ctn := h.Container
 
 	if previousVersion != "" {
-		pFile, err := h.Base.File("PROJECT").Contents(ctx)
+		pFile, err := h.Container.File("PROJECT").Contents(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when read file 'PROJECT'")
 		}
@@ -211,27 +204,10 @@ func (h *Sdk) Bundle(
 
 }
 
-func (h *Sdk) RunOnKube(
-	ctx context.Context,
+// Prmit to run Kube with Operator
+func (h *Sdk) Kube() *K3s {
 
-	// The kubeversion you should
-	// +optional
-	kubeVersion string,
-) (*dagger.Container, error) {
-
-	var err error
-	k3s := dag.K3S("test")
-	k3sServer := k3s.Server()
-	k3sServer, err = k3sServer.Start(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when start k3s")
-	}
-
-	crdFile := h.Base.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
-
-	return k3s.Container().
-		WithFile("/tmp/crd.yaml", crdFile).
-		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")), nil
+	return NewK3s(h.Container)
 
 }
 
@@ -241,6 +217,6 @@ func (h *Sdk) WithSource(
 	// +required
 	src *dagger.Directory,
 ) *Sdk {
-	h.Base = h.Base.WithDirectory(".", src)
+	h.Container = h.Container.WithDirectory(".", src)
 	return h
 }

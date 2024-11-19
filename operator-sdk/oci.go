@@ -14,8 +14,7 @@ type Auth struct {
 }
 
 type Oci struct {
-	// +private
-	Base *dagger.Container
+	Container *dagger.Container
 
 	// +private
 	Manager *dagger.Container
@@ -30,17 +29,12 @@ type Oci struct {
 func NewOci(
 	// The base container with golang
 	// +required
-	base *dagger.Container,
+	container *dagger.Container,
 ) *Oci {
 	return &Oci{
-		Base:  base,
-		Auths: make([]Auth, 0),
+		Container: container,
+		Auths:     make([]Auth, 0),
 	}
-}
-
-// Container return the container that contain golang
-func (h *Oci) Container() *dagger.Container {
-	return h.Base.WithDefaultTerminalCmd([]string{"bash"})
 }
 
 func (h *Oci) WithRepositoryCredentials(
@@ -71,7 +65,7 @@ func (h *Oci) BuildManager(
 ) *dagger.Container {
 
 	// Build manager
-	managerBinFile := h.Base.
+	managerBinFile := h.Container.
 		WithEnvVariable("CGO_ENABLED", "0").
 		WithExec(helper.ForgeCommand("go build -a -o manager cmd/main.go")).File("manager")
 
@@ -111,7 +105,7 @@ func (h *Oci) PublishManager(
 func (h *Oci) BuildBundle(
 	ctx context.Context,
 ) *dagger.Container {
-	h.Bundle = h.Base.Directory(".").DockerBuild(dagger.DirectoryDockerBuildOpts{
+	h.Bundle = h.Container.Directory(".").DockerBuild(dagger.DirectoryDockerBuildOpts{
 		Dockerfile: "bundle.Dockerfile",
 	})
 
@@ -145,6 +139,6 @@ func (h *Oci) WithSource(
 	// +required
 	src *dagger.Directory,
 ) *Oci {
-	h.Base = h.Base.WithDirectory(".", src)
+	h.Container = h.Container.WithDirectory(".", src)
 	return h
 }

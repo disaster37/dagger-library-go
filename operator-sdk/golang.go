@@ -18,9 +18,7 @@ const (
 )
 
 type Golang struct {
-
-	// +private
-	Base *dagger.Container
+	Container *dagger.Container
 
 	// +private
 	Src *dagger.Directory
@@ -55,11 +53,11 @@ func NewGolang(
 
 	// Compute the golang base container version
 	golang := &Golang{
-		Base:    container,
-		Src:     src,
-		Version: version,
+		Container: container,
+		Src:       src,
+		Version:   version,
 	}
-	golang.Base = golang.mountCaches(ctx).
+	golang.Container = golang.mountCaches(ctx).
 		WithDirectory(goWorkDir, src).
 		WithWorkdir(goWorkDir).
 		WithoutEntrypoint()
@@ -93,7 +91,7 @@ func (h *Golang) Sdk(
 ) *Sdk {
 	return NewSdk(
 		ctx,
-		h.Base,
+		h.Container,
 		h.BinPath,
 		sdkVersion,
 		opmVersion,
@@ -104,12 +102,7 @@ func (h *Golang) Sdk(
 }
 
 func (h *Golang) Oci() *Oci {
-	return NewOci(h.Base)
-}
-
-// Container return the container that contain golang
-func (h *Golang) Container() *dagger.Container {
-	return h.Base.WithDefaultTerminalCmd([]string{"bash"})
+	return NewOci(h.Container)
 }
 
 // Lint the target project using golangci-lint
@@ -120,7 +113,7 @@ func (h *Golang) Lint(
 	// +default="colored-line-number"
 	format string,
 ) (string, error) {
-	ctr := h.Base
+	ctr := h.Container
 	if _, err := ctr.WithExec([]string{"golangci-lint", "version"}).Sync(ctx); err != nil {
 		tag, err := dag.Github().GetLatestRelease("golangci/golangci-lint").Tag(ctx)
 		if err != nil {
@@ -166,7 +159,7 @@ func (h *Golang) Lint(
 // Format the source code within a target project using gofumpt. Formatted code must be
 // copied back onto the host.`
 func (h *Golang) Format(ctx context.Context) (*dagger.Directory, error) {
-	ctr := h.Base
+	ctr := h.Container
 	if _, err := ctr.WithExec([]string{"gofumpt", "-version"}).Sync(ctx); err != nil {
 		tag, err := dag.Github().GetLatestRelease("mvdan/gofumpt").Tag(ctx)
 		if err != nil {
@@ -208,7 +201,7 @@ func (h *Golang) Test(
 	withKubeversion string,
 ) (result *TestResult, err error) {
 
-	ctr := h.Base.
+	ctr := h.Container.
 		WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest")).
 		WithMountedCache("/tmp/envtest", dag.CacheVolume("envtest-k8s")).
 		WithExec(helper.ForgeCommandf("setup-envtest use %s --bin-dir /tmp/envtest -p path", withKubeversion))
@@ -262,7 +255,7 @@ func (h *Golang) WithSource(
 	// +required
 	src *dagger.Directory,
 ) *Golang {
-	h.Base = h.Base.WithDirectory(".", src)
+	h.Container = h.Container.WithDirectory(".", src)
 	return h
 }
 
@@ -285,7 +278,7 @@ func defaultImage(version string) *dagger.Container {
 }
 
 func (h *Golang) mountCaches(ctx context.Context) *dagger.Container {
-	goEnvStdout, err := h.Base.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
+	goEnvStdout, err := h.Container.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("Error when get go env; %s", err.Error()))
 	}
@@ -307,10 +300,10 @@ func (h *Golang) mountCaches(ctx context.Context) *dagger.Container {
 
 	h.BinPath = goBinCacheEnv
 
-	h.Base = h.Base.
+	h.Container = h.Container.
 		WithMountedCache(goModCacheEnv, gomod).
 		WithMountedCache(goCacheEnv, gobuild).
 		WithMountedCache(goBinCacheEnv, gobin)
 
-	return h.Base
+	return h.Container
 }
