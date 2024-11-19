@@ -28,14 +28,16 @@ func NewKube(
 func (h *Kube) Cluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
-	service, err := h.K3s.Server().Start(ctx)
+	service, err := h.K3s.
+		Server().
+		Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
 
 	// Install CRD on kube
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
-	_, err = h.K3s.Kubectl("help").
+	_, err = h.K3s.Kubectl("version").
 		WithFile("/tmp/crd.yaml", crdFile).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/crd.yaml")).
 		Stdout(ctx)
