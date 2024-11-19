@@ -8,24 +8,24 @@ import (
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
-type K3s struct {
+type Kube struct {
 	Container *dagger.Container
 
 	// +private
 	K3s *dagger.K3S
 }
 
-func NewK3s(
+func NewKube(
 	// The golang container
 	container *dagger.Container,
-) *K3s {
-	return &K3s{
+) *Kube {
+	return &Kube{
 		Container: container,
 		K3s:       dag.K3S("test"),
 	}
 }
 
-func (h *K3s) Run(
+func (h *Kube) Run(
 	ctx context.Context,
 ) (*dagger.Container, error) {
 

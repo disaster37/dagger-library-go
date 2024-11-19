@@ -205,9 +205,9 @@ func (h *Sdk) Bundle(
 }
 
 // Prmit to run Kube with Operator
-func (h *Sdk) Kube() *K3s {
+func (h *Sdk) Kube() *Kube {
 
-	return NewK3s(h.Container)
+	return NewKube(h.Container)
 
 }
 
