@@ -89,7 +89,9 @@ func NewSdk(
 	return &Sdk{
 		Base: container.
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
+			WithExec(helper.ForgeCommandf("chmod +x %s/operator-sdk", binPath)).
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/opm", urlOpm, binPath)).
+			WithExec(helper.ForgeCommandf("chmod +x %s/opm", binPath)).
 			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
 			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
 			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
