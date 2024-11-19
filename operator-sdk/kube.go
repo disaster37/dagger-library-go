@@ -40,7 +40,6 @@ func (h *Kube) Run(
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
 	_, err = h.K3s.Kubectl("help").
 		WithFile("/tmp/crd.yaml", crdFile).
-		Terminal().
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/crd.yaml")).
 		Stdout(ctx)
 	if err != nil {
@@ -49,6 +48,8 @@ func (h *Kube) Run(
 
 	// Run operator as service
 	_, err = h.Container.
+		WithFile("/tmp/kubeconfig", h.K3s.Config()).
+		WithEnvVariable("KUBECONFIG", "/tmp/kubeconfig").
 		WithExposedPort(8081, dagger.ContainerWithExposedPortOpts{Protocol: dagger.NetworkProtocolTcp, Description: "Health"}).
 		WithExec(helper.ForgeCommand("LOG_LEVEL=trace LOG_FORMATTER=json go run cmd/main.go")).
 		AsService().
