@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
+	"fmt"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -31,16 +32,19 @@ func (h *Kube) Run(
 
 	// Start k3s
 	kServer := h.K3s.Server()
-	_, err := kServer.Start(ctx)
+	kServer, err := kServer.Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
+	}
+	hostname, err := kServer.Hostname(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when get K3s hostname")
 	}
 
 	// Install CRD on kube
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
 	_, err = h.K3s.Kubectl("help").
-		WithoutEnvVariable("HTTP_PROXY").
-		WithoutEnvVariable("HTTPS_PROXY").
+		WithExec([]string{"sed", "-i", fmt.Sprintf(`s/https:.*:6443/https:\/\/%s:6443/g`, hostname), "/.kube/config"}).
 		WithFile("/tmp/crd.yaml", crdFile).
 		Terminal().
 		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")).
@@ -60,8 +64,7 @@ func (h *Kube) Run(
 	}
 
 	return h.K3s.Kns().
-		WithoutEnvVariable("HTTP_PROXY").
-		WithoutEnvVariable("HTTPS_PROXY").
+		WithExec([]string{"sed", "-i", fmt.Sprintf(`s/https:.*:6443/https:\/\/%s:6443/g`, hostname), "/.kube/config"}).
 		WithDirectory("/project", h.Container.Directory(".")).
 		WithWorkdir("/project"), nil
 
