@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
-	"fmt"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -59,7 +58,6 @@ func (h *Kube) Run(
 	}
 
 	return h.K3s.Kns().
-		WithExec([]string{"sed", "-i", fmt.Sprintf(`s/https:.*:6443/https:\/\/%s:6443/g`, hostname), "/.kube/config"}).
 		WithDirectory("/project", h.Container.Directory(".")).
 		WithWorkdir("/project"), nil
 
