@@ -41,7 +41,7 @@ func (h *Kube) Run(
 
 	// Install CRD on kube
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
-	_, err = h.K3s.Container().
+	_, err = h.K3s.Kubectl("version").
 		WithFile("/tmp/crd.yaml", crdFile).
 		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")).
 		Stdout(ctx)
