@@ -25,13 +25,18 @@ func NewKube(
 	}
 }
 
+func (h *Kube) Cluster(
+	ctx context.Context,
+) (*dagger.Service, error) {
+	return h.K3s.Server().Start(ctx)
+}
+
 func (h *Kube) Run(
 	ctx context.Context,
-) (*dagger.Container, error) {
+) (*dagger.Service, error) {
 
 	// Start k3s
-	kServer := h.K3s.Server()
-	_, err := kServer.Start(ctx)
+	_, err := h.Cluster(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
@@ -47,7 +52,7 @@ func (h *Kube) Run(
 	}
 
 	// Run operator as service
-	_, err = h.Container.
+	return h.Container.
 		WithFile("/tmp/kubeconfig", h.K3s.Config()).
 		WithEnvVariable("KUBECONFIG", "/tmp/kubeconfig").
 		WithExposedPort(8081, dagger.ContainerWithExposedPortOpts{Protocol: dagger.NetworkProtocolTcp, Description: "Health"}).
@@ -57,12 +62,14 @@ func (h *Kube) Run(
 		WithExec(helper.ForgeCommand("go run cmd/main.go")).
 		AsService().
 		Start(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when run operator")
-	}
+}
 
+func (h *Kube) Kubeconfig() *dagger.File {
+	return h.K3s.Config(dagger.K3SConfigOpts{Local: true})
+}
+
+func (h *Kube) Kubectl() *dagger.Container {
 	return h.K3s.Kubectl("get nodes").
 		WithDirectory("/project", h.Container.Directory(".")).
-		WithWorkdir("/project"), nil
-
+		WithWorkdir("/project")
 }
