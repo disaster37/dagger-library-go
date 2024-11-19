@@ -39,6 +39,8 @@ func (h *Kube) Run(
 	// Install CRD on kube
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
 	_, err = h.K3s.Kubectl("help").
+		WithoutEnvVariable("HTTP_PROXY").
+		WithoutEnvVariable("HTTPS_PROXY").
 		WithFile("/tmp/crd.yaml", crdFile).
 		Terminal().
 		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")).
@@ -58,6 +60,8 @@ func (h *Kube) Run(
 	}
 
 	return h.K3s.Kns().
+		WithoutEnvVariable("HTTP_PROXY").
+		WithoutEnvVariable("HTTPS_PROXY").
 		WithDirectory("/project", h.Container.Directory(".")).
 		WithWorkdir("/project"), nil
 
