@@ -28,15 +28,7 @@ func NewKube(
 func (h *Kube) Cluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
-	return h.K3s.Server().Start(ctx)
-}
-
-func (h *Kube) Run(
-	ctx context.Context,
-) (*dagger.Service, error) {
-
-	// Start k3s
-	_, err := h.Cluster(ctx)
+	service, err := h.K3s.Server().Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
@@ -49,6 +41,19 @@ func (h *Kube) Run(
 		Stdout(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when install CRDs")
+	}
+
+	return service, nil
+}
+
+func (h *Kube) Run(
+	ctx context.Context,
+) (*dagger.Service, error) {
+
+	// Start k3s
+	_, err := h.Cluster(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when start K3s")
 	}
 
 	// Run operator as service
