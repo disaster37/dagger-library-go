@@ -43,6 +43,7 @@ func (h *Kube) Run(
 	crdFile := h.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
 	_, err = h.K3s.Kubectl("version").
 		WithFile("/tmp/crd.yaml", crdFile).
+		Terminal().
 		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")).
 		Stdout(ctx)
 	if err != nil {
