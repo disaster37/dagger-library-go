@@ -61,7 +61,7 @@ func (h *Kube) Run(
 		return nil, errors.Wrap(err, "Error when run operator")
 	}
 
-	return h.K3s.Kns().
+	return h.K3s.Kubectl("get nodes").
 		WithDirectory("/project", h.Container.Directory(".")).
 		WithWorkdir("/project"), nil
 
