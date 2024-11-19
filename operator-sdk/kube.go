@@ -31,7 +31,7 @@ func (h *Kube) Run(
 
 	// Start k3s
 	kServer := h.K3s.Server()
-	kServer, err := kServer.Start(ctx)
+	_, err := kServer.Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
@@ -41,7 +41,7 @@ func (h *Kube) Run(
 	_, err = h.K3s.Kubectl("help").
 		WithFile("/tmp/crd.yaml", crdFile).
 		Terminal().
-		WithExec(helper.ForgeCommand("kubectl apply -f /tmp/crd.yaml")).
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/crd.yaml")).
 		Stdout(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when install CRDs")
