@@ -163,7 +163,7 @@ func (h *OperatorSdk) Release(
 	}
 
 	// Run bundle
-	metadata := &metadata{}
+	metadata := &Metadata{}
 	versionFile, err := sdk.Base.File("version.yaml").Contents(ctx)
 	if err != nil {
 		// File not yet exist
@@ -213,7 +213,7 @@ func (h *OperatorSdk) Release(
 
 }
 
-type metadata struct {
+type Metadata struct {
 	CurrentVersion  string `json:"currentVersion"`
 	PreviousVersion string `json:"previousVersion"`
 }
