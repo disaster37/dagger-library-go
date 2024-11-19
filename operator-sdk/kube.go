@@ -51,8 +51,10 @@ func (h *Kube) Run(
 		WithFile("/tmp/kubeconfig", h.K3s.Config()).
 		WithEnvVariable("KUBECONFIG", "/tmp/kubeconfig").
 		WithExposedPort(8081, dagger.ContainerWithExposedPortOpts{Protocol: dagger.NetworkProtocolTcp, Description: "Health"}).
-		Terminal().
-		WithExec(helper.ForgeCommand("LOG_LEVEL=trace LOG_FORMATTER=json go run cmd/main.go")).
+		WithEnvVariable("ENABLE_WEBHOOKS", "false").
+		WithEnvVariable("LOG_LEVEL", "trace").
+		WithEnvVariable("LOG_FORMATTER", "json").
+		WithExec(helper.ForgeCommand("go run cmd/main.go")).
 		AsService().
 		Start(ctx)
 	if err != nil {
