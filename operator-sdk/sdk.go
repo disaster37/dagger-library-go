@@ -14,14 +14,21 @@ type Sdk struct {
 
 	// +private
 	Base *dagger.Container
+
+	// +private
+	BinPath string
 }
 
 func NewSdk(
 	ctx context.Context,
 
 	// Container to use with operator-sdk cli inside and golang
-	// + required
+	// +required
 	container *dagger.Container,
+
+	// The bin path
+	// +required
+	binPath string,
 
 	// The operator-sdk cli version to use
 	// +optional
@@ -81,13 +88,13 @@ func NewSdk(
 
 	return &Sdk{
 		Base: container.
-			WithExec(helper.ForgeCommandf("curl --fail -L %s -o /usr/bin/operator-sdk", urlSdk)).
-			WithExec(helper.ForgeCommandf("curl --fail -L %s -o /usr/bin/opm", urlOpm)).
-			WithExec(helper.ForgeCommand("chmod +x /usr/bin/operator-sdk")).
+			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
+			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/opm", urlOpm, binPath)).
 			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
 			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
 			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
 			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")),
+		BinPath: binPath,
 	}
 }
 

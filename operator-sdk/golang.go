@@ -27,6 +27,9 @@ type Golang struct {
 
 	// +private
 	Version string
+
+	// +private
+	BinPath string
 }
 
 func NewGolang(
@@ -46,26 +49,22 @@ func NewGolang(
 		panic(err)
 	}
 
-	if container != nil {
-		return &Golang{
-			Base:    container,
-			Src:     src,
-			Version: version,
-		}
+	if container == nil {
+		container = defaultImage(version)
 	}
 
 	// Compute the golang base container version
-	base := defaultImage(version)
-	base = mountCaches(ctx, base).
+	golang := &Golang{
+		Base:    container,
+		Src:     src,
+		Version: version,
+	}
+	golang.Base = golang.mountCaches(ctx).
 		WithDirectory(goWorkDir, src).
 		WithWorkdir(goWorkDir).
 		WithoutEntrypoint()
 
-	return &Golang{
-		Src:     src,
-		Version: version,
-		Base:    base,
-	}
+	return golang
 }
 
 func (h *Golang) Sdk(
@@ -92,7 +91,16 @@ func (h *Golang) Sdk(
 	kustomizeVersion string,
 
 ) *Sdk {
-	return NewSdk(ctx, h.Base, sdkVersion, opmVersion, controllerGenVersion, cleanCrdVersion, kustomizeVersion)
+	return NewSdk(
+		ctx,
+		h.Base,
+		h.BinPath,
+		sdkVersion,
+		opmVersion,
+		controllerGenVersion,
+		cleanCrdVersion,
+		kustomizeVersion,
+	)
 }
 
 func (h *Golang) Oci() *Oci {
@@ -129,7 +137,7 @@ func (h *Golang) Lint(
 			"-s",
 			"--",
 			"-b",
-			"$(go env GOPATH)/bin",
+			h.BinPath,
 			tag,
 		}
 		ctr = ctr.WithExec([]string{"bash", "-c", strings.Join(cmd, " ")})
@@ -276,8 +284,8 @@ func defaultImage(version string) *dagger.Container {
 	return dag.Container().From(fmt.Sprintf("golang:%s", version))
 }
 
-func mountCaches(ctx context.Context, base *dagger.Container) *dagger.Container {
-	goEnvStdout, err := base.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
+func (h *Golang) mountCaches(ctx context.Context) *dagger.Container {
+	goEnvStdout, err := h.Base.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("Error when get go env; %s", err.Error()))
 	}
@@ -297,8 +305,12 @@ func mountCaches(ctx context.Context, base *dagger.Container) *dagger.Container 
 	gobuild := dag.CacheVolume("gobuild")
 	gobin := dag.CacheVolume("gobin")
 
-	return base.
+	h.BinPath = goBinCacheEnv
+
+	h.Base = h.Base.
 		WithMountedCache(goModCacheEnv, gomod).
 		WithMountedCache(goCacheEnv, gobuild).
 		WithMountedCache(goBinCacheEnv, gobin)
+
+	return h.Base
 }

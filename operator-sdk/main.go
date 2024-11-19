@@ -207,6 +207,8 @@ func (h *OperatorSdk) Release(
 	sb.WriteString(stdout)
 	sb.WriteString("\n")
 
+	// @TODO write the new version file
+
 	return NewRelease(sb.String(), dir), nil
 
 }
