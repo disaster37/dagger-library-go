@@ -5,8 +5,8 @@
   "dependencies": [
     {
       "name": "docker",
-      "source": "github.com/shykes/daggerverse/docker@docker/v0.4.3",
-      "pin": "c9a80c9eac0675a53a7e052da3594207f4235988"
+      "source": "github.com/shykes/daggerverse/docker",
+      "pin": "a3f377083ddc015de801b7b04d0543bc5647b3f8"
     },
     {
       "name": "github",
