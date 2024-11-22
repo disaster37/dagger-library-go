@@ -229,34 +229,6 @@ func (h *Sdk) Catalog(
 	dockerVersion string,
 ) (*dagger.Container, error) {
 
-	opmCmd := []string{
-		"opm",
-		"index",
-		"add",
-		"--container-tool",
-		"docker",
-		"--mode",
-		"semver",
-		"--tag",
-		catalogImage,
-		"--bundles",
-		bundleImage,
-	}
-
-	if update {
-		if previousCatalogImage == "" {
-			opmCmd = append(opmCmd,
-				"--from-index",
-				catalogImage,
-			)
-		} else {
-			opmCmd = append(opmCmd,
-				"--from-index",
-				previousCatalogImage,
-			)
-		}
-	}
-
 	dockerCli := dag.Docker().
 		Cli(dagger.DockerCliOpts{Version: dockerVersion})
 
@@ -269,18 +241,57 @@ func (h *Sdk) Catalog(
 		WithExec(helper.ForgeCommandf("cp %s/opm /tmp/opm", h.BinPath)).
 		File("/tmp/opm")
 
-	_, err = dockerCli.
+	dockerContainer := dockerCli.
 		Container().
-		WithFile("/usr/bin/opm", opmFile).
-		WithExec(opmCmd).
-		Stdout(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when create catalog image")
-	}
+		WithFile("/usr/bin/opm", opmFile)
 
-	catalog := dockerCli.Image(dagger.DockerCliImageOpts{
-		Repository: catalogImage,
-	}).Export()
+	return dockerContainer, nil
+
+	/*
+
+
+			if update {
+			if previousCatalogImage == "" {
+				opmCmd = append(opmCmd,
+					"--from-index",
+					catalogImage,
+				)
+			} else {
+				opmCmd = append(opmCmd,
+					"--from-index",
+					previousCatalogImage,
+				)
+			}
+		}
+
+			opmCmd := []string{
+			"opm",
+			"index",
+			"add",
+			"--container-tool",
+			"docker",
+			"--mode",
+			"semver",
+			"--tag",
+			catalogImage,
+			"--bundles",
+			bundleImage,
+		}
+
+
+			_, err = dockerCli.
+				Container().
+				WithFile("/usr/bin/opm", opmFile).
+				WithExec(opmCmd).
+				Stdout(ctx)
+			if err != nil {
+				return nil, errors.Wrap(err, "Error when create catalog image")
+			}
+
+			catalog := dockerCli.Image(dagger.DockerCliImageOpts{
+				Repository: catalogImage,
+			}).Export()
+	*/
 
 	return catalog, nil
 }
