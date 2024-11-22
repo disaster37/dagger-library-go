@@ -262,7 +262,7 @@ func (h *Sdk) Catalog(
 
 	opmFile :=
 		h.Container.
-			WithExec(helper.ForgeCommandf("%s/opm /tmp/opm", h.BinPath)).
+			WithExec(helper.ForgeCommandf("cp %s/opm /tmp/opm", h.BinPath)).
 			File("/tmp.opm")
 
 	_, err := dockerCli.
