@@ -93,7 +93,8 @@ func NewSdk(
 			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
 			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
 			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
-			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")),
+			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")).
+			WithExec(helper.ForgeScript("apt update && apt install -y docker")),
 		BinPath: binPath,
 	}
 }
@@ -202,6 +203,35 @@ func (h *Sdk) Bundle(
 		WithExec(helper.ForgeCommand("operator-sdk bundle validate ./bundle")).
 		Directory("."), nil
 
+}
+
+func (h *Sdk) Catalog(
+	ctx context.Context,
+
+	// The docker socket
+	// +optional
+	socket *dagger.Socket,
+
+	// The docker service
+	// +optional
+	service *dagger.Service,
+) (*dagger.Container, error) {
+
+	ctn := h.Container
+
+	if service != nil {
+		endpoint, err := service.Endpoint(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when get Docker endpoint")
+		}
+		return ctn.WithEnvVariable("DOCKER_HOST", fmt.Sprintf("tcp://%s", endpoint)), nil
+	}
+
+	if socket != nil {
+		return ctn.WithUnixSocket("/var/run/docker.sock", socket), nil
+	}
+
+	return nil, errors.New("You need to provide docker Service or docker Socket")
 }
 
 // Prmit to run Kube with Operator
