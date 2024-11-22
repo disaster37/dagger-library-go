@@ -260,9 +260,14 @@ func (h *Sdk) Catalog(
 	dockerCli := dag.Docker().
 		Cli(dagger.DockerCliOpts{Version: dockerVersion})
 
+	opmFile :=
+		h.Container.
+			WithExec(helper.ForgeCommandf("%s/opm /tmp/opm", h.BinPath)).
+			File("/tmp.opm")
+
 	_, err := dockerCli.
 		Container().
-		WithFile("/usr/bin/opm", h.Container.WithExec(helper.ForgeCommand("ls -al /go/bin")).File(fmt.Sprintf("%s/opm", h.BinPath))).
+		WithFile("/usr/bin/opm", opmFile).
 		WithExec(opmCmd).
 		Stdout(ctx)
 	if err != nil {
