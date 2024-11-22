@@ -238,6 +238,8 @@ func (h *Sdk) Catalog(
 
 	dockerContainer := dockerCli.
 		Container().
+		WithServiceBinding("dockerd.svc", dockerCli.Engine()).
+		WithEnvVariable("DOCKER_HOST", "tcp://dockerd.svc:2375").
 		WithFile("/usr/bin/opm", opmFile).
 		WithExec(helper.ForgeCommand("docker info"))
 
@@ -276,11 +278,7 @@ func (h *Sdk) Catalog(
 		return nil, errors.Wrap(err, "Error when create catalog image")
 	}
 
-	catalog := dockerCli.Image(dagger.DockerCliImageOpts{
-		Repository: catalogImage,
-	}).Export()
-
-	return catalog, nil
+	return nil, nil
 }
 
 // Prmit to run Kube with Operator
