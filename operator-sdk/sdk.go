@@ -269,7 +269,7 @@ func (h *Sdk) Catalog(
 		}
 	}
 
-	_, err = dockerContainer.
+	_, err := dockerContainer.
 		WithExec(opmCmd).
 		Stdout(ctx)
 	if err != nil {
