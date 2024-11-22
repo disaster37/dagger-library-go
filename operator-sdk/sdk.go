@@ -243,57 +243,49 @@ func (h *Sdk) Catalog(
 
 	dockerContainer := dockerCli.
 		Container().
-		WithFile("/usr/bin/opm", opmFile)
+		WithFile("/usr/bin/opm", opmFile).
+		WithExec(helper.ForgeCommand("docker info"))
 
-	return dockerContainer, nil
+	opmCmd := []string{
+		"opm",
+		"index",
+		"add",
+		"--container-tool",
+		"docker",
+		"--mode",
+		"semver",
+		"--tag",
+		catalogImage,
+		"--bundles",
+		bundleImage,
+	}
 
-	/*
-
-
-			if update {
-			if previousCatalogImage == "" {
-				opmCmd = append(opmCmd,
-					"--from-index",
-					catalogImage,
-				)
-			} else {
-				opmCmd = append(opmCmd,
-					"--from-index",
-					previousCatalogImage,
-				)
-			}
+	if update {
+		if previousCatalogImage == "" {
+			opmCmd = append(opmCmd,
+				"--from-index",
+				catalogImage,
+			)
+		} else {
+			opmCmd = append(opmCmd,
+				"--from-index",
+				previousCatalogImage,
+			)
 		}
+	}
 
-			opmCmd := []string{
-			"opm",
-			"index",
-			"add",
-			"--container-tool",
-			"docker",
-			"--mode",
-			"semver",
-			"--tag",
-			catalogImage,
-			"--bundles",
-			bundleImage,
-		}
+	_, err = dockerContainer.
+		WithExec(opmCmd).
+		Stdout(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when create catalog image")
+	}
 
+	catalog := dockerCli.Image(dagger.DockerCliImageOpts{
+		Repository: catalogImage,
+	}).Export()
 
-			_, err = dockerCli.
-				Container().
-				WithFile("/usr/bin/opm", opmFile).
-				WithExec(opmCmd).
-				Stdout(ctx)
-			if err != nil {
-				return nil, errors.Wrap(err, "Error when create catalog image")
-			}
-
-			catalog := dockerCli.Image(dagger.DockerCliImageOpts{
-				Repository: catalogImage,
-			}).Export()
-	*/
-
-	//return catalog, nil
+	return catalog, nil
 }
 
 // Prmit to run Kube with Operator
