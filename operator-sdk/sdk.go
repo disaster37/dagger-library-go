@@ -106,12 +106,12 @@ func (h *Sdk) Version(
 }
 
 func (h *Sdk) Run(
-	// The cmd to run with operator-sdk
+	// The cmd to run on container
 	// +required
 	cmd string,
 ) *dagger.Container {
 
-	return h.Container.WithExec(helper.ForgeCommandf("operator-sdk %s", cmd))
+	return h.Container.WithExec(helper.ForgeCommand(cmd))
 }
 
 func (h *Sdk) Generate(
