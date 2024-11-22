@@ -93,8 +93,7 @@ func NewSdk(
 			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
 			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
 			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
-			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")).
-			WithExec(helper.ForgeScript("apt update && apt install -y docker")),
+			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")),
 		BinPath: binPath,
 	}
 }
@@ -208,36 +207,73 @@ func (h *Sdk) Bundle(
 func (h *Sdk) Catalog(
 	ctx context.Context,
 
+	// The catalog image name
+	// +required
+	catalogImage string,
+
+	// The previuous catalog image name
+	// If update 'true' and 'previousCatalogImage' not provided, it use the 'catalogImage'
+	// +optional
+	previousCatalogImage string,
+
+	// The bundle image name
+	// +required
+	bundleImage string,
+
+	// Set to true to update existing catalog
+	// +optional
+	update bool,
+
 	// The docker socket
 	// +optional
-	socket *dagger.Socket,
-
-	// The docker service
-	// +optional
-	service *dagger.Service,
+	dockerVersion string,
 ) (*dagger.Container, error) {
 
-	ctn := h.Container
-
-	if service != nil {
-		ports, err := service.Ports(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when get service ports")
-		}
-		port, err := ports[0].Port(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when get port number")
-		}
-		return ctn.
-			WithEnvVariable("DOCKER_HOST", fmt.Sprintf("tcp://docker.svc:%d", port)).
-			WithServiceBinding("docker.svc", service), nil
+	opmCmd := []string{
+		"opm",
+		"index",
+		"add",
+		"--container-tool",
+		"docker",
+		"--mode",
+		"semver",
+		"--tag",
+		catalogImage,
+		"--bundles",
+		bundleImage,
 	}
 
-	if socket != nil {
-		return ctn.WithUnixSocket("/var/run/docker.sock", socket), nil
+	if update {
+		if previousCatalogImage == "" {
+			opmCmd = append(opmCmd,
+				"--from-index",
+				catalogImage,
+			)
+		} else {
+			opmCmd = append(opmCmd,
+				"--from-index",
+				previousCatalogImage,
+			)
+		}
 	}
 
-	return nil, errors.New("You need to provide docker Service or docker Socket")
+	dockerCli := dag.Docker().
+		Cli(dagger.DockerCliOpts{Version: dockerVersion})
+
+	_, err := dockerCli.
+		Container().
+		WithMountedFile("/usr/bin/opm", h.Container.File(fmt.Sprintf("%s/opm", h.BinPath))).
+		WithExec(opmCmd).
+		Stdout(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when create catalog image")
+	}
+
+	catalog := dockerCli.Image(dagger.DockerCliImageOpts{
+		Repository: catalogImage,
+	}).Export()
+
+	return catalog, nil
 }
 
 // Prmit to run Kube with Operator

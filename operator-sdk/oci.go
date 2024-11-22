@@ -133,6 +133,27 @@ func (h *Oci) PublishBundle(
 
 }
 
+// PublishCatalog permit to publish the catalog image
+func (h *Oci) PublishCatalog(
+	ctx context.Context,
+
+	// The catalog image
+	// +required
+	image *dagger.Container,
+
+	// The image name to push
+	// +required
+	name string,
+) (string, error) {
+
+	for _, auth := range h.Auths {
+		image = image.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
+	}
+
+	return image.Publish(ctx, name)
+
+}
+
 // WithSource permit to update the current source
 func (h *Oci) WithSource(
 	// The source directory
