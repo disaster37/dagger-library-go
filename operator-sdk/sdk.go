@@ -220,11 +220,17 @@ func (h *Sdk) Catalog(
 	ctn := h.Container
 
 	if service != nil {
-		endpoint, err := service.Endpoint(ctx)
+		ports, err := service.Ports(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "Error when get Docker endpoint")
+			return nil, errors.Wrap(err, "Error when get service ports")
 		}
-		return ctn.WithEnvVariable("DOCKER_HOST", fmt.Sprintf("tcp://%s", endpoint)), nil
+		port, err := ports[0].Port(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when get port number")
+		}
+		return ctn.
+			WithEnvVariable("DOCKER_HOST", fmt.Sprintf("tcp://docker.svc:%d", port)).
+			WithServiceBinding("docker.svc", service), nil
 	}
 
 	if socket != nil {
