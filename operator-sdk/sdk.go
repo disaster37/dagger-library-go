@@ -282,7 +282,7 @@ func (h *Sdk) Catalog(
 	catalogFile := dockerContainer.
 		WithExec([]string{
 			"docker",
-			"export",
+			"save",
 			"--output=/tmp/image.tar",
 			catalogImage,
 		}).File("/tmp/image.tar")
