@@ -284,7 +284,7 @@ func (h *Sdk) Catalog(
 			"docker",
 			"export",
 			"--output=/tmp/image.tar",
-			"catalogImage",
+			catalogImage,
 		}).File("/tmp/image.tar")
 
 	return dag.Container().Import(catalogFile), nil
