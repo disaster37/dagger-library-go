@@ -293,7 +293,7 @@ func (h *Sdk) Catalog(
 			}).Export()
 	*/
 
-	return catalog, nil
+	//return catalog, nil
 }
 
 // Prmit to run Kube with Operator
