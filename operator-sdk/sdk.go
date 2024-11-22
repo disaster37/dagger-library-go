@@ -232,11 +232,6 @@ func (h *Sdk) Catalog(
 	dockerCli := dag.Docker().
 		Cli(dagger.DockerCliOpts{Version: dockerVersion})
 
-	_, err := dockerCli.Engine().Start(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when start Docker engine")
-	}
-
 	opmFile := h.Container.
 		WithExec(helper.ForgeCommandf("cp %s/opm /tmp/opm", h.BinPath)).
 		File("/tmp/opm")
