@@ -232,10 +232,10 @@ func (h *Sdk) Catalog(
 	dockerCli := dag.Docker().
 		Cli(dagger.DockerCliOpts{Version: dockerVersion})
 
+	// Configure docker cli
 	opmFile := h.Container.
 		WithExec(helper.ForgeCommandf("cp %s/opm /tmp/opm", h.BinPath)).
 		File("/tmp/opm")
-
 	dockerContainer := dockerCli.
 		Container().
 		WithServiceBinding("dockerd.svc", dockerCli.Engine()).
@@ -243,6 +243,7 @@ func (h *Sdk) Catalog(
 		WithFile("/usr/bin/opm", opmFile).
 		WithExec(helper.ForgeCommand("docker info"))
 
+	// Run OPM command
 	opmCmd := []string{
 		"opm",
 		"index",
@@ -256,7 +257,6 @@ func (h *Sdk) Catalog(
 		"--bundles",
 		bundleImage,
 	}
-
 	if update {
 		if previousCatalogImage == "" {
 			opmCmd = append(opmCmd,
@@ -270,15 +270,24 @@ func (h *Sdk) Catalog(
 			)
 		}
 	}
-
+	dockerContainer = dockerContainer.
+		WithExec(opmCmd)
 	_, err := dockerContainer.
-		WithExec(opmCmd).
 		Stdout(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when create catalog image")
 	}
 
-	return nil, nil
+	// Export docker image and import them on dagger
+	catalogFile := dockerContainer.
+		WithExec([]string{
+			"docker",
+			"export",
+			"--output=/tmp/image.tar",
+			"catalogImage",
+		}).File("/tmp/image.tar")
+
+	return dag.Container().Import(catalogFile), nil
 }
 
 // Prmit to run Kube with Operator
