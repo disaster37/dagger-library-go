@@ -262,7 +262,7 @@ func (h *Sdk) Catalog(
 
 	_, err := dockerCli.
 		Container().
-		WithMountedFile("/usr/bin/opm", h.Container.File(fmt.Sprintf("%s/opm", h.BinPath))).
+		WithFile("/usr/bin/opm", h.Container.File(fmt.Sprintf("%s/opm", h.BinPath))).
 		WithExec(opmCmd).
 		Stdout(ctx)
 	if err != nil {
