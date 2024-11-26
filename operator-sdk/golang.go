@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
-	"golang.org/x/mod/modfile"
 )
 
 const (
@@ -18,16 +15,12 @@ const (
 )
 
 type Golang struct {
-	Container *dagger.Container
+
+	// +private
+	GolangModule *dagger.Golang
 
 	// +private
 	Src *dagger.Directory
-
-	// +private
-	Version string
-
-	// +private
-	BinPath string
 }
 
 func NewGolang(
@@ -38,67 +31,20 @@ func NewGolang(
 	src *dagger.Directory,
 
 	// Container to use with operator-sdk cli inside and golang
+	// +optional
 	container *dagger.Container,
 ) *Golang {
 
-	// Get the current golang version
-	version, err := inspectModVersion(context.Background(), src)
-	if err != nil {
-		panic(err)
-	}
-
-	if container == nil {
-		container = defaultImage(version)
-	}
-
 	// Compute the golang base container version
-	golang := &Golang{
-		Container: container,
-		Src:       src,
-		Version:   version,
+	return &Golang{
+		GolangModule: dag.Golang(src, dagger.GolangOpts{Base: container}),
+		Src:          src,
 	}
-	golang.Container = golang.mountCaches(ctx).
-		WithDirectory(goWorkDir, src).
-		WithWorkdir(goWorkDir).
-		WithoutEntrypoint()
-
-	return golang
 }
 
-func (h *Golang) Sdk(
-	ctx context.Context,
-
-	// The operator-sdk cli version to use
-	// +optional
-	sdkVersion string,
-
-	// The Opm cli version to use
-	// +optional
-	opmVersion string,
-
-	// The controller gen version to use
-	// +optional
-	controllerGenVersion string,
-
-	// The clean crd version to use
-	// +optional
-	cleanCrdVersion string,
-
-	// The kustomize version to use
-	// +optional
-	kustomizeVersion string,
-
-) *Sdk {
-	return NewSdk(
-		ctx,
-		h.Container,
-		h.BinPath,
-		sdkVersion,
-		opmVersion,
-		controllerGenVersion,
-		cleanCrdVersion,
-		kustomizeVersion,
-	)
+// Container return the Golang container
+func (h *Golang) Container() *dagger.Container {
+	return h.GolangModule.Container()
 }
 
 func (h *Golang) Oci() *Oci {
@@ -255,55 +201,6 @@ func (h *Golang) WithSource(
 	// +required
 	src *dagger.Directory,
 ) *Golang {
-	h.Container = h.Container.WithDirectory(".", src)
+	h.GolangModule.Container() = h.Container.WithDirectory(".", src)
 	return h
-}
-
-func inspectModVersion(ctx context.Context, src *dagger.Directory) (string, error) {
-	mod, err := src.File(goMod).Contents(ctx)
-	if err != nil {
-		// File not exist, use the last golang image
-		return "latest", nil
-	}
-
-	f, err := modfile.Parse(goMod, []byte(mod), nil)
-	if err != nil {
-		return "", err
-	}
-	return f.Go.Version, nil
-}
-
-func defaultImage(version string) *dagger.Container {
-	return dag.Container().From(fmt.Sprintf("golang:%s", version))
-}
-
-func (h *Golang) mountCaches(ctx context.Context) *dagger.Container {
-	goEnvStdout, err := h.Container.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
-	if err != nil {
-		panic(fmt.Sprintf("Error when get go env; %s", err.Error()))
-	}
-	var goEnv map[string]string
-	if err := json.Unmarshal([]byte(goEnvStdout), &goEnv); err != nil {
-		panic(fmt.Sprintf("Error when decode go env; %s", err.Error()))
-	}
-
-	goCacheEnv := goEnv["GOCACHE"]
-	goModCacheEnv := goEnv["GOMODCACHE"]
-	goBinCacheEnv := goEnv["GOBIN"]
-	if goBinCacheEnv == "" {
-		goBinCacheEnv = fmt.Sprintf("%s/bin", goEnv["GOPATH"])
-	}
-
-	gomod := dag.CacheVolume("gomod")
-	gobuild := dag.CacheVolume("gobuild")
-	gobin := dag.CacheVolume("gobin")
-
-	h.BinPath = goBinCacheEnv
-
-	h.Container = h.Container.
-		WithMountedCache(goModCacheEnv, gomod).
-		WithMountedCache(goCacheEnv, gobuild).
-		WithMountedCache(goBinCacheEnv, gobin)
-
-	return h.Container
 }

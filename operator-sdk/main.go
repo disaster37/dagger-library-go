@@ -27,6 +27,12 @@ import (
 type OperatorSdk struct {
 	// +private
 	Src *dagger.Directory
+
+	// The Golang module
+	Golang *Golang
+
+	// The SDK module
+	Sdk *Sdk
 }
 
 func New(
@@ -35,20 +41,19 @@ func New(
 	// The source directory
 	src *dagger.Directory,
 
-) *OperatorSdk {
-	return &OperatorSdk{
-		Src: src,
-	}
-}
-
-func (h *OperatorSdk) Golang(
-	ctx context.Context,
-
-	// Set alternative Golang container
+	// Extra golang container
 	// +optional
 	container *dagger.Container,
-) *Golang {
-	return NewGolang(ctx, h.Src, container)
+
+) *OperatorSdk {
+
+	goModule := NewGolang(ctx, src, container)
+
+	return &OperatorSdk{
+		Src:    src,
+		Golang: goModule,
+		Sdk:    NewSdk(ctx, goModule.Container()),
+	}
 }
 
 func (h *OperatorSdk) Release(

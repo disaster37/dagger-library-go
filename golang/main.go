@@ -449,3 +449,13 @@ func (g *Golang) Format(ctx context.Context) (*dagger.Directory, error) {
 
 	return ctr.WithExec(cmd).Directory(goWorkDir), nil
 }
+
+// WithSource permit to update the current source on sdk container
+func (h *Golang) WithSource(
+	// The source directory
+	// +required
+	src *dagger.Directory,
+) *Golang {
+	h.Container = h.Container.WithDirectory(".", src)
+	return h
+}

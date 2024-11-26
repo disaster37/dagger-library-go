@@ -14,6 +14,11 @@
       "pin": "b2b06917e338519a04404347a105a7c3bb316472"
     },
     {
+      "name": "golang",
+      "source": "github.com/disaster37/dagger-library-go/golang@v0.0.24",
+      "pin": "2d35aed06292796c4d2351b6336caa1f37247f7b"
+    },
+    {
       "name": "k3s",
       "source": "github.com/marcosnils/daggerverse/k3s",
       "pin": "2f737ceb800c4cdc69c6ca7f01e1f473fac9aac9"
