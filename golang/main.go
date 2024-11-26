@@ -42,10 +42,6 @@ type Golang struct {
 	// Base is the image used by all golang dagger functions, defaults to the bookworm base image
 	Container *dagger.Container
 
-	// Src is a directory that contains the projects source code
-	// +private
-	Src *dagger.Directory
-
 	// Private Go module support
 	// +private
 	Private *GoPrivate
@@ -87,7 +83,6 @@ func New(
 	}
 
 	golang := &Golang{
-		Src:       src,
 		Version:   version,
 		Container: base,
 	}
@@ -293,7 +288,7 @@ func (g *Golang) Test(
 	// Path to test
 	// +optional
 	path string,
-) (string, error) {
+) *GolangTest {
 
 	ctr := g.Container
 
@@ -330,7 +325,7 @@ func (g *Golang) Test(
 		ctr = g.enablePrivateModules()
 	}
 
-	return ctr.WithExec(cmd).Stdout(ctx)
+	return NewGolangTest(ctr)
 }
 
 // Execute benchmarks defined within the target project, excludes all other tests
@@ -391,6 +386,11 @@ func (g *Golang) Lint(
 	// +default="colored-line-number"
 	format string,
 ) (string, error) {
+
+	if format == "" {
+		format = "colored-line-number"
+	}
+
 	ctr := g.Container
 	if _, err := ctr.WithExec([]string{"golangci-lint", "version"}).Sync(ctx); err != nil {
 		tag, err := dag.Github().GetLatestRelease("golangci/golangci-lint").Tag(ctx)
