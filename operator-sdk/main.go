@@ -52,7 +52,7 @@ func New(
 	return &OperatorSdk{
 		Src:    src,
 		Golang: goModule,
-		Sdk:    NewSdk(ctx, goModule.Container()),
+		Sdk:    NewSdk(ctx, goModule.Container, goModule.),
 	}
 }
 

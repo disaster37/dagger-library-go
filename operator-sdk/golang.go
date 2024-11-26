@@ -14,9 +14,7 @@ const (
 )
 
 type Golang struct {
-
-	// +private
-	GolangModule *dagger.Golang
+	*dagger.Golang
 }
 
 func NewGolang(
@@ -33,30 +31,8 @@ func NewGolang(
 
 	// Compute the golang base container version
 	return &Golang{
-		GolangModule: dag.Golang(src, dagger.GolangOpts{Base: container}),
+		Golang: dag.Golang(src, dagger.GolangOpts{Base: container}),
 	}
-}
-
-// Container return the Golang container
-func (h *Golang) Container() *dagger.Container {
-	return h.GolangModule.Container()
-}
-
-// Lint the target project using golangci-lint
-func (h *Golang) Lint(
-	ctx context.Context,
-	// the type of report that should be generated
-	// +optional
-	// +default="colored-line-number"
-	format string,
-) (string, error) {
-	return h.Lint(ctx, format)
-}
-
-// Format the source code within a target project using gofumpt. Formatted code must be
-// copied back onto the host.`
-func (h *Golang) Format(ctx context.Context) *dagger.Directory {
-	return h.GolangModule.Format()
 }
 
 // Test permit to run golang tests
@@ -103,8 +79,7 @@ func (h *Golang) Test(
 		// Create new Golang module with our extra container to run tests
 	golangModule := dag.Golang(h.Container().Directory("."), dagger.GolangOpts{Base: ctr})
 
-	golangModule.Test(
-		ctx,
+	res := golangModule.Test(
 		dagger.GolangTestOpts{
 			Short:         short,
 			Shuffle:       shuffle,
@@ -115,15 +90,15 @@ func (h *Golang) Test(
 		},
 	)
 
-	return NewTestResult(ctr), nil
+	return NewTestResult(res), nil
 }
 
-// WithSource permit to update the current source on sdk container
-func (h *Golang) WithSource(
-	// The source directory
-	// +required
-	src *dagger.Directory,
-) *Golang {
-	h.GolangModule = h.GolangModule.WithSource(src)
-	return h
+type TestResult struct {
+	*dagger.GolangTest
+}
+
+func NewTestResult(res *dagger.GolangTest) *TestResult {
+	return &TestResult{
+		GolangTest: res,
+	}
 }

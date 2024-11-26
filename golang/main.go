@@ -146,6 +146,12 @@ func (g *Golang) ModVersion() string {
 	return g.Version
 }
 
+// GoBin return the Go bin path
+// It can be usefull to add bin on this because of cache volume
+func (g *Golang) GoBin() string {
+	return g.BinPath
+}
+
 func defaultImage(version string) *dagger.Container {
 	return dag.Container().From(fmt.Sprintf("golang:%s", version))
 }

@@ -6,7 +6,7 @@
     {
       "name": "golang",
       "source": "github.com/disaster37/dagger-library-go/golang",
-      "pin": "04e38241f2c63835b51b9c578969614f5d5ae4e2"
+      "pin": "037c8a8dad2d4deca9b7395f8c0438faa243d2c5"
     },
     {
       "name": "docker",
