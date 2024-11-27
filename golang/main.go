@@ -337,6 +337,57 @@ func (g *Golang) Test(
 		File("coverage.out")
 }
 
+// Execute tests defined within the target project, ignores benchmarks by default
+// Debug test with dlv
+func (g *Golang) DebugTest(
+	ctx context.Context,
+	// run select tests only, defined using a regex
+	// +optional
+	run string,
+) *dagger.Service {
+
+	ctr := g.Container.
+		WithExec(helper.ForgeScript(`
+set -e
+
+go install github.com/acroca/go-symbols@latest &&\
+go install github.com/cweill/gotests/gotests@latest &&\
+go install github.com/davidrjenni/reftools/cmd/fillstruct@latest &&\
+go install github.com/haya14busa/goplay/cmd/goplay@latest &&\
+go install github.com/stamblerre/gocode@latest &&\
+mv /go/bin/gocode /go/bin/gocode-gomod &&\
+go install github.com/mdempsky/gocode@latest &&\
+go install github.com/ramya-rao-a/go-outline@latest &&\
+go install github.com/rogpeppe/godef@latest &&\
+go install github.com/sqs/goreturns@latest &&\
+go install github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest &&\
+go install github.com/zmb3/gogetdoc@latest &&\
+go install honnef.co/go/tools/cmd/staticcheck@latest &&\
+go install golang.org/x/tools/cmd/gorename@latest &&\
+go install github.com/go-delve/delve/cmd/dlv@latest &&\
+go install golang.org/x/tools/gopls@latest
+		`))
+
+	cmd := []string{
+		"dlv",
+		"test",
+		"--listen=:4000",
+		"--log=true",
+		"--headless=true",
+		"--accept-multiclient",
+		"--api-version=2",
+	}
+
+	if run != "" {
+		cmd = append(cmd, "--", "-test.run", run)
+	}
+
+	return ctr.
+		WithExposedPort(4000).
+		WithExec(cmd).
+		AsService()
+}
+
 // Execute benchmarks defined within the target project, excludes all other tests
 func (g *Golang) Bench(
 	ctx context.Context,
