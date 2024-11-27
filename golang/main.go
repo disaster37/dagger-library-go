@@ -28,9 +28,6 @@ type Golang interface {
 	// Retrun the GO bin path
 	GoBin(ctx context.Context) (string, error)
 
-	// With permit to set new container
-	With(container *dagger.Container) Golang
-
 	// Container permit to get the Golang container
 	Container() *dagger.Container
 
@@ -214,12 +211,6 @@ func New(
 		WithoutEntrypoint()
 
 	return golang, nil
-}
-
-// With set the new container
-func (g *GolangModule) With(container *dagger.Container) *GolangModule {
-	g.Container = container
-	return g
 }
 
 // Echoes the version of go defined within a projects go.mod file.
