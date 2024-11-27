@@ -25,13 +25,13 @@ type Oci struct {
 	// +private
 	Src *dagger.Directory
 
-	// +private
+	// The manager image
 	Manager *dagger.Container
 
-	// +private
+	// The bundle image
 	Bundle *dagger.Container
 
-	// +private
+	// The catalog image
 	Catalog *dagger.Container
 
 	// +private
@@ -82,7 +82,7 @@ func (h *Oci) WithRepositoryCredentials(
 // BuildManager permit to build manager image
 func (h *Oci) BuildManager(
 	ctx context.Context,
-) *dagger.Container {
+) *Oci {
 
 	// Build manager
 	managerBinFile := h.GolangContainer.
@@ -97,7 +97,7 @@ func (h *Oci) BuildManager(
 		WithUser("65532:65532").
 		WithEntrypoint([]string{"/manager"})
 
-	return h.Manager
+	return h
 
 }
 
@@ -111,7 +111,7 @@ func (h *Oci) PublishManager(
 ) (string, error) {
 
 	if h.Manager == nil {
-		h.Manager = h.BuildManager(ctx)
+		h.BuildManager(ctx)
 	}
 
 	for _, auth := range h.Auths {
@@ -125,7 +125,7 @@ func (h *Oci) PublishManager(
 // BuildCatalog permit to build catalog image
 func (h *Oci) BuildBundle(
 	ctx context.Context,
-) *dagger.Container {
+) *Oci {
 	h.Bundle = h.GolangContainer.
 		Directory(".").
 		DockerBuild(
@@ -134,7 +134,7 @@ func (h *Oci) BuildBundle(
 			},
 		)
 
-	return h.Bundle
+	return h
 }
 
 // PublishBundle permit to push OCI image on registry
@@ -147,7 +147,7 @@ func (h *Oci) PublishBundle(
 ) (string, error) {
 
 	if h.Bundle == nil {
-		h.Bundle = h.BuildBundle(ctx)
+		h.BuildBundle(ctx)
 	}
 
 	for _, auth := range h.Auths {
@@ -177,7 +177,7 @@ func (h *Oci) BuildCatalog(
 	// Set to true to update existing catalog
 	// +optional
 	update bool,
-) (*dagger.Container, error) {
+) (*Oci, error) {
 
 	// Run OPM command
 	opmCmd := []string{
@@ -225,7 +225,7 @@ func (h *Oci) BuildCatalog(
 
 	h.Catalog = dag.Container().Import(catalogFile)
 
-	return h.Catalog, nil
+	return h, nil
 }
 
 // PublishCatalog permit to publish the catalog image
