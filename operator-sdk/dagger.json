@@ -4,11 +4,6 @@
   "sdk": "go",
   "dependencies": [
     {
-      "name": "golang",
-      "source": "github.com/disaster37/dagger-library-go/golang",
-      "pin": "037c8a8dad2d4deca9b7395f8c0438faa243d2c5"
-    },
-    {
       "name": "docker",
       "source": "github.com/shykes/daggerverse/docker",
       "pin": "a3f377083ddc015de801b7b04d0543bc5647b3f8"
@@ -17,6 +12,11 @@
       "name": "github",
       "source": "github.com/jedevc/daggerverse/github",
       "pin": "b2b06917e338519a04404347a105a7c3bb316472"
+    },
+    {
+      "name": "golang",
+      "source": "../golang",
+      "pin": ""
     },
     {
       "name": "k3s",

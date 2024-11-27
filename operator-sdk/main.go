@@ -17,58 +17,44 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
-	"fmt"
-	"strings"
 
 	"emperror.dev/errors"
-	"gopkg.in/yaml.v3"
+	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
 type OperatorSdk struct {
 	// +private
 	Src *dagger.Directory
 
+	// Docker module
+	// +private
+	Docker *dagger.DockerCli
+
+	// K3s module
+	// +private
+	K3s *dagger.K3S
+
 	// The Golang module
-	Golang *Golang
+	*dagger.Golang
 
 	// The SDK module
-	Sdk *Sdk
+	*Sdk
+
+	// The OCI module
+	*Oci
+
+	// +private
+	KubeVersion string
 }
 
 func New(
 	ctx context.Context,
 
 	// The source directory
+	// +required
 	src *dagger.Directory,
 
 	// Extra golang container
-	// +optional
-	container *dagger.Container,
-
-) *OperatorSdk {
-
-	goModule := NewGolang(ctx, src, container)
-
-	return &OperatorSdk{
-		Src:    src,
-		Golang: goModule,
-		Sdk:    NewSdk(ctx, goModule.Container, goModule.),
-	}
-}
-
-func (h *OperatorSdk) Release(
-	ctx context.Context,
-
-	// The list of channel. Comma separated
-	// +optional
-	channels string,
-
-	// Set true to run tests
-	// +optional
-	// +default=false
-	withTest bool,
-
-	// Set alternative Golang container
 	// +optional
 	container *dagger.Container,
 
@@ -76,7 +62,7 @@ func (h *OperatorSdk) Release(
 	// +optional
 	sdkVersion string,
 
-	// The Opm cli version to use
+	// The opm cli version to use
 	// +optional
 	opmVersion string,
 
@@ -92,14 +78,100 @@ func (h *OperatorSdk) Release(
 	// +optional
 	kustomizeVersion string,
 
-	// The CRD version to generate
+	// The Docker version to use
+	// +optional
+	dockerVersion string,
+
+	// The kube version to use when run tests
+	kubeVersion string,
+
+) (*OperatorSdk, error) {
+
+	var err error
+
+	// goModule
+	goModule := dag.Golang(src, dagger.GolangOpts{Base: container})
+	binPath, err := goModule.GoBin(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when get GoBin")
+	}
+
+	//sdkModule
+	sdkModule := NewSdk(
+		ctx,
+		src,
+		goModule.Container(),
+		binPath,
+		sdkVersion,
+		opmVersion,
+		controllerGenVersion,
+		cleanCrdVersion,
+		kustomizeVersion,
+	)
+
+	// docker cli
+	dockerCli := dag.Docker().Cli(
+		dagger.DockerCliOpts{
+			Version: dockerVersion,
+		},
+	)
+	opmFile := sdkModule.Container.
+		WithExec(helper.ForgeCommandf("cp %s/opm /tmp/opm", sdkModule.BinPath)).
+		File("/tmp/opm")
+
+	return &OperatorSdk{
+		Src:    src,
+		Golang: goModule,
+		Sdk:    sdkModule,
+		Oci: NewOci(
+			src,
+			goModule.Container(),
+			dockerCli.Container().
+				WithServiceBinding("dockerd.svc", dockerCli.Engine()).
+				WithEnvVariable("DOCKER_HOST", "tcp://dockerd.svc:2375").
+				WithFile("/usr/bin/opm", opmFile),
+		),
+		Docker:      dockerCli,
+		K3s:         dag.K3S("test"),
+		KubeVersion: kubeVersion,
+	}, nil
+}
+
+// WithSource permit to update source on all sub containers
+func (h *OperatorSdk) WithSource(src *dagger.Directory) *OperatorSdk {
+	h.Src = src
+	h.Golang = h.Golang.WithSource(src)
+	h.Sdk = h.Sdk.WithSource(src)
+	h.Oci = h.Oci.WithSource(src)
+
+	return h
+}
+
+/*
+
+// Release permit to release to operator version
+func (h *OperatorSdk) Release(
+	ctx context.Context,
+
+	// The version to release
+	// +required
+	version string,
+
+	// The previous version to replace
+	// +optional
+	previousVersion string,
+
+	// The CRD version do generate manifests
 	// +optional
 	crdVersion string,
 
-	// The Kubeversion version to use when run test
+	// The list of channel. Comma separated
 	// +optional
-	// +default="latest"
-	withKubeversion string,
+	channels string,
+
+	// Set true to run tests
+	// +optional
+	withTest bool,
 
 	// The OCI registry
 	// +required
@@ -119,98 +191,85 @@ func (h *OperatorSdk) Release(
 
 ) (*dagger.Directory, error) {
 
-	var sb strings.Builder
 	var dir *dagger.Directory
 	var err error
-	var stdout string
 
-	golang := h.Golang(ctx, container)
-	sdk := golang.Sdk(ctx, sdkVersion, opmVersion, controllerGenVersion, cleanCrdVersion, kustomizeVersion)
+	// Prepare OCI
+	h.Oci.WithRepositoryCredentials(registry, registryUsername, registryPassword)
 
 	// Generate manifests
-	dir, err = sdk.Generate(ctx, crdVersion)
+	dir, err = h.Generate(ctx, crdVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when call 'generate'")
 	}
-	golang = golang.WithSource(dir)
-	sdk = sdk.WithSource(dir)
+	h.WithSource(dir)
 
 	// Format code
-	dir, err = golang.Format(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when call 'format'")
-	}
-	golang = golang.WithSource(dir)
-	sdk = sdk.WithSource(dir)
+	dir = h.Format()
+	h.WithSource(dir)
 
 	// Lint code
-	stdout, err = golang.Lint(ctx, "")
+	_, err = h.Lint(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when call 'lint'")
 	}
-	sb.WriteString(stdout)
-	sb.WriteString("\n")
 
 	if withTest {
-		res, err := golang.Test(ctx, false, false, "", "", true, "", withKubeversion)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when call 'test'")
-		}
-		stdout, err = res.Stdout(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when run tests")
-		}
-		sb.WriteString(stdout)
-		sb.WriteString("\n")
-		dir = dir.WithFile(".", res.Coverage())
-		golang = golang.WithSource(dir)
-		sdk = sdk.WithSource(dir)
+		coverageFile := h.Test(ctx, false, false, "", "", true, "", h.KubeVersion)
+		dir = dir.WithFile(".", coverageFile)
+		h.WithSource(dir)
 	}
 
 	// Run bundle
 	metadata := &metadata{}
-	versionFile, err := sdk.Container.File("version.yaml").Contents(ctx)
-	if err != nil {
-		// File not yet exist
-		metadata.CurrentVersion = "0.0.1"
-	} else {
+	versionFile, err := h.Sdk.Container.File("version.yaml").Contents(ctx)
+	if err == nil {
 		if err := yaml.Unmarshal([]byte(versionFile), metadata); err != nil {
 			return nil, errors.Wrap(err, "Error when decode version.yaml")
 		}
-
-		if metadata.CurrentVersion == "" {
-			return nil, errors.New("Your file version.yaml have not field 'currentVersion'")
-		}
-
-		if metadata.PreviousVersion == "" {
-			return nil, errors.New("Your file version.yaml have not field 'previousVersion'")
-		}
 	}
-
-	dir, err = sdk.Bundle(ctx, fmt.Sprintf("%s/%s", registry, repository), metadata.CurrentVersion, channels, metadata.PreviousVersion)
+	if previousVersion == "" {
+		metadata.PreviousVersion = metadata.CurrentVersion
+	} else {
+		metadata.PreviousVersion = previousVersion
+	}
+	metadata.CurrentVersion = version
+	dir, err = h.Sdk.Bundle(
+		ctx,
+		fmt.Sprintf("%s/%s", registry, repository),
+		metadata.CurrentVersion,
+		channels,
+		metadata.PreviousVersion,
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when call 'bundle'")
 	}
-	golang = golang.WithSource(dir)
-	sdk = sdk.WithSource(dir)
-
-	oci := golang.Oci().WithRepositoryCredentials(registry, registryUsername, registryPassword)
+	h.WithSource(dir)
 
 	// Build and push operator image
-	stdout, err = oci.PublishManager(ctx, fmt.Sprintf("%s/%s:%s", registry, repository, metadata.CurrentVersion))
+	_, err = h.PublishManager(ctx, fmt.Sprintf("%s/%s:%s", registry, repository, metadata.CurrentVersion))
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when call 'publishManager'")
 	}
-	sb.WriteString(stdout)
-	sb.WriteString("\n")
 
 	// Build and push the bundle
-	stdout, err = oci.PublishBundle(ctx, fmt.Sprintf("%s/%s-bundle:v%s", registry, repository, metadata.CurrentVersion))
+	_, err = h.PublishBundle(ctx, fmt.Sprintf("%s/%s-bundle:v%s", registry, repository, metadata.CurrentVersion))
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when call 'publishBundle'")
 	}
-	sb.WriteString(stdout)
-	sb.WriteString("\n")
+
+	// Build and push catalog
+	updateFromPreviousCatalog := true
+	if metadata.CurrentVersion == "0.0.1" {
+		updateFromPreviousCatalog = false
+	}
+	h.BuildCatalog(
+		ctx,
+		fmt.Sprintf("%s/%s-catalog:latest", registry, repository),
+		fmt.Sprintf("%s/%s-catalog:%s", registry, repository, metadata.CurrentVersion),
+		fmt.Sprintf("%s/%s-bundle:v%s", registry, repository, metadata.CurrentVersion),
+		updateFromPreviousCatalog,
+	)
 
 	// @TODO write the new version file
 
@@ -222,3 +281,5 @@ type metadata struct {
 	CurrentVersion  string `yaml:"currentVersion"`
 	PreviousVersion string `yaml:"previousVersion"`
 }
+
+*/

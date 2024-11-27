@@ -13,12 +13,19 @@ import (
 type Sdk struct {
 	Container *dagger.Container
 
+	// The source directory
+	Src *dagger.Directory
+
 	// +private
 	BinPath string
 }
 
 func NewSdk(
 	ctx context.Context,
+
+	// The source directory
+	// +required
+	src *dagger.Directory,
 
 	// Container to use with operator-sdk cli inside and golang
 	// +required
@@ -86,6 +93,7 @@ func NewSdk(
 
 	return &Sdk{
 		Container: container.
+			WithDirectory(".", src).
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
 			WithExec(helper.ForgeCommandf("chmod +x %s/operator-sdk", binPath)).
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/opm", urlOpm, binPath)).
@@ -95,6 +103,7 @@ func NewSdk(
 			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
 			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")),
 		BinPath: binPath,
+		Src:     src,
 	}
 }
 
@@ -204,99 +213,6 @@ func (h *Sdk) Bundle(
 
 }
 
-func (h *Sdk) Catalog(
-	ctx context.Context,
-
-	// The catalog image name
-	// +required
-	catalogImage string,
-
-	// The previuous catalog image name
-	// If update 'true' and 'previousCatalogImage' not provided, it use the 'catalogImage'
-	// +optional
-	previousCatalogImage string,
-
-	// The bundle image name
-	// +required
-	bundleImage string,
-
-	// Set to true to update existing catalog
-	// +optional
-	update bool,
-
-	// The docker socket
-	// +optional
-	dockerVersion string,
-) (*dagger.Container, error) {
-
-	dockerCli := dag.Docker().
-		Cli(dagger.DockerCliOpts{Version: dockerVersion})
-
-	// Configure docker cli
-	opmFile := h.Container.
-		WithExec(helper.ForgeCommandf("cp %s/opm /tmp/opm", h.BinPath)).
-		File("/tmp/opm")
-	dockerContainer := dockerCli.
-		Container().
-		WithServiceBinding("dockerd.svc", dockerCli.Engine()).
-		WithEnvVariable("DOCKER_HOST", "tcp://dockerd.svc:2375").
-		WithFile("/usr/bin/opm", opmFile).
-		WithExec(helper.ForgeCommand("docker info"))
-
-	// Run OPM command
-	opmCmd := []string{
-		"opm",
-		"index",
-		"add",
-		"--container-tool",
-		"docker",
-		"--mode",
-		"semver",
-		"--tag",
-		catalogImage,
-		"--bundles",
-		bundleImage,
-	}
-	if update {
-		if previousCatalogImage == "" {
-			opmCmd = append(opmCmd,
-				"--from-index",
-				catalogImage,
-			)
-		} else {
-			opmCmd = append(opmCmd,
-				"--from-index",
-				previousCatalogImage,
-			)
-		}
-	}
-	dockerContainer = dockerContainer.
-		WithExec(opmCmd)
-	_, err := dockerContainer.
-		Stdout(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when create catalog image")
-	}
-
-	// Export docker image and import them on dagger
-	catalogFile := dockerContainer.
-		WithExec([]string{
-			"docker",
-			"save",
-			"--output=/tmp/image.tar",
-			catalogImage,
-		}).File("/tmp/image.tar")
-
-	return dag.Container().Import(catalogFile), nil
-}
-
-// Prmit to run Kube with Operator
-func (h *Sdk) Kube() *Kube {
-
-	return NewKube(h.Container)
-
-}
-
 // WithSource permit to update the current source on sdk container
 func (h *Sdk) WithSource(
 	// The source directory
@@ -304,5 +220,6 @@ func (h *Sdk) WithSource(
 	src *dagger.Directory,
 ) *Sdk {
 	h.Container = h.Container.WithDirectory(".", src)
+	h.Src = src
 	return h
 }
