@@ -35,12 +35,15 @@ type OperatorSdk struct {
 	K3s *dagger.K3S
 
 	// The Golang module
+	// +private
 	*dagger.Golang
 
 	// The SDK module
+	// +private
 	*Sdk
 
 	// The OCI module
+	// +private
 	*Oci
 
 	// +private
