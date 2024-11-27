@@ -123,7 +123,7 @@ func (h *Sdk) Run(
 	return h.Container.WithExec(helper.ForgeCommand(cmd))
 }
 
-func (h *Sdk) Generate(
+func (h *Sdk) GenerateManifests(
 	ctx context.Context,
 
 	// The CRD version to generate
@@ -159,7 +159,7 @@ func (h *Sdk) Generate(
 }
 
 // Bundle generate the bundle
-func (h *Sdk) Bundle(
+func (h *Sdk) GenerateBundle(
 	ctx context.Context,
 
 	// The OCI image name without the version
