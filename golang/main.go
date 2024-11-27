@@ -17,6 +17,118 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+type Golang interface {
+	DaggerObject
+
+	// Return the current mod version
+	ModVersion(ctx context.Context) (string, error)
+
+	// Retrun the GO bin path
+	GoBin(ctx context.Context) (string, error)
+
+	// Add private Go module
+	WithPrivate(
+		// the remote machine name
+		// +required
+		machine string,
+		// a user on the remote machine that can login
+		// +required
+		username *dagger.Secret,
+		// a token (or password) used to login into a remote machine by
+		// the identified user
+		// +required
+		password *dagger.Secret,
+		// a list of Go module paths that will be treated as private by Go
+		// through the GOPRIVATE environment variable
+		// +required
+		modules []string,
+	) Golang
+
+	// Add private Go module with auto login
+	WithPrivateLoad(
+		// a path to a .netrc auto-login configuration file
+		// +required
+		cfg *dagger.File,
+		// a list of Go module paths that will be treated as private by Go
+		// through the GOPRIVATE environment variable
+		// +required
+		modules []string,
+	) Golang
+
+	// Build the Go project
+	Build(
+		// the path to the main.go file of the project
+		// +optional
+		main string,
+		// the name of the built binary
+		// +optional
+		out string,
+		// the target operating system
+		// +optional
+		os string,
+		// the target architecture
+		// +optional
+		arch string,
+		// flags to configure the linking during a build, by default sets flags for
+		// generating a release binary
+		// +optional
+		// +default=["-s", "-w"]
+		ldflags []string,
+	) *dagger.Directory
+
+	// Test the Go project
+	Test(
+		// if only short running tests should be executed
+		// +optional
+		// +default=true
+		short bool,
+		// if the tests should be executed out of order
+		// +optional
+		// +default=true
+		shuffle bool,
+		// run select tests only, defined using a regex
+		// +optional
+		run string,
+		// skip select tests, defined using a regex
+		// +optional
+		skip string,
+		// Run test with gotestsum
+		// +optional
+		withGotestsum bool,
+		// Path to test
+		// +optional
+		path string,
+	) *dagger.File
+
+	// Run a Bench
+	Bench(
+		ctx context.Context,
+		// print memory allocation statistics for benchmarks
+		// +optional
+		// +default=true
+		memory bool,
+		// the time.Duration each benchmark should run for
+		// +optional
+		// +default="5s"
+		time string,
+	) (string, error)
+
+	// Test the vulnerability
+	Vulncheck(ctx context.Context) (string, error)
+
+	// Lint the code
+	Lint(
+		ctx context.Context,
+		// the type of report that should be generated
+		// +optional
+		// +default="colored-line-number"
+		format string,
+	) (string, error)
+
+	// Format the code
+	Format() *dagger.Directory
+}
+
 const (
 	goMod     = "go.mod"
 	goWorkDir = "/src"
@@ -38,7 +150,7 @@ type GoPrivate struct {
 }
 
 // Golang dagger module
-type Golang struct {
+type GolangModule struct {
 	// Base is the image used by all golang dagger functions, defaults to the bookworm base image
 	Container *dagger.Container
 
@@ -68,7 +180,7 @@ func New(
 	// a path to a directory containing the source code
 	// +required
 	src *dagger.Directory,
-) (*Golang, error) {
+) (*GolangModule, error) {
 	version, err := inspectModVersion(context.Background(), src)
 	if err != nil {
 		return nil, err
@@ -82,7 +194,7 @@ func New(
 		}
 	}
 
-	golang := &Golang{
+	golang := &GolangModule{
 		Version:   version,
 		Container: base,
 	}
@@ -96,69 +208,21 @@ func New(
 	return golang, nil
 }
 
-func inspectModVersion(ctx context.Context, src *dagger.Directory) (string, error) {
-	mod, err := src.File(goMod).Contents(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	f, err := modfile.Parse(goMod, []byte(mod), nil)
-	if err != nil {
-		return "", err
-	}
-	return f.Go.Version, nil
-}
-
-func (h *Golang) mountCaches(ctx context.Context) *dagger.Container {
-	goEnvStdout, err := h.Container.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
-	if err != nil {
-		panic(fmt.Sprintf("Error when get go env; %s", err.Error()))
-	}
-	var goEnv map[string]string
-	if err := json.Unmarshal([]byte(goEnvStdout), &goEnv); err != nil {
-		panic(fmt.Sprintf("Error when decode go env; %s", err.Error()))
-	}
-
-	goCacheEnv := goEnv["GOCACHE"]
-	goModCacheEnv := goEnv["GOMODCACHE"]
-	goBinCacheEnv := goEnv["GOBIN"]
-	if goBinCacheEnv == "" {
-		goBinCacheEnv = fmt.Sprintf("%s/bin", goEnv["GOPATH"])
-	}
-
-	gomod := dag.CacheVolume("gomod")
-	gobuild := dag.CacheVolume("gobuild")
-	gobin := dag.CacheVolume("gobin")
-
-	h.BinPath = goBinCacheEnv
-
-	h.Container = h.Container.
-		WithMountedCache(goModCacheEnv, gomod).
-		WithMountedCache(goCacheEnv, gobuild).
-		WithMountedCache(goBinCacheEnv, gobin)
-
-	return h.Container
-}
-
 // Echoes the version of go defined within a projects go.mod file.
 // It expects the go.mod file to be located within the root of the project
-func (g *Golang) ModVersion() string {
+func (g *GolangModule) ModVersion() string {
 	return g.Version
 }
 
 // GoBin return the Go bin path
 // It can be usefull to add bin on this because of cache volume
-func (g *Golang) GoBin() string {
+func (g *GolangModule) GoBin() string {
 	return g.BinPath
-}
-
-func defaultImage(version string) *dagger.Container {
-	return dag.Container().From(fmt.Sprintf("golang:%s", version))
 }
 
 // Enable private Go module support by dynamically constructing a .netrc auto-login
 // configuration file. Each call will append a new auto-login configuration
-func (g *Golang) WithPrivate(
+func (g *GolangModule) WithPrivate(
 	ctx context.Context,
 	// the remote machine name
 	// +required
@@ -174,7 +238,7 @@ func (g *Golang) WithPrivate(
 	// through the GOPRIVATE environment variable
 	// +required
 	modules []string,
-) *Golang {
+) *GolangModule {
 	if g.Private == nil {
 		g.Private = &GoPrivate{
 			Netrc: dag.Netrc(dagger.NetrcOpts{Format: dagger.Compact}),
@@ -188,7 +252,7 @@ func (g *Golang) WithPrivate(
 
 // Enable private Go module support by loading an existing .netrc auto-login configuration
 // file. Each call will append a new auto-login configuration
-func (g *Golang) WithPrivateLoad(
+func (g *GolangModule) WithPrivateLoad(
 	ctx context.Context,
 	// a path to a .netrc auto-login configuration file
 	// +required
@@ -197,7 +261,7 @@ func (g *Golang) WithPrivateLoad(
 	// through the GOPRIVATE environment variable
 	// +required
 	modules []string,
-) *Golang {
+) *GolangModule {
 	if g.Private == nil {
 		g.Private = &GoPrivate{
 			Netrc: dag.Netrc(dagger.NetrcOpts{Format: dagger.Compact}),
@@ -209,20 +273,9 @@ func (g *Golang) WithPrivateLoad(
 	return g
 }
 
-func (g *Golang) enablePrivateModules() *dagger.Container {
-	if g.Private == nil {
-		return g.Container
-	}
-
-	return g.Container.
-		WithEnvVariable("GOPRIVATE", strings.Join(g.Private.Modules, ",")).
-		WithEnvVariable("NETRC", netrcPath).
-		WithMountedSecret(netrcPath, g.Private.Netrc.AsSecret())
-}
-
 // Build a static binary from a Go project using the provided configuration.
 // A directory is returned containing the built binary.
-func (g *Golang) Build(
+func (g *GolangModule) Build(
 	// the path to the main.go file of the project
 	// +optional
 	main string,
@@ -272,7 +325,7 @@ func (g *Golang) Build(
 }
 
 // Execute tests defined within the target project, ignores benchmarks by default
-func (g *Golang) Test(
+func (g *GolangModule) Test(
 	ctx context.Context,
 	// if only short running tests should be executed
 	// +optional
@@ -294,7 +347,7 @@ func (g *Golang) Test(
 	// Path to test
 	// +optional
 	path string,
-) *GolangTest {
+) *dagger.File {
 
 	ctr := g.Container
 
@@ -331,11 +384,13 @@ func (g *Golang) Test(
 		ctr = g.enablePrivateModules()
 	}
 
-	return NewGolangTest(ctr)
+	return ctr.WithExec(cmd).
+		WithExec(helper.ForgeScript(`cat coverage.out.tmp | grep -v "_generated.*.go" > coverage.out`)).
+		File("coverage.out")
 }
 
 // Execute benchmarks defined within the target project, excludes all other tests
-func (g *Golang) Bench(
+func (g *GolangModule) Bench(
 	ctx context.Context,
 	// print memory allocation statistics for benchmarks
 	// +optional
@@ -360,7 +415,7 @@ func (g *Golang) Bench(
 }
 
 // Scans the target project for vulnerabilities using govulncheck
-func (g *Golang) Vulncheck(ctx context.Context) (string, error) {
+func (g *GolangModule) Vulncheck(ctx context.Context) (string, error) {
 	if g.Version == "1.17" {
 		return "", fmt.Errorf("govulncheck supports go versions 1.18 and higher")
 	}
@@ -385,7 +440,7 @@ func (g *Golang) Vulncheck(ctx context.Context) (string, error) {
 }
 
 // Lint the target project using golangci-lint
-func (g *Golang) Lint(
+func (g *GolangModule) Lint(
 	ctx context.Context,
 	// the type of report that should be generated
 	// +optional
@@ -440,7 +495,7 @@ func (g *Golang) Lint(
 
 // Format the source code within a target project using gofumpt. Formatted code must be
 // copied back onto the host.`
-func (g *Golang) Format(ctx context.Context) (*dagger.Directory, error) {
+func (g *GolangModule) Format(ctx context.Context) (*dagger.Directory, error) {
 	ctr := g.Container
 	if _, err := ctr.WithExec([]string{"gofumpt", "-version"}).Sync(ctx); err != nil {
 		tag, err := dag.Github().GetLatestRelease("mvdan/gofumpt").Tag(ctx)
@@ -457,11 +512,70 @@ func (g *Golang) Format(ctx context.Context) (*dagger.Directory, error) {
 }
 
 // WithSource permit to update the current source on sdk container
-func (h *Golang) WithSource(
+func (h *GolangModule) WithSource(
 	// The source directory
 	// +required
 	src *dagger.Directory,
-) *Golang {
+) *GolangModule {
 	h.Container = h.Container.WithDirectory(".", src)
 	return h
+}
+
+func inspectModVersion(ctx context.Context, src *dagger.Directory) (string, error) {
+	mod, err := src.File(goMod).Contents(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	f, err := modfile.Parse(goMod, []byte(mod), nil)
+	if err != nil {
+		return "", err
+	}
+	return f.Go.Version, nil
+}
+
+func (h *GolangModule) mountCaches(ctx context.Context) *dagger.Container {
+	goEnvStdout, err := h.Container.WithExec([]string{"go", "env", "-json"}).Stdout(ctx)
+	if err != nil {
+		panic(fmt.Sprintf("Error when get go env; %s", err.Error()))
+	}
+	var goEnv map[string]string
+	if err := json.Unmarshal([]byte(goEnvStdout), &goEnv); err != nil {
+		panic(fmt.Sprintf("Error when decode go env; %s", err.Error()))
+	}
+
+	goCacheEnv := goEnv["GOCACHE"]
+	goModCacheEnv := goEnv["GOMODCACHE"]
+	goBinCacheEnv := goEnv["GOBIN"]
+	if goBinCacheEnv == "" {
+		goBinCacheEnv = fmt.Sprintf("%s/bin", goEnv["GOPATH"])
+	}
+
+	gomod := dag.CacheVolume("gomod")
+	gobuild := dag.CacheVolume("gobuild")
+	gobin := dag.CacheVolume("gobin")
+
+	h.BinPath = goBinCacheEnv
+
+	h.Container = h.Container.
+		WithMountedCache(goModCacheEnv, gomod).
+		WithMountedCache(goCacheEnv, gobuild).
+		WithMountedCache(goBinCacheEnv, gobin)
+
+	return h.Container
+}
+
+func defaultImage(version string) *dagger.Container {
+	return dag.Container().From(fmt.Sprintf("golang:%s", version))
+}
+
+func (g *GolangModule) enablePrivateModules() *dagger.Container {
+	if g.Private == nil {
+		return g.Container
+	}
+
+	return g.Container.
+		WithEnvVariable("GOPRIVATE", strings.Join(g.Private.Modules, ",")).
+		WithEnvVariable("NETRC", netrcPath).
+		WithMountedSecret(netrcPath, g.Private.Netrc.AsSecret())
 }
