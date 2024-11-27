@@ -28,9 +28,6 @@ type Golang interface {
 	// Retrun the GO bin path
 	GoBin(ctx context.Context) (string, error)
 
-	// Container permit to get the Golang container
-	Container() *dagger.Container
-
 	// Add private Go module
 	WithPrivate(
 		// the remote machine name
@@ -131,7 +128,7 @@ type Golang interface {
 	) (string, error)
 
 	// Format the code
-	Format() *dagger.Directory
+	Format(ctx context.Context) *dagger.Directory
 }
 
 const (
@@ -156,6 +153,7 @@ type GoPrivate struct {
 
 // Golang dagger module
 type GolangModule struct {
+	dagger.DaggerObject
 	// Base is the image used by all golang dagger functions, defaults to the bookworm base image
 	Container *dagger.Container
 
@@ -185,7 +183,7 @@ func New(
 	// a path to a directory containing the source code
 	// +required
 	src *dagger.Directory,
-) (*GolangModule, error) {
+) (Golang, error) {
 	version, err := inspectModVersion(context.Background(), src)
 	if err != nil {
 		return nil, err
@@ -215,14 +213,14 @@ func New(
 
 // Echoes the version of go defined within a projects go.mod file.
 // It expects the go.mod file to be located within the root of the project
-func (g *GolangModule) ModVersion() string {
-	return g.Version
+func (g *GolangModule) ModVersion(ctx context.Context) (string, error) {
+	return g.Version, nil
 }
 
 // GoBin return the Go bin path
 // It can be usefull to add bin on this because of cache volume
-func (g *GolangModule) GoBin() string {
-	return g.BinPath
+func (g *GolangModule) GoBin(ctx context.Context) (string, error) {
+	return g.BinPath, nil
 }
 
 // Enable private Go module support by dynamically constructing a .netrc auto-login
@@ -500,12 +498,12 @@ func (g *GolangModule) Lint(
 
 // Format the source code within a target project using gofumpt. Formatted code must be
 // copied back onto the host.`
-func (g *GolangModule) Format(ctx context.Context) (*dagger.Directory, error) {
+func (g *GolangModule) Format(ctx context.Context) *dagger.Directory {
 	ctr := g.Container
 	if _, err := ctr.WithExec([]string{"gofumpt", "-version"}).Sync(ctx); err != nil {
 		tag, err := dag.Github().GetLatestRelease("mvdan/gofumpt").Tag(ctx)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 
 		ctr = ctr.WithExec([]string{"go", "install", "mvdan.cc/gofumpt@" + tag})
@@ -513,7 +511,7 @@ func (g *GolangModule) Format(ctx context.Context) (*dagger.Directory, error) {
 
 	cmd := []string{"gofumpt", "-w", "-d", "."}
 
-	return ctr.WithExec(cmd).Directory(goWorkDir), nil
+	return ctr.WithExec(cmd).Directory(goWorkDir)
 }
 
 // WithSource permit to update the current source on sdk container
