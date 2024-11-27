@@ -114,11 +114,13 @@ func (h *Oci) PublishManager(
 		h.BuildManager(ctx)
 	}
 
+	manager := h.Manager
+
 	for _, auth := range h.Auths {
-		h.Manager = h.Manager.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
+		manager = manager.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
 	}
 
-	return h.Manager.Publish(ctx, name)
+	return manager.Publish(ctx, name)
 
 }
 
@@ -150,11 +152,13 @@ func (h *Oci) PublishBundle(
 		h.BuildBundle(ctx)
 	}
 
+	bundle := h.Bundle
+
 	for _, auth := range h.Auths {
-		h.Bundle = h.Bundle.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
+		bundle = bundle.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
 	}
 
-	return h.Bundle.Publish(ctx, name)
+	return bundle.Publish(ctx, name)
 
 }
 
@@ -237,11 +241,13 @@ func (h *Oci) PublishCatalog(
 	name string,
 ) (string, error) {
 
+	catalog := h.Catalog
+
 	for _, auth := range h.Auths {
-		h.Catalog = h.Catalog.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
+		catalog = catalog.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
 	}
 
-	return h.Catalog.Publish(ctx, name)
+	return catalog.Publish(ctx, name)
 }
 
 // WithSource permit to update the current source
