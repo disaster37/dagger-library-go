@@ -154,7 +154,7 @@ func (h *Oci) PublishBundle(
 		h.Bundle = h.Bundle.WithRegistryAuth(auth.Url, auth.Username, auth.Password)
 	}
 
-	return h.Manager.Publish(ctx, name)
+	return h.Bundle.Publish(ctx, name)
 
 }
 
