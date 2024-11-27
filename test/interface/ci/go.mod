@@ -1,4 +1,4 @@
-module dagger/interface
+module dagger/ci
 
 go 1.23.2
 

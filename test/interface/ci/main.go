@@ -1,4 +1,4 @@
-// A generated module for Interface functions
+// A generated module for Ci functions
 //
 // This module has been generated via dagger init and serves as a reference to
 // basic module structure as you get started with Dagger.
@@ -16,23 +16,19 @@ package main
 
 import (
 	"context"
-	"dagger/interface/internal/dagger"
+	"dagger/ci/internal/dagger"
 )
+
+type Ci struct {
+}
 
 type Interface interface {
 	DaggerObject
 	ContainerEcho(ctx context.Context, stringArg string) *dagger.Container
 }
 
-type InterfaceModule struct{
-	DaggerObject
-}
-
-func New() Interface {
-	return &InterfaceModule{}
-}
-
 // Returns a container that echoes whatever string argument is provided
-func (m *InterfaceModule) ContainerEcho(ctx context.Context, stringArg string) *dagger.Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
+func (m *Ci) ContainerEcho(ctx context.Context, interfacer Interface) *dagger.Container {
+	return interfacer.ContainerEcho(ctx, "plop")
+
 }
