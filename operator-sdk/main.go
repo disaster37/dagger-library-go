@@ -216,8 +216,8 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Install catalog
 	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
-		Terminal().
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/catalog.yaml")).
+		WithExec(helper.ForgeCommand("kubectl wait catalogSource test --for=jsonpath=status.connectionState.lastObservedState=READY -n olm --timeout 60s")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install catalog")
 	}
@@ -226,7 +226,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	subscription := &olmv1alpha1.Subscription{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "test",
-			Namespace: "olm",
+			Namespace: "operators",
 		},
 		Spec: &olmv1alpha1.SubscriptionSpec{
 			CatalogSource:          "test",
@@ -245,7 +245,8 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Install subscription
 	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
-		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/subscription.yaml")).
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/subscription.yaml")).
+		WithExec(helper.ForgeCommand("kubectl wait subscription test --for=jsonpath=status.state=AtLatestKnown -n operators --timeout 60s")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install subscription")
 	}
