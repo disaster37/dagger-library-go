@@ -37,7 +37,7 @@ type OperatorSdk struct {
 
 	// K3s module
 	// +private
-	K3s *Kube
+	*Kube
 
 	// The Golang module
 	// +private
@@ -140,7 +140,7 @@ func New(
 				WithFile("/usr/bin/opm", opmFile),
 		),
 		Docker:      dockerCli,
-		K3s:         NewKube(src),
+		Kube:        NewKube(src),
 		KubeVersion: kubeVersion,
 	}, nil
 }
@@ -151,7 +151,7 @@ func (h *OperatorSdk) WithSource(src *dagger.Directory) *OperatorSdk {
 	h.Golang = h.Golang.WithSource(src)
 	h.Sdk = h.Sdk.WithSource(src)
 	h.Oci = h.Oci.WithSource(src)
-	h.K3s = h.K3s.WithSource(src)
+	h.Kube = h.Kube.WithSource(src)
 
 	return h
 }
@@ -178,7 +178,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Start kube cluster
-	kubeService, err := h.K3s.Server().Start(ctx)
+	kubeService, err := h.Kube.Server().Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
@@ -186,7 +186,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Install OLM
 	if _, err := h.Sdk.InstallOlm(
 		ctx,
-		h.K3s.Config(),
+		h.Kube.Config(),
 	); err != nil {
 		return nil, errors.Wrap(err, "Error when install OLM")
 	}
@@ -213,7 +213,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install catalog
-	if _, err := h.K3s.K3S.Kubectl("version").
+	if _, err := h.Kube.K3S.Kubectl("version").
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/catalog.yaml")).
 		Stdout(ctx); err != nil {
@@ -241,7 +241,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install subscription
-	if _, err := h.K3s.K3S.Kubectl("version").
+	if _, err := h.Kube.K3S.Kubectl("version").
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/subscription.yaml")).
 		Stdout(ctx); err != nil {
