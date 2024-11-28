@@ -26,7 +26,6 @@ func NewKube(
 						WithExec([]string{"sh", "-c", `
 cat <<EOF > /etc/rancher/k3s/registries.yaml
 configs:
-  "docker.io":
   "*":
     tls:
       insecure_skip_verify: true
