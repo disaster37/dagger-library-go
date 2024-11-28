@@ -9,7 +9,7 @@ type Kube struct {
 	Src *dagger.Directory
 
 	// +private
-	*dagger.K3S
+	Kube *dagger.K3S
 }
 
 func NewKube(
@@ -18,7 +18,7 @@ func NewKube(
 ) *Kube {
 	return &Kube{
 		Src: src,
-		K3S: dag.K3S("test"),
+		Kube: dag.K3S("test"),
 	}
 }
 

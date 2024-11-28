@@ -178,7 +178,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Start kube cluster
-	kubeService, err := h.Kube.Server().Start(ctx)
+	kubeService, err := h.Kube.Kube.Server().Start(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when start K3s")
 	}
@@ -186,7 +186,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Install OLM
 	if _, err := h.Sdk.InstallOlm(
 		ctx,
-		h.Kube.Config(),
+		h.Kube.Kube.Config(),
 	); err != nil {
 		return nil, errors.Wrap(err, "Error when install OLM")
 	}
@@ -213,7 +213,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install catalog
-	if _, err := h.Kube.Kubectl("version").
+	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/catalog.yaml")).
 		Stdout(ctx); err != nil {
@@ -241,7 +241,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install subscription
-	if _, err := h.Kube.Kubectl("version").
+	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/subscription.yaml")).
 		Stdout(ctx); err != nil {
