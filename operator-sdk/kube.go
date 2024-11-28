@@ -24,13 +24,13 @@ func NewKube(
 				return k.WithContainer(
 					k.Container().
 						WithExec([]string{"sh", "-c", `
-	cat <<EOF > /etc/rancher/k3s/registries.yaml
-	configs:
-	  "docker.io":
-	  "*":
-	    tls:
-	      insecure_skip_verify: true
-	EOF`}),
+cat <<EOF > /etc/rancher/k3s/registries.yaml
+configs:
+  "docker.io":
+  "*":
+    tls:
+      insecure_skip_verify: true
+EOF`}),
 				)
 			}),
 	}
@@ -61,6 +61,10 @@ func (h *Kube) KubeCluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
 	return h.Kube.Server().Start(ctx)
+}
+
+func (h *Kube) KubeContainer() *dagger.Container {
+	return h.Kube.Container()
 }
 
 /*
