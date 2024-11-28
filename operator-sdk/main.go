@@ -15,11 +15,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"dagger/operator-sdk/internal/dagger"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
+	olmv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 type OperatorSdk struct {
@@ -32,7 +37,7 @@ type OperatorSdk struct {
 
 	// K3s module
 	// +private
-	K3s *dagger.K3S
+	K3s *Kube
 
 	// The Golang module
 	// +private
@@ -135,7 +140,7 @@ func New(
 				WithFile("/usr/bin/opm", opmFile),
 		),
 		Docker:      dockerCli,
-		K3s:         dag.K3S("test"),
+		K3s:         NewKube(src),
 		KubeVersion: kubeVersion,
 	}, nil
 }
@@ -146,8 +151,105 @@ func (h *OperatorSdk) WithSource(src *dagger.Directory) *OperatorSdk {
 	h.Golang = h.Golang.WithSource(src)
 	h.Sdk = h.Sdk.WithSource(src)
 	h.Oci = h.Oci.WithSource(src)
+	h.K3s = h.K3s.WithSource(src)
 
 	return h
+}
+
+func (h *OperatorSdk) InstallOlmOperator(
+	ctx context.Context,
+
+	// The catalog image to install
+	// +required
+	catalogImage string,
+
+	// The operator name
+	// +required
+	name string,
+
+	// The channel of the operator to install
+	// +optional
+	// +default="stable"
+	channel string,
+) (*dagger.Service, error) {
+
+	if channel == "" {
+		channel = "stable"
+	}
+
+	// Start kube cluster
+	kubeService, err := h.K3s.Server().Start(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when start K3s")
+	}
+
+	// Install OLM
+	if _, err := h.Sdk.InstallOlm(
+		ctx,
+		h.K3s.Config(),
+	); err != nil {
+		return nil, errors.Wrap(err, "Error when install OLM")
+	}
+
+	// Forge Catalog
+	catalogSource := &olmv1alpha1.CatalogSource{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "test",
+			Namespace: "olm",
+		},
+		Spec: olmv1alpha1.CatalogSourceSpec{
+			SourceType: olmv1alpha1.SourceTypeGrpc,
+			Image:      catalogImage,
+		},
+	}
+	sch := scheme.Scheme
+	if err := olmv1alpha1.AddToScheme(sch); err != nil {
+		panic(err)
+	}
+	y := printers.NewTypeSetter(sch).ToPrinter(&printers.JSONPrinter{})
+	buf := new(bytes.Buffer)
+	if err := y.PrintObj(catalogSource, buf); err != nil {
+		panic(err)
+	}
+
+	// Install catalog
+	if _, err := h.K3s.K3S.Kubectl("version").
+		WithNewFile("/tmp/catalog.yaml", buf.String()).
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/catalog.yaml")).
+		Stdout(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when install catalog")
+	}
+
+	// Forge subscription
+	subscription := &olmv1alpha1.Subscription{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "test",
+			Namespace: "olm",
+		},
+		Spec: &olmv1alpha1.SubscriptionSpec{
+			CatalogSource:          "test",
+			CatalogSourceNamespace: "olm",
+			Channel:                channel,
+			InstallPlanApproval:    olmv1alpha1.ApprovalAutomatic,
+			Package:                name,
+		},
+	}
+	y = printers.NewTypeSetter(sch).ToPrinter(&printers.JSONPrinter{})
+	buf = new(bytes.Buffer)
+	if err := y.PrintObj(subscription, buf); err != nil {
+		panic(err)
+	}
+
+	// Install subscription
+	if _, err := h.K3s.K3S.Kubectl("version").
+		WithNewFile("/tmp/subscription.yaml", buf.String()).
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/subscription.yaml")).
+		Stdout(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when install subscription")
+	}
+
+	return kubeService, nil
+
 }
 
 /*

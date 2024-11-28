@@ -223,3 +223,20 @@ func (h *Sdk) WithSource(
 	h.Src = src
 	return h
 }
+
+// InstallOlm permit to install the OLM
+func (h *Sdk) InstallOlm(
+	ctx context.Context,
+
+	// The kubeconfig file to access on cluster where to install OLM
+	// +required
+	kubeconfig *dagger.File,
+
+) (string, error) {
+
+	return h.Container.
+		WithFile("/kubeconfig", kubeconfig).
+		WithEnvVariable("KUBECONFIG", "/kubeconfig").
+		WithExec(helper.ForgeCommand("operator-sdk olm install")).
+		Stdout(ctx)
+}

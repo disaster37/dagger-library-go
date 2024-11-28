@@ -1,30 +1,47 @@
 package main
 
 import (
-	"context"
 	"dagger/operator-sdk/internal/dagger"
-
-	"emperror.dev/errors"
-	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
 type Kube struct {
-	Container *dagger.Container
+	// +private
+	Src *dagger.Directory
 
 	// +private
-	K3s *dagger.K3S
+	*dagger.K3S
 }
 
 func NewKube(
 	// The golang container
-	container *dagger.Container,
+	src *dagger.Directory,
 ) *Kube {
 	return &Kube{
-		Container: container,
-		K3s:       dag.K3S("test"),
+		Src: src,
+		K3S: dag.K3S("test"),
 	}
 }
 
+func (h *Kube) WithSource(
+	// The source directory
+	// +required
+	src *dagger.Directory,
+) *Kube {
+	h.Src = src
+	return h
+}
+
+func (h *Kube) Kubeconfig() *dagger.File {
+	return h.K3S.Config(dagger.K3SConfigOpts{Local: true})
+}
+
+func (h *Kube) Kubectl() *dagger.Container {
+	return h.K3S.Kubectl("get nodes").
+		WithDirectory("/project", h.Src).
+		WithWorkdir("/project")
+}
+
+/*
 func (h *Kube) Cluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
@@ -80,3 +97,4 @@ func (h *Kube) Kubectl() *dagger.Container {
 		WithDirectory("/project", h.Container.Directory(".")).
 		WithWorkdir("/project")
 }
+*/
