@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"dagger/operator-sdk/internal/dagger"
 )
 
@@ -43,6 +44,12 @@ func (h *Kube) Kubectl() *dagger.Container {
 	return h.K3S.Kubectl("get nodes").
 		WithDirectory("/project", h.Src).
 		WithWorkdir("/project")
+}
+
+func (h *Kube) K3s(
+	ctx context.Context,
+) (*dagger.Service, error) {
+	return h.K3S.Server().Start(ctx)
 }
 
 /*
