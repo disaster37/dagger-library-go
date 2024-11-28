@@ -17,7 +17,7 @@ func NewKube(
 	src *dagger.Directory,
 ) *Kube {
 	return &Kube{
-		Src: src,
+		Src:  src,
 		Kube: dag.K3S("test"),
 	}
 }
@@ -31,6 +31,10 @@ func (h *Kube) WithSource(
 	return h
 }
 
+func (h *Kube) Kubectl() *dagger.Container {
+	return h.Kube.Kubectl("get nodes")
+}
+
 /*
 func (h *Kube) Kubeconfig(
 	// set true if expose the k3s on host
@@ -40,9 +44,7 @@ func (h *Kube) Kubeconfig(
 	return h.K3S.Config(dagger.K3SConfigOpts{Local: local})
 }
 
-func (h *Kube) Kubectl() *dagger.Container {
-	return h.K3S.Kubectl("get nodes")
-}
+
 
 func (h *Kube) KubeCluster(
 	ctx context.Context,
