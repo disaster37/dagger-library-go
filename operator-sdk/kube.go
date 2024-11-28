@@ -31,8 +31,12 @@ func (h *Kube) WithSource(
 	return h
 }
 
-func (h *Kube) Kubeconfig() *dagger.File {
-	return h.K3S.Config(dagger.K3SConfigOpts{Local: true})
+func (h *Kube) Kubeconfig(
+	// set true if expose the k3s on host
+	// +optional
+	local bool,
+) *dagger.File {
+	return h.K3S.Config(dagger.K3SConfigOpts{Local: local})
 }
 
 func (h *Kube) Kubectl() *dagger.Container {
