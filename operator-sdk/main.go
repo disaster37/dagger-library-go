@@ -213,7 +213,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install catalog
-	if _, err := h.Kube.K3S.Kubectl("version").
+	if _, err := h.Kube.Kubectl("version").
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/catalog.yaml")).
 		Stdout(ctx); err != nil {
@@ -241,7 +241,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install subscription
-	if _, err := h.Kube.K3S.Kubectl("version").
+	if _, err := h.Kube.Kubectl("version").
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/subscription.yaml")).
 		Stdout(ctx); err != nil {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"dagger/operator-sdk/internal/dagger"
 )
 
@@ -32,6 +31,7 @@ func (h *Kube) WithSource(
 	return h
 }
 
+/*
 func (h *Kube) Kubeconfig(
 	// set true if expose the k3s on host
 	// +optional
@@ -49,6 +49,7 @@ func (h *Kube) KubeCluster(
 ) (*dagger.Service, error) {
 	return h.K3S.Server().Start(ctx)
 }
+*/
 
 /*
 func (h *Kube) Cluster(
