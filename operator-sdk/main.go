@@ -202,11 +202,12 @@ func (h *OperatorSdk) InstallOlmOperator(
 			Image:      catalogImage,
 		},
 	}
+
 	sch := scheme.Scheme
 	if err := olmv1alpha1.AddToScheme(sch); err != nil {
 		panic(err)
 	}
-	y := printers.NewTypeSetter(sch).ToPrinter(&printers.JSONPrinter{})
+	y := printers.NewTypeSetter(sch).ToPrinter(&printers.YAMLPrinter{})
 	buf := new(bytes.Buffer)
 	if err := y.PrintObj(catalogSource, buf); err != nil {
 		panic(err)
@@ -215,7 +216,8 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Install catalog
 	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
-		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f  /tmp/catalog.yaml")).
+		Terminal().
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/catalog.yaml")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install catalog")
 	}
@@ -234,7 +236,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 			Package:                name,
 		},
 	}
-	y = printers.NewTypeSetter(sch).ToPrinter(&printers.JSONPrinter{})
+	y = printers.NewTypeSetter(sch).ToPrinter(&printers.YAMLPrinter{})
 	buf = new(bytes.Buffer)
 	if err := y.PrintObj(subscription, buf); err != nil {
 		panic(err)
