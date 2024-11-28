@@ -240,3 +240,7 @@ func (h *Sdk) InstallOlm(
 		WithExec(helper.ForgeCommand("operator-sdk olm install")).
 		Stdout(ctx)
 }
+
+func (h *Sdk) SdkContainer() *dagger.Container {
+	return h.Container
+}
