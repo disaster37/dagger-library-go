@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"dagger/operator-sdk/internal/dagger"
 )
 
@@ -35,23 +36,19 @@ func (h *Kube) Kubectl() *dagger.Container {
 	return h.Kube.Kubectl("get nodes")
 }
 
-/*
 func (h *Kube) Kubeconfig(
 	// set true if expose the k3s on host
 	// +optional
 	local bool,
 ) *dagger.File {
-	return h.K3S.Config(dagger.K3SConfigOpts{Local: local})
+	return h.Kube.Config(dagger.K3SConfigOpts{Local: local})
 }
-
-
 
 func (h *Kube) KubeCluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
-	return h.K3S.Server().Start(ctx)
+	return h.Kube.Server().Start(ctx)
 }
-*/
 
 /*
 func (h *Kube) Cluster(
