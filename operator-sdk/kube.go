@@ -18,8 +18,21 @@ func NewKube(
 	src *dagger.Directory,
 ) *Kube {
 	return &Kube{
-		Src:  src,
-		Kube: dag.K3S("test"),
+		Src: src,
+		Kube: dag.K3S("test").
+			With(func(k *dagger.K3S) *dagger.K3S {
+				return k.WithContainer(
+					k.Container().
+						WithExec([]string{"sh", "-c", `
+	cat <<EOF > /etc/rancher/k3s/registries.yaml
+	configs:
+	  "docker.io":
+	  "*":
+	    tls:
+	      insecure_skip_verify: true
+	EOF`}),
+				)
+			}),
 	}
 }
 
