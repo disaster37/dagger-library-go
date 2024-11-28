@@ -44,7 +44,7 @@ func (h *Kube) Kubectl() *dagger.Container {
 	return h.K3S.Kubectl("get nodes")
 }
 
-func (h *Kube) K3s(
+func (h *Kube) KubeCluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
 	return h.K3S.Server().Start(ctx)
