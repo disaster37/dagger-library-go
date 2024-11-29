@@ -71,11 +71,15 @@ func (h *OperatorSdkGolang) Test(
 	return h.Golang.
 		With(func(r *dagger.Golang) *dagger.Golang {
 
-			// Install and configure envtest
 			ctr := h.Golang.Container().
-				WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest")).
-				WithMountedCache("/tmp/envtest", dag.CacheVolume("envtest-k8s")).
-				WithExec(helper.ForgeCommandf("setup-envtest use %s --bin-dir /tmp/envtest -p path", withKubeversion))
+				WithMountedCache("/tmp/envtest", dag.CacheVolume("envtest-k8s"))
+
+			if _, err := ctr.WithExec([]string{"setup-envtest", "list"}).Sync(ctx); err != nil {
+				ctr = ctr.WithExec(helper.ForgeCommand("go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest"))
+			}
+
+			// Install and configure envtest
+			ctr = ctr.WithExec(helper.ForgeCommandf("setup-envtest use %s --bin-dir /tmp/envtest -p path", withKubeversion))
 
 			stdout, err := ctr.Stdout(ctx)
 			if err != nil {

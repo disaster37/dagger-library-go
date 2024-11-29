@@ -313,8 +313,10 @@ func (g *Golang) Test(
 	}
 
 	if withGotestsum {
+		if _, err := ctr.WithExec([]string{"gotestsum", "--version"}).Sync(ctx); err != nil {
+			ctr = ctr.WithExec(helper.ForgeCommand("go install gotest.tools/gotestsum@latest"))
+		}
 		cmd = []string{"gotestsum", "--format", "testname", "--"}
-		ctr = ctr.WithExec(helper.ForgeCommand("go install gotest.tools/gotestsum@latest"))
 	} else {
 		cmd = []string{"go", "test"}
 	}
@@ -354,8 +356,11 @@ func (g *Golang) DebugTest(
 	run string,
 ) *dagger.Service {
 
-	ctr := g.Container.
-		WithExec(helper.ForgeScript(`
+	ctr := g.Container
+
+	if _, err := ctr.WithExec([]string{"dlv", "version"}).Sync(ctx); err != nil {
+		ctr = ctr.
+			WithExec(helper.ForgeScript(`
 set -e
 
 go install github.com/acroca/go-symbols@latest &&\
@@ -375,6 +380,7 @@ go install golang.org/x/tools/cmd/gorename@latest &&\
 go install github.com/go-delve/delve/cmd/dlv@latest &&\
 go install golang.org/x/tools/gopls@latest
 		`))
+	}
 
 	cmd := []string{
 		"dlv",

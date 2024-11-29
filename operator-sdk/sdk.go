@@ -91,19 +91,45 @@ func NewSdk(
 	}
 	kustomize := fmt.Sprintf("sigs.k8s.io/kustomize/kustomize/v5@%s", kustomizeVersion)
 
+	ctr := container.
+		WithDirectory(".", src)
+
+	// Install operator-sdk
+	if _, err := ctr.WithExec([]string{"operator-sdk", "version"}).Sync(ctx); err != nil {
+		ctr = ctr.WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
+			WithExec(helper.ForgeCommandf("chmod +x %s/operator-sdk", binPath))
+	}
+
+	// Install opm
+	if _, err := ctr.WithExec([]string{"opm", "version"}).Sync(ctx); err != nil {
+		ctr = ctr.WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/opm", urlOpm, binPath)).
+			WithExec(helper.ForgeCommandf("chmod +x %s/opm", binPath))
+	}
+
+	// Install controller gen
+	if _, err := ctr.WithExec([]string{"controller-gen", "--version"}).Sync(ctx); err != nil {
+		ctr = ctr.WithExec(helper.ForgeCommandf("go install %s", controllerGen))
+	}
+
+	// Install clean crd
+	if _, err := ctr.WithExec([]string{"crd", "--version"}).Sync(ctx); err != nil {
+		ctr = ctr.WithExec(helper.ForgeCommandf("go install %s", cleanCrd))
+	}
+
+	// Install kustomize
+	if _, err := ctr.WithExec([]string{"kustomize", "version"}).Sync(ctx); err != nil {
+		ctr = ctr.WithExec(helper.ForgeCommandf("go install %s", kustomize))
+	}
+
+	// Install YQ
+	if _, err := ctr.WithExec([]string{"yq", "--version"}).Sync(ctx); err != nil {
+		ctr = ctr.WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest"))
+	}
+
 	return &OperatorSdkSdk{
-		Container: container.
-			WithDirectory(".", src).
-			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
-			WithExec(helper.ForgeCommandf("chmod +x %s/operator-sdk", binPath)).
-			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/opm", urlOpm, binPath)).
-			WithExec(helper.ForgeCommandf("chmod +x %s/opm", binPath)).
-			WithExec(helper.ForgeCommandf("go install %s", controllerGen)).
-			WithExec(helper.ForgeCommandf("go install %s", cleanCrd)).
-			WithExec(helper.ForgeCommandf("go install %s", kustomize)).
-			WithExec(helper.ForgeCommand("go install github.com/mikefarah/yq/v4@latest")),
-		BinPath: binPath,
-		Src:     src,
+		Container: ctr,
+		BinPath:   binPath,
+		Src:       src,
 	}
 }
 
