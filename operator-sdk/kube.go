@@ -5,7 +5,7 @@ import (
 	"dagger/operator-sdk/internal/dagger"
 )
 
-type Kube struct {
+type OperatorSdkKube struct {
 	// +private
 	Src *dagger.Directory
 
@@ -16,8 +16,8 @@ type Kube struct {
 func NewKube(
 	// The golang container
 	src *dagger.Directory,
-) *Kube {
-	return &Kube{
+) *OperatorSdkKube {
+	return &OperatorSdkKube{
 		Src: src,
 		Kube: dag.K3S("test").
 			With(func(k *dagger.K3S) *dagger.K3S {
@@ -35,20 +35,20 @@ EOF`}),
 	}
 }
 
-func (h *Kube) WithSource(
+func (h *OperatorSdkKube) WithSource(
 	// The source directory
 	// +required
 	src *dagger.Directory,
-) *Kube {
+) *OperatorSdkKube {
 	h.Src = src
 	return h
 }
 
-func (h *Kube) Kubectl() *dagger.Container {
+func (h *OperatorSdkKube) Kubectl() *dagger.Container {
 	return h.Kube.Kubectl("get nodes")
 }
 
-func (h *Kube) Kubeconfig(
+func (h *OperatorSdkKube) Kubeconfig(
 	// set true if expose the k3s on host
 	// +optional
 	local bool,
@@ -56,13 +56,13 @@ func (h *Kube) Kubeconfig(
 	return h.Kube.Config(dagger.K3SConfigOpts{Local: local})
 }
 
-func (h *Kube) KubeCluster(
+func (h *OperatorSdkKube) KubeCluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
 	return h.Kube.Server().Start(ctx)
 }
 
-func (h *Kube) KubeContainer() *dagger.Container {
+func (h *OperatorSdkKube) KubeContainer() *dagger.Container {
 	return h.Kube.Container()
 }
 

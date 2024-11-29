@@ -7,7 +7,7 @@ import (
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
-type Golang struct {
+type OperatorSdkGolang struct {
 	// +private
 	Src *dagger.Directory
 
@@ -27,14 +27,14 @@ func NewGolang(
 	// +optional
 	container *dagger.Container,
 
-) *Golang {
-	return &Golang{
-		Src:    src,
+) *OperatorSdkGolang {
+	return &OperatorSdkGolang{
+		Src: src,
 		Golang: dag.Golang(
-			src, 
+			src,
 			dagger.GolangOpts{
 				Version: version,
-				Base: container,
+				Base:    container,
 			},
 		),
 	}
@@ -42,7 +42,7 @@ func NewGolang(
 
 // Test permit to run golang tests
 // It will run envtest with the kube version provided
-func (h *Golang) Test(
+func (h *OperatorSdkGolang) Test(
 	ctx context.Context,
 	// if only short running tests should be executed
 	// +optional
@@ -100,17 +100,17 @@ func (h *Golang) Test(
 }
 
 // To update the source directory
-func (h *Golang) WithSource(
+func (h *OperatorSdkGolang) WithSource(
 	// The source directory
 	// +required
 	src *dagger.Directory,
-) *Golang {
+) *OperatorSdkGolang {
 	h.Src = src
 	h.Golang.WithSource(src)
 	return h
 }
 
 // Container permit to get Golang container
-func (h *Golang) Container() *dagger.Container {
+func (h *OperatorSdkGolang) Container() *dagger.Container {
 	return h.Golang.Container()
 }

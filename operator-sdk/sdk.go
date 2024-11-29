@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Sdk struct {
+type OperatorSdkSdk struct {
 	Container *dagger.Container
 
 	// The source directory
@@ -55,7 +55,7 @@ func NewSdk(
 	// +optional
 	kustomizeVersion string,
 
-) *Sdk {
+) *OperatorSdkSdk {
 
 	// Compute URL to download operator-sdk
 	var urlSdk string
@@ -91,7 +91,7 @@ func NewSdk(
 	}
 	kustomize := fmt.Sprintf("sigs.k8s.io/kustomize/kustomize/v5@%s", kustomizeVersion)
 
-	return &Sdk{
+	return &OperatorSdkSdk{
 		Container: container.
 			WithDirectory(".", src).
 			WithExec(helper.ForgeCommandf("curl --fail -L %s -o %s/operator-sdk", urlSdk, binPath)).
@@ -108,13 +108,13 @@ func NewSdk(
 }
 
 // Version display the current version of operator-sdk cli
-func (h *Sdk) Version(
+func (h *OperatorSdkSdk) Version(
 	ctx context.Context,
 ) (string, error) {
 	return h.Container.WithExec(helper.ForgeCommand("operator-sdk version")).Stdout(ctx)
 }
 
-func (h *Sdk) Run(
+func (h *OperatorSdkSdk) Run(
 	// The cmd to run on container
 	// +required
 	cmd string,
@@ -123,7 +123,7 @@ func (h *Sdk) Run(
 	return h.Container.WithExec(helper.ForgeCommand(cmd))
 }
 
-func (h *Sdk) GenerateManifests(
+func (h *OperatorSdkSdk) GenerateManifests(
 	ctx context.Context,
 
 	// The CRD version to generate
@@ -159,7 +159,7 @@ func (h *Sdk) GenerateManifests(
 }
 
 // Bundle generate the bundle
-func (h *Sdk) GenerateBundle(
+func (h *OperatorSdkSdk) GenerateBundle(
 	ctx context.Context,
 
 	// The OCI image name without the version
@@ -214,18 +214,18 @@ func (h *Sdk) GenerateBundle(
 }
 
 // WithSource permit to update the current source on sdk container
-func (h *Sdk) WithSource(
+func (h *OperatorSdkSdk) WithSource(
 	// The source directory
 	// +required
 	src *dagger.Directory,
-) *Sdk {
+) *OperatorSdkSdk {
 	h.Container = h.Container.WithDirectory(".", src)
 	h.Src = src
 	return h
 }
 
 // InstallOlm permit to install the OLM
-func (h *Sdk) InstallOlm(
+func (h *OperatorSdkSdk) InstallOlm(
 	ctx context.Context,
 
 	// The kubeconfig file to access on cluster where to install OLM

@@ -8,13 +8,13 @@ import (
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
-type Auth struct {
+type OperatorSdkOciAuth struct {
 	Url      string
 	Username string
 	Password *dagger.Secret
 }
 
-type Oci struct {
+type OperatorSdkOci struct {
 	// The Golang container
 	GolangContainer *dagger.Container
 
@@ -35,7 +35,7 @@ type Oci struct {
 	Catalog *dagger.Container
 
 	// +private
-	Auths []Auth
+	Auths []OperatorSdkOciAuth
 }
 
 func NewOci(
@@ -48,16 +48,16 @@ func NewOci(
 	// +required
 	// The base container with docker
 	dockerContainer *dagger.Container,
-) *Oci {
-	return &Oci{
+) *OperatorSdkOci {
+	return &OperatorSdkOci{
 		Src:             src,
 		GolangContainer: golangContainer.WithDirectory(".", src),
 		DockerContainer: dockerContainer.WithDirectory(".", src),
-		Auths:           make([]Auth, 0),
+		Auths:           make([]OperatorSdkOciAuth, 0),
 	}
 }
 
-func (h *Oci) WithRepositoryCredentials(
+func (h *OperatorSdkOci) WithRepositoryCredentials(
 	// The repository URL
 	// +required
 	url string,
@@ -69,8 +69,8 @@ func (h *Oci) WithRepositoryCredentials(
 	// The password
 	// +required
 	password *dagger.Secret,
-) *Oci {
-	h.Auths = append(h.Auths, Auth{
+) *OperatorSdkOci {
+	h.Auths = append(h.Auths, OperatorSdkOciAuth{
 		Url:      url,
 		Username: username,
 		Password: password,
@@ -80,9 +80,9 @@ func (h *Oci) WithRepositoryCredentials(
 }
 
 // BuildManager permit to build manager image
-func (h *Oci) BuildManager(
+func (h *OperatorSdkOci) BuildManager(
 	ctx context.Context,
-) *Oci {
+) *OperatorSdkOci {
 
 	// Build manager
 	managerBinFile := h.GolangContainer.
@@ -102,7 +102,7 @@ func (h *Oci) BuildManager(
 }
 
 // PublishManager permit to push OCI image on registry
-func (h *Oci) PublishManager(
+func (h *OperatorSdkOci) PublishManager(
 	ctx context.Context,
 
 	// The image name to push
@@ -125,9 +125,9 @@ func (h *Oci) PublishManager(
 }
 
 // BuildCatalog permit to build catalog image
-func (h *Oci) BuildBundle(
+func (h *OperatorSdkOci) BuildBundle(
 	ctx context.Context,
-) *Oci {
+) *OperatorSdkOci {
 	h.Bundle = h.GolangContainer.
 		Directory(".").
 		DockerBuild(
@@ -140,7 +140,7 @@ func (h *Oci) BuildBundle(
 }
 
 // PublishBundle permit to push OCI image on registry
-func (h *Oci) PublishBundle(
+func (h *OperatorSdkOci) PublishBundle(
 	ctx context.Context,
 
 	// The image name to push
@@ -163,7 +163,7 @@ func (h *Oci) PublishBundle(
 }
 
 // Build the OLM catalog
-func (h *Oci) BuildCatalog(
+func (h *OperatorSdkOci) BuildCatalog(
 	ctx context.Context,
 
 	// The catalog image name
@@ -178,7 +178,7 @@ func (h *Oci) BuildCatalog(
 	// The bundle image name
 	// +required
 	bundleImage string,
-) (*Oci, error) {
+) (*OperatorSdkOci, error) {
 
 	// Run OPM command
 	opmCmd := []string{
@@ -225,7 +225,7 @@ func (h *Oci) BuildCatalog(
 }
 
 // PublishCatalog permit to publish the catalog image
-func (h *Oci) PublishCatalog(
+func (h *OperatorSdkOci) PublishCatalog(
 	ctx context.Context,
 
 	// The image name to push
@@ -243,11 +243,11 @@ func (h *Oci) PublishCatalog(
 }
 
 // WithSource permit to update the current source
-func (h *Oci) WithSource(
+func (h *OperatorSdkOci) WithSource(
 	// The source directory
 	// +required
 	src *dagger.Directory,
-) *Oci {
+) *OperatorSdkOci {
 	h.Src = src
 	h.GolangContainer = h.GolangContainer.WithDirectory(".", src)
 	h.DockerContainer = h.DockerContainer.WithDirectory(".", src)

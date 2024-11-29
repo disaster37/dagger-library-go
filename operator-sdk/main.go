@@ -37,17 +37,16 @@ type OperatorSdk struct {
 	Docker *dagger.DockerCli
 
 	// K3s module
-	// +private
-	*Kube
+	Kube *OperatorSdkKube
 
 	// The Golang module
-	Golang *Golang
+	Golang *OperatorSdkGolang
 
 	// The SDK module
-	Sdk *Sdk
+	Sdk *OperatorSdkSdk
 
 	// The OCI module
-	Oci *Oci
+	Oci *OperatorSdkOci
 }
 
 func New(
@@ -334,16 +333,16 @@ func (h *OperatorSdk) Release(
 	h.WithSource(dir)
 
 	// Format code
-	dir = h.Golang.Format()
+	dir = h.Golang.Golang.Format()
 	h.WithSource(dir)
 
 	// Lint code
-	if _, err = h.Golang.Lint(ctx); err != nil {
+	if _, err = h.Golang.Golang.Lint(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when lint code")
 	}
 
 	// Vuln check
-	if _, err = h.Golang.Vulncheck(ctx); err != nil {
+	if _, err = h.Golang.Golang.Vulncheck(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when check vulnerability")
 	}
 
