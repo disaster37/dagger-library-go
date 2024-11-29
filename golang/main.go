@@ -9,9 +9,7 @@ import (
 	"context"
 	"dagger/golang/internal/dagger"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 
@@ -76,7 +74,7 @@ func New(
 ) (*Golang, error) {
 	expectedVersion, err := inspectModVersion(context.Background(), src)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) && version != "" {
+		if version != "" {
 			expectedVersion = version
 		} else {
 			return nil, err
