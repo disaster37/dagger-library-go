@@ -66,6 +66,10 @@ func New(
 	// +optional
 	container *dagger.Container,
 
+	// The go version when go.mod not yet exist
+	// +optional
+	goVersion string,
+
 	// The operator-sdk cli version to use
 	// +optional
 	sdkVersion string,
@@ -98,7 +102,7 @@ func New(
 	var err error
 
 	// goModule
-	goModule := dag.Golang(src, dagger.GolangOpts{Base: container})
+	goModule := dag.Golang(src, dagger.GolangOpts{Base: container, Version: goVersion})
 	binPath, err := goModule.GoBin(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when get GoBin")
