@@ -10,6 +10,7 @@ import (
 	"dagger/golang/internal/dagger"
 	"encoding/json"
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
@@ -65,14 +66,22 @@ func New(
 	// bookworm (> 1.20) variants.
 	// +optional
 	base *dagger.Container,
+	// The golang version to use when no go.mod
+	// +optional
+	version string,
 	// a path to a directory containing the source code
 	// +required
 	src *dagger.Directory,
 ) (*Golang, error) {
-	version, err := inspectModVersion(context.Background(), src)
+	expectedVersion, err := inspectModVersion(context.Background(), src)
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) && version != "" {
+			expectedVersion = version
+		} else {
+			return nil, err
+		}
 	}
+	version = expectedVersion
 
 	if base == nil {
 		base = defaultImage(version)
@@ -479,10 +488,12 @@ func (g *Golang) Lint(
 		"run",
 		"--timeout",
 		"5m",
-		"--go",
-		g.Version,
 		"--out-format",
 		format,
+	}
+
+	if g.Version != "latest" {
+		cmd = append(cmd, "--go", g.Version)
 	}
 
 	if g.Private != nil {
