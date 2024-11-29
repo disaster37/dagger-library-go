@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"dagger/operator-sdk/internal/dagger"
+	"fmt"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -40,19 +41,13 @@ type OperatorSdk struct {
 	*Kube
 
 	// The Golang module
-	// +private
-	*dagger.Golang
+	Golang *Golang
 
 	// The SDK module
-	// +private
-	*Sdk
+	Sdk *Sdk
 
 	// The OCI module
-	// +private
-	*Oci
-
-	// +private
-	KubeVersion string
+	Oci *Oci
 }
 
 func New(
@@ -94,15 +89,12 @@ func New(
 	// +optional
 	dockerVersion string,
 
-	// The kube version to use when run tests
-	kubeVersion string,
-
 ) (*OperatorSdk, error) {
 
 	var err error
 
 	// goModule
-	goModule := dag.Golang(src, dagger.GolangOpts{Base: container, Version: goVersion})
+	goModule := NewGolang(src, goVersion, container)
 	binPath, err := goModule.GoBin(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when get GoBin")
@@ -143,9 +135,8 @@ func New(
 				WithEnvVariable("DOCKER_HOST", "tcp://dockerd.svc:2375").
 				WithFile("/usr/bin/opm", opmFile),
 		),
-		Docker:      dockerCli,
-		Kube:        NewKube(src),
-		KubeVersion: kubeVersion,
+		Docker: dockerCli,
+		Kube:   NewKube(src),
 	}, nil
 }
 
@@ -259,8 +250,6 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 }
 
-/*
-
 // Release permit to release to operator version
 func (h *OperatorSdk) Release(
 	ctx context.Context,
@@ -285,20 +274,26 @@ func (h *OperatorSdk) Release(
 	// +optional
 	withTest bool,
 
+	// Set the kubeversion to use when run envtest
+	// +optional
+	kubeVersion string,
+
+	// Set true to publish the operator image, the bundle image and the catalog image
+	// +optional
+	withPublish bool,
+
 	// The OCI registry
-	// +required
 	registry string,
 
 	// The OCI repository
-	// +required
 	repository string,
 
 	// The registry username
-	// +required
+	// +optional
 	registryUsername string,
 
 	// The registry password
-	// +required
+	// +optional
 	registryPassword *dagger.Secret,
 
 ) (*dagger.Directory, error) {
@@ -306,84 +301,148 @@ func (h *OperatorSdk) Release(
 	var dir *dagger.Directory
 	var err error
 
-	// Prepare OCI
-	h.Oci.WithRepositoryCredentials(registry, registryUsername, registryPassword)
+	imageName := fmt.Sprintf("%s/%s", registry, repository)
+	bundleName := fmt.Sprintf("%s-bundle", imageName)
+	catalogName := fmt.Sprintf("%s-catalog", imageName)
+	fullImageName := fmt.Sprintf("%s:%s", imageName, version)
+	fullBundleName := fmt.Sprintf("%s:%s", bundleName, version)
+	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
+	previousCatalogName := ""
+	if previousVersion != "" {
+		previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+	}
+	lastCatalogName := fmt.Sprintf("%s:latest", catalogName)
 
 	// Generate manifests
-	dir, err = h.Generate(ctx, crdVersion)
+	dir, err = h.Sdk.GenerateManifests(ctx, crdVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error when call 'generate'")
+		return nil, errors.Wrap(err, "Error when generate manifests")
+	}
+	h.WithSource(dir)
+
+	// Generate bundle
+	dir, err = h.Sdk.GenerateBundle(
+		ctx,
+		imageName,
+		version,
+		channels,
+		previousVersion,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when generate bundle")
 	}
 	h.WithSource(dir)
 
 	// Format code
-	dir = h.Format()
+	dir = h.Golang.Format()
 	h.WithSource(dir)
 
 	// Lint code
-	_, err = h.Lint(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when call 'lint'")
+	if _, err = h.Golang.Lint(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when lint code")
 	}
 
+	// Vuln check
+	if _, err = h.Golang.Vulncheck(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when check vulnerability")
+	}
+
+	// Test code
 	if withTest {
-		coverageFile := h.Test(ctx, false, false, "", "", true, "", h.KubeVersion)
+		coverageFile := h.Golang.Test(
+			ctx,
+			false,
+			false,
+			"",
+			"",
+			true,
+			"",
+			kubeVersion,
+		)
 		dir = dir.WithFile(".", coverageFile)
 		h.WithSource(dir)
 	}
 
-	// Run bundle
-	metadata := &metadata{}
-	versionFile, err := h.Sdk.Container.File("version.yaml").Contents(ctx)
-	if err == nil {
-		if err := yaml.Unmarshal([]byte(versionFile), metadata); err != nil {
-			return nil, errors.Wrap(err, "Error when decode version.yaml")
+	// Build operator image
+	if _, err = h.Oci.
+		BuildManager(ctx).
+		Manager.
+		Export(ctx, "/dev/null"); err != nil {
+		return nil, errors.Wrap(err, "Error when build operator image")
+	}
+
+	// Build bundle
+	if _, err = h.Oci.
+		BuildBundle(ctx).
+		Bundle.
+		Export(ctx, "/dev/null"); err != nil {
+		return nil, errors.Wrap(err, "Error when build bundle image")
+	}
+
+	// Build catalog
+	if _, err = h.Oci.BuildCatalog(
+		ctx,
+		fullCatalogName,
+		previousCatalogName,
+		fullBundleName,
+	); err != nil {
+		return nil, errors.Wrap(err, "Error when build Catalog image")
+	}
+
+	if withPublish {
+		if registryUsername == "" || registryPassword == nil {
+			return nil, errors.New("You need to provide credentials to connect on registry to publish images")
+		}
+
+		// Add registry credentials
+		h.Oci.WithRepositoryCredentials(registry, registryUsername, registryPassword)
+
+		// Publish operator image
+		if _, err := h.Oci.PublishManager(ctx, fullImageName); err != nil {
+			return nil, errors.Wrap(err, "Error when Publish operator image")
+		}
+
+		// Publish bundle image
+		if _, err := h.Oci.PublishBundle(ctx, fullBundleName); err != nil {
+			return nil, errors.Wrap(err, "Error when publish bundle image")
+		}
+
+		// Publish catalog image
+		if _, err := h.Oci.PublishCatalog(ctx, catalogName); err != nil {
+			return nil, errors.Wrap(err, "Error when publish catalog image")
+		}
+		if _, err := h.Oci.PublishCatalog(ctx, lastCatalogName); err != nil {
+			return nil, errors.Wrap(err, "Error when publish last catalog image")
 		}
 	}
-	if previousVersion == "" {
-		metadata.PreviousVersion = metadata.CurrentVersion
-	} else {
-		metadata.PreviousVersion = previousVersion
-	}
-	metadata.CurrentVersion = version
-	dir, err = h.Sdk.Bundle(
-		ctx,
-		fmt.Sprintf("%s/%s", registry, repository),
-		metadata.CurrentVersion,
-		channels,
-		metadata.PreviousVersion,
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when call 'bundle'")
-	}
-	h.WithSource(dir)
 
-	// Build and push operator image
-	_, err = h.PublishManager(ctx, fmt.Sprintf("%s/%s:%s", registry, repository, metadata.CurrentVersion))
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when call 'publishManager'")
-	}
-
-	// Build and push the bundle
-	_, err = h.PublishBundle(ctx, fmt.Sprintf("%s/%s-bundle:v%s", registry, repository, metadata.CurrentVersion))
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when call 'publishBundle'")
-	}
-
-	// Build and push catalog
-	updateFromPreviousCatalog := true
-	if metadata.CurrentVersion == "0.0.1" {
-		updateFromPreviousCatalog = false
-	}
-	h.BuildCatalog(
-		ctx,
-		fmt.Sprintf("%s/%s-catalog:latest", registry, repository),
-		fmt.Sprintf("%s/%s-catalog:%s", registry, repository, metadata.CurrentVersion),
-		fmt.Sprintf("%s/%s-bundle:v%s", registry, repository, metadata.CurrentVersion),
-		updateFromPreviousCatalog,
-	)
-
-	// @TODO write the new version file
+	/*
+		// Run bundle
+		metadata := &metadata{}
+		versionFile, err := h.Sdk.Container.File("version.yaml").Contents(ctx)
+		if err == nil {
+			if err := yaml.Unmarshal([]byte(versionFile), metadata); err != nil {
+				return nil, errors.Wrap(err, "Error when decode version.yaml")
+			}
+		}
+		if previousVersion == "" {
+			metadata.PreviousVersion = metadata.CurrentVersion
+		} else {
+			metadata.PreviousVersion = previousVersion
+		}
+		metadata.CurrentVersion = version
+		dir, err = h.Sdk.Bundle(
+			ctx,
+			fmt.Sprintf("%s/%s", registry, repository),
+			metadata.CurrentVersion,
+			channels,
+			metadata.PreviousVersion,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when call 'bundle'")
+		}
+		h.WithSource(dir)
+	*/
 
 	return dir, nil
 
@@ -393,5 +452,3 @@ type metadata struct {
 	CurrentVersion  string `yaml:"currentVersion"`
 	PreviousVersion string `yaml:"previousVersion"`
 }
-
-*/

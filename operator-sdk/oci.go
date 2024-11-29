@@ -162,6 +162,7 @@ func (h *Oci) PublishBundle(
 
 }
 
+// Build the OLM catalog
 func (h *Oci) BuildCatalog(
 	ctx context.Context,
 
@@ -177,10 +178,6 @@ func (h *Oci) BuildCatalog(
 	// The bundle image name
 	// +required
 	bundleImage string,
-
-	// Set to true to update existing catalog
-	// +optional
-	update bool,
 ) (*Oci, error) {
 
 	// Run OPM command
@@ -197,19 +194,14 @@ func (h *Oci) BuildCatalog(
 		"--bundles",
 		bundleImage,
 	}
-	if update {
-		if previousCatalogImage == "" {
-			opmCmd = append(opmCmd,
-				"--from-index",
-				catalogImage,
-			)
-		} else {
-			opmCmd = append(opmCmd,
-				"--from-index",
-				previousCatalogImage,
-			)
-		}
+
+	if previousCatalogImage == "" {
+		opmCmd = append(opmCmd,
+			"--from-index",
+			previousCatalogImage,
+		)
 	}
+
 	dockerContainer := h.DockerContainer.
 		WithExec(opmCmd)
 	_, err := dockerContainer.

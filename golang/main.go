@@ -487,12 +487,10 @@ func (g *Golang) Lint(
 		"run",
 		"--timeout",
 		"5m",
+		"--go",
+		g.Version,
 		"--out-format",
 		format,
-	}
-
-	if g.Version != "latest" {
-		cmd = append(cmd, "--go", g.Version)
 	}
 
 	if g.Private != nil {
