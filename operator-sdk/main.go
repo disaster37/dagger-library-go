@@ -309,6 +309,12 @@ func (h *OperatorSdk) Release(
 	previousCatalogName := ""
 	if previousVersion != "" {
 		previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+	} else {
+		// Open the current version
+		previousVersion, err := h.Src.File("VERSION").Contents(ctx)
+		if err != nil {
+			previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+		}
 	}
 	lastCatalogName := fmt.Sprintf("%s:latest", catalogName)
 
@@ -366,7 +372,7 @@ func (h *OperatorSdk) Release(
 	if _, err = h.Oci.
 		BuildManager(ctx).
 		Manager.
-		Export(ctx, "/dev/null"); err != nil {
+		Sync(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when build operator image")
 	}
 
@@ -374,7 +380,7 @@ func (h *OperatorSdk) Release(
 	if _, err = h.Oci.
 		BuildBundle(ctx).
 		Bundle.
-		Export(ctx, "/dev/null"); err != nil {
+		Sync(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when build bundle image")
 	}
 
@@ -415,33 +421,8 @@ func (h *OperatorSdk) Release(
 		}
 	}
 
-	/*
-		// Run bundle
-		metadata := &metadata{}
-		versionFile, err := h.Sdk.Container.File("version.yaml").Contents(ctx)
-		if err == nil {
-			if err := yaml.Unmarshal([]byte(versionFile), metadata); err != nil {
-				return nil, errors.Wrap(err, "Error when decode version.yaml")
-			}
-		}
-		if previousVersion == "" {
-			metadata.PreviousVersion = metadata.CurrentVersion
-		} else {
-			metadata.PreviousVersion = previousVersion
-		}
-		metadata.CurrentVersion = version
-		dir, err = h.Sdk.Bundle(
-			ctx,
-			fmt.Sprintf("%s/%s", registry, repository),
-			metadata.CurrentVersion,
-			channels,
-			metadata.PreviousVersion,
-		)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when call 'bundle'")
-		}
-		h.WithSource(dir)
-	*/
+	// Generate current version file
+	dir = dir.WithNewFile("VERSION", version)
 
 	return dir, nil
 

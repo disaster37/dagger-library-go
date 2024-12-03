@@ -188,7 +188,7 @@ func (h *OperatorSdkSdk) GenerateManifests(
 func (h *OperatorSdkSdk) GenerateBundle(
 	ctx context.Context,
 
-	// The OCI image name without the version
+	// The OCI operator image name without the version
 	// +required
 	imageName string,
 

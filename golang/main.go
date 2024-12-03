@@ -316,7 +316,7 @@ func (g *Golang) Test(
 		}
 		cmd = []string{"gotestsum", "--format", "testname", "--"}
 	} else {
-		cmd = []string{"go", "test"}
+		cmd = []string{"go", "test", "-v"}
 	}
 	cmd = append(cmd, "-p=1", "-count=1", "-vet=off", "-timeout=60m", "-covermode=atomic", "-coverprofile=coverage.out.tmp", testPath)
 	if short {
