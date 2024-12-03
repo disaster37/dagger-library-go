@@ -281,6 +281,10 @@ func (h *OperatorSdk) Release(
 	// +optional
 	withPublish bool,
 
+	// Set true to publish the catalog with last tag
+	// +optional
+	publishLast bool,
+
 	// The OCI registry
 	registry string,
 
@@ -416,9 +420,13 @@ func (h *OperatorSdk) Release(
 		if _, err := h.Oci.PublishCatalog(ctx, catalogName); err != nil {
 			return nil, errors.Wrap(err, "Error when publish catalog image")
 		}
-		if _, err := h.Oci.PublishCatalog(ctx, lastCatalogName); err != nil {
-			return nil, errors.Wrap(err, "Error when publish last catalog image")
+
+		if publishLast {
+			if _, err := h.Oci.PublishCatalog(ctx, lastCatalogName); err != nil {
+				return nil, errors.Wrap(err, "Error when publish last catalog image")
+			}
 		}
+
 	}
 
 	// Generate current version file
@@ -426,9 +434,4 @@ func (h *OperatorSdk) Release(
 
 	return dir, nil
 
-}
-
-type metadata struct {
-	CurrentVersion  string `yaml:"currentVersion"`
-	PreviousVersion string `yaml:"previousVersion"`
 }
