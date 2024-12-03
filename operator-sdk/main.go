@@ -316,7 +316,7 @@ func (h *OperatorSdk) Release(
 	} else {
 		// Open the current version
 		previousVersion, err := h.Src.File("VERSION").Contents(ctx)
-		if err != nil {
+		if err == nil {
 			previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
 		}
 	}
@@ -388,16 +388,6 @@ func (h *OperatorSdk) Release(
 		return nil, errors.Wrap(err, "Error when build bundle image")
 	}
 
-	// Build catalog
-	if _, err = h.Oci.BuildCatalog(
-		ctx,
-		fullCatalogName,
-		previousCatalogName,
-		fullBundleName,
-	); err != nil {
-		return nil, errors.Wrap(err, "Error when build Catalog image")
-	}
-
 	if withPublish {
 		if registryUsername == "" || registryPassword == nil {
 			return nil, errors.New("You need to provide credentials to connect on registry to publish images")
@@ -414,6 +404,17 @@ func (h *OperatorSdk) Release(
 		// Publish bundle image
 		if _, err := h.Oci.PublishBundle(ctx, fullBundleName); err != nil {
 			return nil, errors.Wrap(err, "Error when publish bundle image")
+		}
+
+		// Build catalog
+		// We can only build catalog after publish the bundle
+		if _, err = h.Oci.BuildCatalog(
+			ctx,
+			fullCatalogName,
+			previousCatalogName,
+			fullBundleName,
+		); err != nil {
+			return nil, errors.Wrap(err, "Error when build Catalog image")
 		}
 
 		// Publish catalog image
