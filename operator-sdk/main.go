@@ -368,7 +368,7 @@ func (h *OperatorSdk) Release(
 			"",
 			kubeVersion,
 		)
-		dir = dir.WithFile(".", coverageFile)
+		dir = dir.WithFile("coverage.out", coverageFile)
 		h.WithSource(dir)
 	}
 
