@@ -177,9 +177,6 @@ func (h *OperatorSdkSdk) GenerateManifests(
 		crdSubCommand = fmt.Sprintf("crd:crdVersions=%s,generateEmbeddedObjectMeta=true", crdVersion)
 	}
 
-	h.Container.
-		WithExec([]string{"ls", "-al"}).Stdout(ctx)
-
 	return h.Container.
 		WithExec([]string{"controller-gen", fmt.Sprintf("rbac:roleName=%s", roleName), crdSubCommand, "webhook", "paths=./...", "output:crd:artifacts:config=config/crd/bases"}).
 		WithExec([]string{"crd", "clean-crd", "--crd-file", "config/crd/bases/*.yaml"}).
