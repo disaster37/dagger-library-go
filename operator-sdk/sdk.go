@@ -174,13 +174,13 @@ func (h *OperatorSdkSdk) GenerateManifests(
 	if crdVersion == "" {
 		crdSubCommand = "crd:generateEmbeddedObjectMeta=true"
 	} else {
-		crdSubCommand = fmt.Sprintf("crd:crdVersions=%s,generateEmbeddedObjectMeta=true", crdSubCommand)
+		crdSubCommand = fmt.Sprintf("crd:crdVersions=%s,generateEmbeddedObjectMeta=true", crdVersion)
 	}
 
 	return h.Container.
-		WithExec(helper.ForgeCommandf("controller-gen rbac:roleName=%s %s webhook paths=\"./...\" output:crd:artifacts:config=config/crd/bases", roleName, crdSubCommand)).
+		WithExec([]string{"controller-gen", fmt.Sprintf("rbac:roleName=%s", roleName), crdSubCommand, "webhook", "paths=./...", "output:crd:artifacts:config=config/crd/bases"}).
 		WithExec([]string{"crd", "clean-crd", "--crd-file", "config/crd/bases/*.yaml"}).
-		WithExec(helper.ForgeCommand("controller-gen object:headerFile=\"hack/boilerplate.go.txt\" paths=\"./...\"")).
+		WithExec([]string{"controller-gen", "object:headerFile=hack/boilerplate.go.txt", "paths=./..."}).
 		Directory("."), nil
 }
 
