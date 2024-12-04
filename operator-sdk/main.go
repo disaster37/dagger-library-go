@@ -188,6 +188,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Install Prometheus CRD
 	if _, err := h.Kube.Kube.Kubectl("version").
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml")).
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-podmonitors.yaml")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install ServiceMonitor CRD")
 	}
