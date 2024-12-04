@@ -327,7 +327,7 @@ func (h *OperatorSdk) Release(
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when generate manifests")
 	}
-	h.WithSource(dir)
+	h = h.WithSource(dir)
 
 	// Generate bundle
 	dir, err = h.Sdk.GenerateBundle(
@@ -340,11 +340,11 @@ func (h *OperatorSdk) Release(
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when generate bundle")
 	}
-	h.WithSource(dir)
+	h = h.WithSource(dir)
 
 	// Format code
 	dir = h.Golang.Golang.Format()
-	h.WithSource(dir)
+	h = h.WithSource(dir)
 
 	// Lint code
 	if _, err = h.Golang.Golang.Lint(ctx); err != nil {
@@ -369,7 +369,7 @@ func (h *OperatorSdk) Release(
 			kubeVersion,
 		)
 		dir = dir.WithFile("coverage.out", coverageFile)
-		h.WithSource(dir)
+		h = h.WithSource(dir)
 	}
 
 	// Build operator image
