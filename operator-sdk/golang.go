@@ -110,7 +110,7 @@ func (h *OperatorSdkGolang) WithSource(
 	src *dagger.Directory,
 ) *OperatorSdkGolang {
 	h.Src = src
-	h.Golang.WithSource(src)
+	h.Golang = h.Golang.WithSource(src)
 	return h
 }
 
