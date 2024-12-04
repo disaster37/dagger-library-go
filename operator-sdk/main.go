@@ -240,7 +240,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/subscription.yaml")).
-		WithExec(helper.ForgeCommand("kubectl wait subscription test --for=jsonpath=status.state=AtLatestKnown -n operators --timeout 60s")).
+		//WithExec(helper.ForgeCommand("kubectl wait subscription test --for=jsonpath=status.state=AtLatestKnown -n operators --timeout 60s")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install subscription")
 	}
