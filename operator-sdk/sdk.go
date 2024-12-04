@@ -248,7 +248,7 @@ func (h *OperatorSdkSdk) WithSource(
 	// +required
 	src *dagger.Directory,
 ) *OperatorSdkSdk {
-	h.Container = h.Container.WithDirectory(".", src)
+	h.Container = h.Container.WithDirectory(".", src, dagger.ContainerWithDirectoryOpts{})
 	h.Src = src
 	return h
 }

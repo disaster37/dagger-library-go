@@ -418,7 +418,7 @@ func (h *OperatorSdk) Release(
 		}
 
 		// Publish catalog image
-		if _, err := h.Oci.PublishCatalog(ctx, catalogName); err != nil {
+		if _, err := h.Oci.PublishCatalog(ctx, fullCatalogName); err != nil {
 			return nil, errors.Wrap(err, "Error when publish catalog image")
 		}
 
