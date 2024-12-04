@@ -211,7 +211,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	if _, err := h.Kube.Kube.Kubectl("version").
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/catalog.yaml")).
-		WithExec(helper.ForgeCommand("kubectl wait catalogSource test --for=jsonpath=status.connectionState.lastObservedState=READY -n olm --timeout 60s")).
+		//WithExec(helper.ForgeCommand("kubectl wait catalogSource test --for=jsonpath=status.connectionState.lastObservedState=READY -n olm --timeout 60s")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install catalog")
 	}
