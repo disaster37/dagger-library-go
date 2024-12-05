@@ -320,7 +320,7 @@ func (h *OperatorSdk) TestOlmOperator(
 
 	defer service.Stop(ctx)
 
-	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=90", name)).Stdout(ctx); err != nil {
+	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=60s", name)).Stdout(ctx); err != nil {
 		return "", errors.Wrap(err, "Operator not ready")
 	}
 
