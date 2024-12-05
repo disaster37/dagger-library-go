@@ -320,11 +320,16 @@ func (h *OperatorSdk) TestOlmOperator(
 
 	defer service.Stop(ctx)
 
-	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=60s", name)).Stdout(ctx); err != nil {
+	kubeCtn := h.Kube.Kube.Kubectl("get nodes").
+		WithExec([]string{"sleep", "30"})
+
+	_, _ = kubeCtn.WithExec(helper.ForgeCommand("kubectl get deployment -n operators")).Stdout(ctx)
+
+	if _, err := kubeCtn.WithExec(helper.ForgeCommandf("kubectl wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=60s", name)).Stdout(ctx); err != nil {
 		return "", errors.Wrap(err, "Operator not ready")
 	}
 
-	return h.Kube.Kube.Kubectl(fmt.Sprintf("logs -n operators -l control-plane=%s", name)).Stdout(ctx)
+	return kubeCtn.WithExec(helper.ForgeCommandf("logs -n operators -l control-plane=%s", name)).Stdout(ctx)
 
 }
 
