@@ -315,7 +315,7 @@ func (h *OperatorSdk) TestOlmOperator(
 		return "", errors.Wrap(err, "Error when install OLM operator")
 	}
 
-	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("kubectl wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=90", name)).Stdout(ctx); err != nil {
+	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=90", name)).Stdout(ctx); err != nil {
 		return "", errors.Wrap(err, "Operator not ready")
 	}
 
