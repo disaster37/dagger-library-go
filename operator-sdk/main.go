@@ -48,6 +48,9 @@ type OperatorSdk struct {
 
 	// The OCI module
 	Oci *OperatorSdkOci
+
+	// The catalog image pushed
+	CatalogImage string
 }
 
 func New(
@@ -329,7 +332,7 @@ func (h *OperatorSdk) TestOlmOperator(
 		return "", errors.Wrap(err, "Operator not ready")
 	}
 
-	return kubeCtn.WithExec(helper.ForgeCommandf("logs -n operators -l control-plane=%s", name)).Stdout(ctx)
+	return kubeCtn.WithExec(helper.ForgeCommandf("kubectl logs -n operators -l control-plane=%s", name)).Stdout(ctx)
 
 }
 
@@ -541,8 +544,8 @@ func (h *OperatorSdk) Release(
 		if _, err := h.Oci.PublishCatalog(ctx, fullCatalogName); err != nil {
 			return nil, errors.Wrap(err, "Error when publish catalog image")
 		}
-
 		fmt.Printf("Successfully publish catalog image: %s\n", fullCatalogName)
+		h.CatalogImage = fullCatalogName
 
 		if publishLast {
 			if _, err := h.Oci.PublishCatalog(ctx, lastCatalogName); err != nil {
