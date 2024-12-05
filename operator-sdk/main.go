@@ -519,11 +519,13 @@ func (h *OperatorSdk) Release(
 		if _, err := h.Oci.PublishManager(ctx, fullImageName); err != nil {
 			return nil, errors.Wrap(err, "Error when Publish operator image")
 		}
+		fmt.Printf("Successfully publish operator image: %s\n", fullImageName)
 
 		// Publish bundle image
 		if _, err := h.Oci.PublishBundle(ctx, fullBundleName); err != nil {
 			return nil, errors.Wrap(err, "Error when publish bundle image")
 		}
+		fmt.Printf("Successfully publish bundle image: %s\n", fullBundleName)
 
 		// Build catalog
 		// We can only build catalog after publish the bundle
