@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/99designs/gqlgen v0.17.55
 	github.com/Khan/genqlient v0.7.0
+	github.com/coreos/go-semver v0.3.1
 	github.com/disaster37/dagger-library-go/lib v0.0.0-20241112155200-52140e653504
 	github.com/operator-framework/api v0.27.0
 	github.com/vektah/gqlparser/v2 v2.5.17

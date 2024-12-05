@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"emperror.dev/errors"
+	"github.com/coreos/go-semver/semver"
 	"github.com/disaster37/dagger-library-go/lib/helper"
 	olmv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -290,6 +291,11 @@ func (h *OperatorSdk) Release(
 	// +required
 	version string,
 
+	// Set true if the current version is the build number
+	// We will use semver from version file to generate next minor + version as tag name
+	// +optional
+	isBuildNumber bool,
+
 	// The previous version to replace
 	// +optional
 	previousVersion string,
@@ -350,6 +356,25 @@ func (h *OperatorSdk) Release(
 	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
 	previousCatalogName := ""
 
+	var previousVersionFromLocal string
+	var nextVersion *semver.Version
+
+	if isBuildNumber || (!skipBuildFromPreviousVersion && (previousVersion == "")) {
+		// Open the current version
+		previousVersionFromLocal, err := h.Src.File("VERSION").Contents(ctx)
+		if err == nil {
+			nextVersion = semver.New(previousVersionFromLocal)
+		} else {
+			nextVersion = semver.New("0.0.0")
+		}
+	}
+
+	if isBuildNumber {
+		nextVersion.BumpMinor()
+		nextVersion.Set(fmt.Sprintf("%s-%s", nextVersion.String(), version))
+		version = nextVersion.String()
+	}
+
 	// Compute the last version
 	if skipBuildFromPreviousVersion {
 		previousVersion = ""
@@ -358,13 +383,12 @@ func (h *OperatorSdk) Release(
 			previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
 		} else {
 			// Open the current version
-			previousVersion, err := h.Src.File("VERSION").Contents(ctx)
-			if err == nil {
-				previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+			if previousVersionFromLocal != "" {
+				previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersionFromLocal)
 			}
 		}
 	}
-	
+
 	lastCatalogName := fmt.Sprintf("%s:latest", catalogName)
 
 	// Generate manifests
