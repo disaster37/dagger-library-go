@@ -397,6 +397,12 @@ func (h *OperatorSdk) Release(
 		} else {
 			nextVersion = semver.New("0.0.0")
 		}
+
+		if isBuildNumber {
+			nextVersion.BumpPatch()
+			nextVersion.Set(fmt.Sprintf("%s-%s", nextVersion.String(), version))
+			version = nextVersion.String()
+		}
 	}
 
 	imageName := fmt.Sprintf("%s/%s", registry, repository)
@@ -406,24 +412,6 @@ func (h *OperatorSdk) Release(
 	fullBundleName := fmt.Sprintf("%s:%s", bundleName, version)
 	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
 	previousCatalogName := ""
-
-	
-
-	if isBuildNumber || (!skipBuildFromPreviousVersion && (previousVersion == "")) {
-		// Open the current version
-		previousVersionFromLocal, err := h.Src.File("VERSION").Contents(ctx)
-		if err == nil {
-			nextVersion = semver.New(previousVersionFromLocal)
-		} else {
-			nextVersion = semver.New("0.0.0")
-		}
-	}
-
-	if isBuildNumber {
-		nextVersion.BumpPatch()
-		nextVersion.Set(fmt.Sprintf("%s-%s", nextVersion.String(), version))
-		version = nextVersion.String()
-	}
 
 	// Compute the last version
 	if skipBuildFromPreviousVersion {
