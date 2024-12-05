@@ -175,6 +175,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// Set tru to install CRD prometheus.
 	// When you use internal kube, it always true
 	// The installPlan needed this if metric is enable on operator
+	// +optional
 	installPromteheusCrd bool,
 ) (*dagger.Service, error) {
 
@@ -283,6 +284,44 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 }
 
+/*
+// It will deploy OLM, Then it will deploy operator on it
+// Then it will check that the operator pod run
+func (h *OperatorSdk) TestOlmOperator(
+	ctx context.Context,
+
+	// The catalog image to install
+	// +required
+	catalogImage string,
+
+	// The operator name
+	// +required
+	name string,
+
+	// The channel of the operator to install
+	// +optional
+	// +default="stable"
+	channel string,
+) (string, error) {
+
+	// Install OLM operator
+	if _, err := h.InstallOlmOperator(
+		ctx,
+		catalogImage,
+		name,
+		channel,
+		"",
+		true,
+	); err != nil {
+		return "", errors.Wrap(err, "Error when install OLM operator")
+	}
+
+	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("-n operators get pod")).Stdout(ctx) {
+
+	}
+}
+*/
+
 // Release permit to release to operator version
 func (h *OperatorSdk) Release(
 	ctx context.Context,
@@ -347,6 +386,18 @@ func (h *OperatorSdk) Release(
 
 	var dir *dagger.Directory
 	var err error
+	var previousVersionFromLocal string
+	var nextVersion *semver.Version
+
+	if isBuildNumber || (!skipBuildFromPreviousVersion && (previousVersion == "")) {
+		// Open the current version
+		previousVersionFromLocal, err := h.Src.File("VERSION").Contents(ctx)
+		if err == nil {
+			nextVersion = semver.New(previousVersionFromLocal)
+		} else {
+			nextVersion = semver.New("0.0.0")
+		}
+	}
 
 	imageName := fmt.Sprintf("%s/%s", registry, repository)
 	bundleName := fmt.Sprintf("%s-bundle", imageName)
@@ -356,8 +407,7 @@ func (h *OperatorSdk) Release(
 	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
 	previousCatalogName := ""
 
-	var previousVersionFromLocal string
-	var nextVersion *semver.Version
+	
 
 	if isBuildNumber || (!skipBuildFromPreviousVersion && (previousVersion == "")) {
 		// Open the current version
@@ -491,10 +541,14 @@ func (h *OperatorSdk) Release(
 			return nil, errors.Wrap(err, "Error when publish catalog image")
 		}
 
+		fmt.Printf("Successfully publish catalog image: %s\n", fullCatalogName)
+
 		if publishLast {
 			if _, err := h.Oci.PublishCatalog(ctx, lastCatalogName); err != nil {
 				return nil, errors.Wrap(err, "Error when publish last catalog image")
 			}
+
+			fmt.Printf("Successfully publish catalog image: %s\n", lastCatalogName)
 		}
 
 	}
