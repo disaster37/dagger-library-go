@@ -284,7 +284,6 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 }
 
-/*
 // It will deploy OLM, Then it will deploy operator on it
 // Then it will check that the operator pod run
 func (h *OperatorSdk) TestOlmOperator(
@@ -316,11 +315,13 @@ func (h *OperatorSdk) TestOlmOperator(
 		return "", errors.Wrap(err, "Error when install OLM operator")
 	}
 
-	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("-n operators get pod")).Stdout(ctx) {
-
+	if _, err := h.Kube.Kube.Kubectl(fmt.Sprintf("kubectl wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=90", name)).Stdout(ctx); err != nil {
+		return "", errors.Wrap(err, "Operator not ready")
 	}
+
+	return h.Kube.Kube.Kubectl(fmt.Sprintf("logs -n operators -l control-plane=%s", name)).Stdout(ctx)
+
 }
-*/
 
 // Release permit to release to operator version
 func (h *OperatorSdk) Release(
