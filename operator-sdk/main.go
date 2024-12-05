@@ -321,7 +321,7 @@ func (h *OperatorSdk) TestOlmOperator(
 	defer service.Stop(ctx)
 
 	kubeCtn := h.Kube.Kube.Kubectl("get nodes").
-		WithExec([]string{"sleep", "30"})
+		WithExec([]string{"sleep", "90"})
 
 	_, _ = kubeCtn.WithExec(helper.ForgeCommand("kubectl get deployment -n operators")).Stdout(ctx)
 
