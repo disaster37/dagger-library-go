@@ -165,32 +165,57 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// +optional
 	// +default="stable"
 	channel string,
+
+	// The kubeconfig to connect on existing cluster
+	// It not set, it will run local k3s cluster
+	// +optional
+	kubeconfig string,
+
+	// Set tru to install CRD prometheus.
+	// When you use internal kube, it always true
+	// The installPlan needed this if metric is enable on operator
+	installPromteheusCrd bool,
 ) (*dagger.Service, error) {
 
 	if channel == "" {
 		channel = "stable"
 	}
 
-	// Start kube cluster
-	kubeService, err := h.Kube.Kube.Server().Start(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error when start K3s")
+	var err error
+	var kubeService *dagger.Service
+	var kubeConfigFile *dagger.File
+	kubeCtr := h.Kube.Kube.Kubectl("version")
+
+	if kubeconfig == "" {
+		// Start kube cluster
+		kubeService, err = h.Kube.Kube.Server().Start(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when start K3s")
+		}
+		kubeConfigFile = h.Kube.Kube.Config()
+	} else {
+		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
+		kubeCtr = kubeCtr.
+			WithFile("/kubeconfig", kubeConfigFile).
+			WithEnvVariable("KUBECONFIG", "/kubeconfig")
 	}
 
 	// Install OLM
 	if _, err := h.Sdk.InstallOlm(
 		ctx,
-		h.Kube.Kube.Config(),
+		kubeConfigFile,
 	); err != nil {
 		return nil, errors.Wrap(err, "Error when install OLM")
 	}
 
 	// Install Prometheus CRD
-	if _, err := h.Kube.Kube.Kubectl("version").
-		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml")).
-		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-podmonitors.yaml")).
-		Stdout(ctx); err != nil {
-		return nil, errors.Wrap(err, "Error when install ServiceMonitor CRD")
+	if kubeconfig == "" || installPromteheusCrd {
+		if _, err := kubeCtr.
+			WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml")).
+			WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-podmonitors.yaml")).
+			Stdout(ctx); err != nil {
+			return nil, errors.Wrap(err, "Error when install ServiceMonitor / PodMonitor CRD")
+		}
 	}
 
 	// Forge Catalog
@@ -216,7 +241,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install catalog
-	if _, err := h.Kube.Kube.Kubectl("version").
+	if _, err := kubeCtr.
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/catalog.yaml")).
 		//WithExec(helper.ForgeCommand("kubectl wait catalogSource test --for=jsonpath=status.connectionState.lastObservedState=READY -n olm --timeout 60s")).
@@ -245,7 +270,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install subscription
-	if _, err := h.Kube.Kube.Kubectl("version").
+	if _, err := kubeCtr.
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/subscription.yaml")).
 		//WithExec(helper.ForgeCommand("kubectl wait subscription test --for=jsonpath=status.state=AtLatestKnown -n operators --timeout 60s")).
@@ -268,6 +293,11 @@ func (h *OperatorSdk) Release(
 	// The previous version to replace
 	// +optional
 	previousVersion string,
+
+	// Set tru to not build from previous version
+	// It usefull when build from PR
+	// +optional
+	skipBuildFromPreviousVersion bool,
 
 	// The CRD version do generate manifests
 	// +optional
@@ -319,15 +349,22 @@ func (h *OperatorSdk) Release(
 	fullBundleName := fmt.Sprintf("%s:%s", bundleName, version)
 	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
 	previousCatalogName := ""
-	if previousVersion != "" {
-		previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+
+	// Compute the last version
+	if skipBuildFromPreviousVersion {
+		previousVersion = ""
 	} else {
-		// Open the current version
-		previousVersion, err := h.Src.File("VERSION").Contents(ctx)
-		if err == nil {
+		if previousVersion != "" {
 			previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+		} else {
+			// Open the current version
+			previousVersion, err := h.Src.File("VERSION").Contents(ctx)
+			if err == nil {
+				previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
+			}
 		}
 	}
+	
 	lastCatalogName := fmt.Sprintf("%s:latest", catalogName)
 
 	// Generate manifests
