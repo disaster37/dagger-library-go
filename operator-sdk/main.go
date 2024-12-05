@@ -370,7 +370,7 @@ func (h *OperatorSdk) Release(
 	}
 
 	if isBuildNumber {
-		nextVersion.BumpMinor()
+		nextVersion.BumpPatch()
 		nextVersion.Set(fmt.Sprintf("%s-%s", nextVersion.String(), version))
 		version = nextVersion.String()
 	}
