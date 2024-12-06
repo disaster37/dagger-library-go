@@ -194,13 +194,19 @@ func (h *OperatorSdk) InstallOlmOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeConfigFile = h.Kube.Kube.With(func(r *dagger.K3S) *dagger.K3S {
+		kubeConfigFile = h.Kube.Kube.
+			With(func(r *dagger.K3S) *dagger.K3S {
+				dag.Container().
+					From("alpine/curl").
+					WithoutEntrypoint().
+					WithServiceBinding("kube.svc", kubeService).
+					WithExec(helper.ForgeCommand("curl -k https://kube.svc:6443")).
+					Stdout(ctx)
 
-			// Force sync before install OLM
-			r.Container().WithServiceBinding("kube.svc", kubeService).Sync(ctx)
+				return r
 
-			return r
-		}).Config()
+			}).
+			Config()
 	} else {
 		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
 		kubeCtr = kubeCtr.
