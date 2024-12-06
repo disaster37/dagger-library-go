@@ -350,11 +350,6 @@ func (h *OperatorSdk) Release(
 	// +required
 	version string,
 
-	// Set true if the current version is the build number
-	// We will use semver from version file to generate next minor + version as tag name
-	// +optional
-	isBuildNumber bool,
-
 	// The previous version to replace
 	// +optional
 	previousVersion string,
@@ -407,7 +402,6 @@ func (h *OperatorSdk) Release(
 	var dir *dagger.Directory
 	var err error
 
-	version = h.GetVersion(ctx, version, isBuildNumber)
 
 	if !skipBuildFromPreviousVersion && previousVersion == "" {
 		// Open the current version
