@@ -197,7 +197,6 @@ func (h *OperatorSdk) InstallOlmOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		defer kubeService.Stop(ctx)
 		kubeConfigFile = h.Kube.Kube.Config()
 	} else {
 		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
@@ -321,7 +320,6 @@ func (h *OperatorSdk) TestOlmOperator(
 	); err != nil {
 		return "", errors.Wrap(err, "Error when install OLM operator")
 	}
-
 	defer service.Stop(ctx)
 
 	kubeCtn := h.Kube.Kube.Kubectl("get nodes").
