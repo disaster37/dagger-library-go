@@ -197,7 +197,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 		kubeConfigFile = h.Kube.Kube.With(func(r *dagger.K3S) *dagger.K3S {
 
 			// Force sync before install OLM
-			r.Kubectl("version").WithServiceBinding("kube.svc", kubeService).WithExec(helper.ForgeCommand("kubectl get nodes")).Stdout(ctx)
+			r.Container().WithServiceBinding("kube.svc", kubeService).Sync(ctx)
 
 			return r
 		}).Config()
