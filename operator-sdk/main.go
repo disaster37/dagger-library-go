@@ -304,7 +304,7 @@ func (h *OperatorSdk) TestOlmOperator(
 	// +optional
 	// +default="stable"
 	channel string,
-) (*dagger.Container, error) {
+) (*dagger.Service, error) {
 
 	var service *dagger.Service
 	var err error
@@ -318,22 +318,30 @@ func (h *OperatorSdk) TestOlmOperator(
 		"",
 		true,
 	); err != nil {
-		return nil, errors.Wrap(err, "Error when install OLM operator")
+		return service, errors.Wrap(err, "Error when install OLM operator")
 	}
-	defer service.Stop(ctx)
 
+	// Wait the time it install OLM operator
 	kubeCtn := h.Kube.Kube.Kubectl("get nodes").
 		WithExec([]string{"sleep", "90"})
 
-	_, _ = kubeCtn.WithExec(helper.ForgeCommand("kubectl get deployment -n operators")).Stdout(ctx)
+	//  Get some trace to troobleshooting if needed
+	_, _ = kubeCtn.
+		WithExec(helper.ForgeCommand("kubectl -n olm get pods")).
+		WithExec(helper.ForgeCommand("kubectl -n olm describe catalogSource test")).
+		WithExec(helper.ForgeCommand("kubectl -n operators describe subscription test")).
+		WithExec(helper.ForgeCommand("kubectl -n operators describe installplan")).
+		WithExec(helper.ForgeCommand("kubectl -n operators describe clusterServiceVersion")).
+		WithExec(helper.ForgeCommand("kubectl -n operators describe deployment")).
+		WithExec(helper.ForgeCommand("kubectl -n operators describe pod")).
+		Stdout(ctx)
 
-	if _, err := kubeCtn.WithExec(helper.ForgeCommandf("kubectl wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=60s", name)).Stdout(ctx); err != nil {
-		return kubeCtn, errors.Wrap(err, "Operator not ready")
+	// Check deployment operator is ready
+	if _, err := kubeCtn.WithExec(helper.ForgeCommand("kubectl -n operators wait --for=condition=Available=True --all deployment --timeout=60s")).Stdout(ctx); err != nil {
+		return service, errors.Wrap(err, "Operator not ready")
 	}
 
-	_, _ = kubeCtn.WithExec(helper.ForgeCommandf("kubectl logs -n operators -l control-plane=%s", name)).Stdout(ctx)
-
-	return kubeCtn, nil
+	return service, nil
 
 }
 
