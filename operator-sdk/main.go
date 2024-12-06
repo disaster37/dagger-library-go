@@ -304,7 +304,7 @@ func (h *OperatorSdk) TestOlmOperator(
 	// +optional
 	// +default="stable"
 	channel string,
-) (string, error) {
+) (*dagger.Container, error) {
 
 	var service *dagger.Service
 	var err error
@@ -318,7 +318,7 @@ func (h *OperatorSdk) TestOlmOperator(
 		"",
 		true,
 	); err != nil {
-		return "", errors.Wrap(err, "Error when install OLM operator")
+		return nil, errors.Wrap(err, "Error when install OLM operator")
 	}
 	defer service.Stop(ctx)
 
@@ -328,10 +328,12 @@ func (h *OperatorSdk) TestOlmOperator(
 	_, _ = kubeCtn.WithExec(helper.ForgeCommand("kubectl get deployment -n operators")).Stdout(ctx)
 
 	if _, err := kubeCtn.WithExec(helper.ForgeCommandf("kubectl wait pods -n operators -l control-plane=%s --for condition=Ready --timeout=60s", name)).Stdout(ctx); err != nil {
-		return "", errors.Wrap(err, "Operator not ready")
+		return kubeCtn, errors.Wrap(err, "Operator not ready")
 	}
 
-	return kubeCtn.WithExec(helper.ForgeCommandf("kubectl logs -n operators -l control-plane=%s", name)).Stdout(ctx)
+	_, _ = kubeCtn.WithExec(helper.ForgeCommandf("kubectl logs -n operators -l control-plane=%s", name)).Stdout(ctx)
+
+	return kubeCtn, nil
 
 }
 
