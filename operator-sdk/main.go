@@ -194,7 +194,12 @@ func (h *OperatorSdk) InstallOlmOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeConfigFile = h.Kube.Kube.Config()
+		kubeConfigFile = h.Kube.Kube.With(func(r *dagger.K3S) *dagger.K3S {
+
+			r.Kubectl("get nodes").Stdout(ctx)
+
+			return r
+		}).Config()
 	} else {
 		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
 		kubeCtr = kubeCtr.
@@ -401,7 +406,6 @@ func (h *OperatorSdk) Release(
 
 	var dir *dagger.Directory
 	var err error
-
 
 	if !skipBuildFromPreviousVersion && previousVersion == "" {
 		// Open the current version
