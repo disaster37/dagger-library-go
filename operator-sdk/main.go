@@ -48,9 +48,6 @@ type OperatorSdk struct {
 
 	// The OCI module
 	Oci *OperatorSdkOci
-
-	// The catalog image pushed
-	CatalogImage string
 }
 
 func New(
@@ -409,45 +406,28 @@ func (h *OperatorSdk) Release(
 
 	var dir *dagger.Directory
 	var err error
-	var previousVersionFromLocal string
-	var nextVersion *semver.Version
 
-	if isBuildNumber || (!skipBuildFromPreviousVersion && (previousVersion == "")) {
+	version = h.GetVersion(ctx, version, isBuildNumber)
+
+	if !skipBuildFromPreviousVersion && previousVersion == "" {
 		// Open the current version
-		previousVersionFromLocal, err := h.Src.File("VERSION").Contents(ctx)
-		if err == nil {
-			nextVersion = semver.New(previousVersionFromLocal)
-		} else {
-			nextVersion = semver.New("0.0.0")
-		}
-
-		if isBuildNumber {
-			nextVersion.BumpPatch()
-			nextVersion.Set(fmt.Sprintf("%s-%s", nextVersion.String(), version))
-			version = nextVersion.String()
-		}
+		previousVersion, _ = h.Src.File("VERSION").Contents(ctx)
+	}
+	if skipBuildFromPreviousVersion {
+		previousVersion = ""
 	}
 
 	imageName := fmt.Sprintf("%s/%s", registry, repository)
 	bundleName := fmt.Sprintf("%s-bundle", imageName)
-	catalogName := fmt.Sprintf("%s-catalog", imageName)
+	catalogName := h.GetCatalogName(registry, repository, version)
 	fullImageName := fmt.Sprintf("%s:%s", imageName, version)
 	fullBundleName := fmt.Sprintf("%s:%s", bundleName, version)
 	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
 	previousCatalogName := ""
 
-	// Compute the last version
-	if skipBuildFromPreviousVersion {
-		previousVersion = ""
-	} else {
-		if previousVersion != "" {
-			previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
-		} else {
-			// Open the current version
-			if previousVersionFromLocal != "" {
-				previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersionFromLocal)
-			}
-		}
+	// Compute the previous catalog image
+	if previousVersion != "" {
+		previousCatalogName = fmt.Sprintf("%s:%s", catalogName, previousVersion)
 	}
 
 	lastCatalogName := fmt.Sprintf("%s:latest", catalogName)
@@ -554,7 +534,6 @@ func (h *OperatorSdk) Release(
 			return nil, errors.Wrap(err, "Error when publish catalog image")
 		}
 		fmt.Printf("Successfully publish catalog image: %s\n", fullCatalogName)
-		h.CatalogImage = fullCatalogName
 
 		if publishLast {
 			if _, err := h.Oci.PublishCatalog(ctx, lastCatalogName); err != nil {
@@ -571,4 +550,45 @@ func (h *OperatorSdk) Release(
 
 	return dir, nil
 
+}
+
+// GetVersion permit to compute the target sem version
+// Some time on CI, we should to build volatile version like PR or RC.
+// When we are on this cas, we should to generate next minor version + tag
+func (h *OperatorSdk) GetVersion(
+	ctx context.Context,
+	// The version to release
+	// +required
+	version string,
+
+	// Set true if the current version is the build number
+	// We will use semver from version file to generate next minor + version as tag name
+	// +optional
+	isBuildNumber bool,
+) string {
+	var nextVersion *semver.Version
+
+	if isBuildNumber {
+		// Open the current version
+		previousVersionFromLocal, err := h.Src.File("VERSION").Contents(ctx)
+		if err == nil {
+			nextVersion = semver.New(previousVersionFromLocal)
+		} else {
+			nextVersion = semver.New("0.0.0")
+		}
+
+		if isBuildNumber {
+			nextVersion.BumpPatch()
+			nextVersion.Set(fmt.Sprintf("%s-%s", nextVersion.String(), version))
+			version = nextVersion.String()
+		}
+	}
+
+	return version
+}
+
+
+// GetCatalogName return the catalog image name
+func (h *OperatorSdk) GetCatalogName(registry, repository, version string) string {
+	return fmt.Sprintf("%s/%s-catalog:%s", registry, repository, version)
 }
