@@ -419,7 +419,7 @@ func (h *OperatorSdk) Release(
 
 	imageName := fmt.Sprintf("%s/%s", registry, repository)
 	bundleName := fmt.Sprintf("%s-bundle", imageName)
-	catalogName := h.GetCatalogName(registry, repository, version)
+	catalogName := h.GetCatalogName(registry, repository)
 	fullImageName := fmt.Sprintf("%s:%s", imageName, version)
 	fullBundleName := fmt.Sprintf("%s:%s", bundleName, version)
 	fullCatalogName := fmt.Sprintf("%s:%s", catalogName, version)
@@ -587,8 +587,7 @@ func (h *OperatorSdk) GetVersion(
 	return version
 }
 
-
 // GetCatalogName return the catalog image name
-func (h *OperatorSdk) GetCatalogName(registry, repository, version string) string {
-	return fmt.Sprintf("%s/%s-catalog:%s", registry, repository, version)
+func (h *OperatorSdk) GetCatalogName(registry, repository string) string {
+	return fmt.Sprintf("%s/%s-catalog", registry, repository)
 }
