@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
 	"fmt"
+	"time"
 
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -261,6 +262,7 @@ func (h *OperatorSdkSdk) InstallOlm(
 ) (string, error) {
 
 	return h.Container.
+		WithEnvVariable("CACHE", time.Now().String()).
 		WithFile("/kubeconfig", kubeconfig).
 		WithEnvVariable("KUBECONFIG", "/kubeconfig").
 		WithExec(helper.ForgeCommand("operator-sdk olm install")).
