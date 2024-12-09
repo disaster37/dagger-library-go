@@ -19,6 +19,7 @@ import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
 	"fmt"
+	"time"
 
 	"emperror.dev/errors"
 	"github.com/coreos/go-semver/semver"
@@ -190,23 +191,17 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 	if kubeconfig == "" {
 		// Start kube cluster
-		kubeService, err = h.Kube.Kube.Server().Start(ctx)
+		kubeService, err = h.Kube.Kube.
+			With(func(r *dagger.K3S) *dagger.K3S {
+				ctr := r.Container().WithEnvVariable("CACHE", time.Now().String())
+				return r.WithContainer(ctr)
+			}).
+			Server().
+			Start(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeConfigFile = h.Kube.Kube.
-			With(func(r *dagger.K3S) *dagger.K3S {
-				dag.Container().
-					From("alpine/curl").
-					WithoutEntrypoint().
-					WithServiceBinding("kube.svc", kubeService).
-					WithExec(helper.ForgeCommand("curl -k https://kube.svc:6443")).
-					Stdout(ctx)
-
-				return r
-
-			}).
-			Config()
+		kubeConfigFile = h.Kube.Kube.Config()
 	} else {
 		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
 		kubeCtr = kubeCtr.
