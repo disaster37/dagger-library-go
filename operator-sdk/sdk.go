@@ -266,3 +266,21 @@ func (h *OperatorSdkSdk) InstallOlm(
 		WithExec(helper.ForgeCommand("operator-sdk olm install")).
 		Stdout(ctx)
 }
+
+// GetCLi permit to get all CLI to run it on local if needed
+func (h *OperatorSdkSdk) GetCLi(
+	ctx context.Context,
+) *dagger.Directory {
+	return h.Container.WithExec(helper.ForgeScript(`
+mkdir /tmp/cli
+GOBIN=%s
+
+cp $GOBIN/operator-sdk /tmp/cli/
+cp $GOBIN/opm /tmp/cli/
+cp $GOBIN/controller-gen /tmp/cli/
+cp $GOBIN/crd /tmp/cli/
+cp $GOBIN/kustomize /tmp/cli/
+cp $GOBIN/yq /tmp/cli/
+			`, h.BinPath)).
+		Directory("/tmp/cli")
+}

@@ -172,7 +172,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// +optional
 	kubeconfig string,
 
-	// Set tru to install CRD prometheus.
+	// Set true to install CRD prometheus.
 	// When you use internal kube, it always true
 	// The installPlan needed this if metric is enable on operator
 	// +optional
