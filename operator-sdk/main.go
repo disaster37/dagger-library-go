@@ -201,10 +201,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeConfigFile = h.Kube.Kube.Container().
-			WithEnvVariable("CACHE", time.Now().String()).
-			WithExec(helper.ForgeCommand("cp /etc/rancher/k3s/k3s.yaml /tmp/k3s.yaml")).
-			File("/tmp/k3s.yaml")
+		kubeConfigFile = h.Kube.Kube.Config()
 
 	} else {
 		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
