@@ -170,7 +170,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	// The kubeconfig to connect on existing cluster
 	// It not set, it will run local k3s cluster
 	// +optional
-	kubeconfig string,
+	kubeconfig *dagger.File,
 
 	// Set true to install CRD prometheus.
 	// When you use internal kube, it always true
@@ -185,10 +185,9 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 	var err error
 	var kubeService *dagger.Service
-	var kubeConfigFile *dagger.File
 	kubeCtr := h.Kube.Kube.Kubectl("version")
 
-	if kubeconfig == "" {
+	if kubeconfig == nil {
 		// Start kube cluster
 		kubeService, err = h.Kube.Kube.
 			Server().
@@ -196,25 +195,24 @@ func (h *OperatorSdk) InstallOlmOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeConfigFile = h.Kube.Kube.Config()
+		kubeconfig = h.Kube.Kube.Config()
 
 	} else {
-		kubeConfigFile = dag.Directory().WithNewFile("kubeconfig", kubeconfig).File("kubeconfig")
 		kubeCtr = kubeCtr.
-			WithFile("/kubeconfig", kubeConfigFile).
+			WithFile("/kubeconfig", kubeconfig).
 			WithEnvVariable("KUBECONFIG", "/kubeconfig")
 	}
 
 	// Install OLM
 	if _, err := h.Sdk.InstallOlm(
 		ctx,
-		kubeConfigFile,
+		kubeconfig,
 	); err != nil {
 		return nil, errors.Wrap(err, "Error when install OLM")
 	}
 
 	// Install Prometheus CRD
-	if kubeconfig == "" || installPromteheusCrd {
+	if kubeconfig == nil || installPromteheusCrd {
 		if _, err := kubeCtr.
 			WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml")).
 			WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-podmonitors.yaml")).
@@ -315,7 +313,7 @@ func (h *OperatorSdk) TestOlmOperator(
 		catalogImage,
 		name,
 		channel,
-		"",
+		nil,
 		true,
 	); err != nil {
 		return service, errors.Wrap(err, "Error when install OLM operator")
@@ -342,6 +340,67 @@ func (h *OperatorSdk) TestOlmOperator(
 	}
 
 	return service, nil
+
+}
+
+
+// RunOperator permit to run operator for test purpose
+func (h *OperatorSdk) RunOperator(
+	ctx context.Context,
+
+	// The kubeconfig to connect on kube
+	// If not set, it run local k3s
+	// +optional
+	kubeconfig *dagger.File,
+) ([]*dagger.Service, error) {
+
+	var err error
+	var kubeService *dagger.Service
+	kubeCtr := h.Kube.Kube.Kubectl("version")
+
+	if kubeconfig == nil {
+		// Start kube cluster
+		kubeService, err = h.Kube.Kube.
+			Server().
+			Start(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when start K3s")
+		}
+		kubeconfig = h.Kube.Kube.Config()
+
+	} else {
+		kubeCtr = kubeCtr.
+			WithFile("/kubeconfig", kubeconfig).
+			WithEnvVariable("KUBECONFIG", "/kubeconfig")
+	}
+
+	// Install CRD on kube
+	crdFile := h.Sdk.Container.WithExec(helper.ForgeCommand("kustomize build config/crd -o /tmp/crd.yaml")).File("/tmp/crd.yaml")
+	_, err = kubeCtr.
+		WithFile("/tmp/crd.yaml", crdFile).
+		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/crd.yaml")).
+		Stdout(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when install CRDs")
+	}
+
+	// Run operator as service
+	operatorService, err := h.Golang.Container().
+		WithFile("/tmp/kubeconfig", kubeconfig).
+		WithEnvVariable("KUBECONFIG", "/tmp/kubeconfig").
+		WithExposedPort(8081, dagger.ContainerWithExposedPortOpts{Protocol: dagger.NetworkProtocolTcp, Description: "Health"}).
+		WithEnvVariable("ENABLE_WEBHOOKS", "false").
+		WithEnvVariable("LOG_LEVEL", "trace").
+		WithEnvVariable("LOG_FORMATTER", "json").
+		WithExec(helper.ForgeCommand("go run cmd/main.go")).
+		AsService().
+		Start(ctx)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when run operator")
+	}
+
+	return []*dagger.Service{kubeService, operatorService}, nil
 
 }
 

@@ -114,14 +114,4 @@ func (h *Kube) Run(
 		AsService().
 		Start(ctx)
 }
-
-func (h *Kube) Kubeconfig() *dagger.File {
-	return h.K3s.Config(dagger.K3SConfigOpts{Local: true})
-}
-
-func (h *Kube) Kubectl() *dagger.Container {
-	return h.K3s.Kubectl("get nodes").
-		WithDirectory("/project", h.Container.Directory(".")).
-		WithWorkdir("/project")
-}
-*/
+		*/
