@@ -171,7 +171,6 @@ func (h *OperatorSdkOci) BuildCatalog(
 	catalogImage string,
 
 	// The previuous catalog image name
-	// If update 'true' and 'previousCatalogImage' not provided, it use the 'catalogImage'
 	// +optional
 	previousCatalogImage string,
 
@@ -195,7 +194,7 @@ func (h *OperatorSdkOci) BuildCatalog(
 		bundleImage,
 	}
 
-	if previousCatalogImage == "" {
+	if previousCatalogImage != "" {
 		opmCmd = append(opmCmd,
 			"--from-index",
 			previousCatalogImage,
