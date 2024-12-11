@@ -332,8 +332,7 @@ func (h *OperatorSdk) TestOlmOperator(
 		WithExec(helper.ForgeCommand("kubectl -n operators describe clusterServiceVersion")).
 		WithExec(helper.ForgeCommand("kubectl -n operators describe deployment")).
 		WithExec(helper.ForgeCommand("kubectl -n operators describe pod")).
-		WithExec(helper.ForgeCommand("kubectl logs -n operators -l control-plane=controller-manager --tail -1")).
-		WithExec(helper.ForgeCommandf("kubectl logs -n operators -l control-plane=%s --tail -1", name)).
+		WithExec(helper.ForgeCommand("kubectl get -n operators pods -o name | xargs -I {} kubectl logs -n operators {}")).
 		Stdout(ctx)
 
 	// Check deployment operator is ready
@@ -538,7 +537,6 @@ func (h *OperatorSdk) Release(
 		h = h.WithSource(dir)
 	}
 
-	
 	// Build operator image
 	commit, _ := h.Oci.GolangContainer.
 		WithExec(helper.ForgeCommand("git rev-parse --short HEAD")).
