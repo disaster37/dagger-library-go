@@ -321,7 +321,7 @@ func (h *OperatorSdk) TestOlmOperator(
 
 	// Wait the time it install OLM operator
 	kubeCtn := h.Kube.Kube.Kubectl("get nodes").
-		WithExec([]string{"sleep", "90"})
+		WithExec([]string{"sleep", "120"})
 
 	//  Get some trace to troobleshooting if needed
 	_, _ = kubeCtn.
@@ -332,6 +332,8 @@ func (h *OperatorSdk) TestOlmOperator(
 		WithExec(helper.ForgeCommand("kubectl -n operators describe clusterServiceVersion")).
 		WithExec(helper.ForgeCommand("kubectl -n operators describe deployment")).
 		WithExec(helper.ForgeCommand("kubectl -n operators describe pod")).
+		WithExec(helper.ForgeCommand("kubectl logs -n operators -l control-plane=controller-manager --tail -1")).
+		WithExec(helper.ForgeCommandf("kubectl logs -n operators -l control-plane=%s --tail -1", name)).
 		Stdout(ctx)
 
 	// Check deployment operator is ready
@@ -342,7 +344,6 @@ func (h *OperatorSdk) TestOlmOperator(
 	return service, nil
 
 }
-
 
 // RunOperator permit to run operator for test purpose
 func (h *OperatorSdk) RunOperator(
