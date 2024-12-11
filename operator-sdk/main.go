@@ -538,9 +538,13 @@ func (h *OperatorSdk) Release(
 		h = h.WithSource(dir)
 	}
 
+	
 	// Build operator image
+	commit, _ := h.Oci.GolangContainer.
+		WithExec(helper.ForgeCommand("git rev-parse --short HEAD")).
+		Stdout(ctx)
 	if _, err = h.Oci.
-		BuildManager(ctx).
+		BuildManager(ctx, version, commit, "").
 		Manager.
 		Sync(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when build operator image")

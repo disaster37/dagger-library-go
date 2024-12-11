@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
+	"fmt"
 
 	"emperror.dev/errors"
-	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
 type OperatorSdkOciAuth struct {
@@ -82,12 +82,44 @@ func (h *OperatorSdkOci) WithRepositoryCredentials(
 // BuildManager permit to build manager image
 func (h *OperatorSdkOci) BuildManager(
 	ctx context.Context,
+
+	// The version, if you need to inject on build to display current version
+	// +optional
+	version string,
+
+	// The commit hash, if you need to inject on build to display current version
+	// +optional
+	commit string,
+
+	// The build path
+	// +default="./cmd"
+	buildPath string,
 ) *OperatorSdkOci {
+
+	cmd := []string{
+		"go",
+		"build",
+		"-o",
+		"manager",
+		"-a",
+	}
+
+	if version != "" || commit != "" {
+		cmd = append(cmd,
+			"-ldflags",
+			fmt.Sprintf("-s -w -X main.version=%s -X main.commit=%s", version, commit),
+		)
+	}
+
+	if buildPath == "" {
+		buildPath = "./cmd"
+	}
+	cmd = append(cmd, buildPath)
 
 	// Build manager
 	managerBinFile := h.GolangContainer.
 		WithEnvVariable("CGO_ENABLED", "0").
-		WithExec(helper.ForgeCommand("go build -a -o manager cmd/main.go")).
+		WithExec(cmd).
 		File("manager")
 
 	h.Manager = dag.Container().
@@ -109,10 +141,6 @@ func (h *OperatorSdkOci) PublishManager(
 	// +required
 	name string,
 ) (string, error) {
-
-	if h.Manager == nil {
-		h.BuildManager(ctx)
-	}
 
 	manager := h.Manager
 
