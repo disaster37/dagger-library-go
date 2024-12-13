@@ -87,6 +87,7 @@ func (h *OperatorSdkGolang) Test(
 			}
 
 			ctr = ctr.WithEnvVariable("TEST", "true").
+				WithEnvVariable("ENABLE_WEBHOOKS", "false").
 				WithEnvVariable("KUBEBUILDER_ASSETS", stdout)
 
 			return dag.Golang(h.Src, dagger.GolangOpts{Base: ctr})
