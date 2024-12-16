@@ -247,7 +247,6 @@ func (h *OperatorSdk) InstallOlmOperator(
 	if _, err := kubeCtr.
 		WithNewFile("/tmp/catalog.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/catalog.yaml")).
-		//WithExec(helper.ForgeCommand("kubectl wait catalogSource test --for=jsonpath=status.connectionState.lastObservedState=READY -n olm --timeout 60s")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install catalog")
 	}
@@ -276,7 +275,6 @@ func (h *OperatorSdk) InstallOlmOperator(
 	if _, err := kubeCtr.
 		WithNewFile("/tmp/subscription.yaml", buf.String()).
 		WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f /tmp/subscription.yaml")).
-		//WithExec(helper.ForgeCommand("kubectl wait subscription test --for=jsonpath=status.state=AtLatestKnown -n operators --timeout 60s")).
 		Stdout(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when install subscription")
 	}
@@ -332,7 +330,7 @@ func (h *OperatorSdk) TestOlmOperator(
 		WithExec(helper.ForgeCommand("kubectl -n operators describe clusterServiceVersion")).
 		WithExec(helper.ForgeCommand("kubectl -n operators describe deployment")).
 		WithExec(helper.ForgeCommand("kubectl -n operators describe pod")).
-		WithExec(helper.ForgeCommand("kubectl get -n operators pods -o name | xargs -I {} kubectl logs -n operators {}")).
+		WithExec(helper.ForgeScript("kubectl get -n operators pods -o name | xargs -I {} kubectl logs -n operators {}")).
 		Stdout(ctx)
 
 	// Check deployment operator is ready
