@@ -67,7 +67,7 @@ func (m *Git) GetBaseContainer() *dagger.Container {
 		WithExec(helper.ForgeCommand("git config --global --add safe.directory /project"))
 }
 
-func (m *Git) WithContainer(c *dagger.Container) *Git {
+func (m *Git) WithCustomContainer(c *dagger.Container) *Git {
 	m.BaseContainer = c
 	return m
 }
