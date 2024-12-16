@@ -30,6 +30,7 @@ type Git struct {
 
 // Default contsructor
 func New(
+
 	// base container
 	// +optional
 	baseContainer *dagger.Container,
@@ -42,6 +43,19 @@ func New(
 	}
 
 	return git
+}
+
+func (m *Git) GetCurrentBranchName(
+	ctx context.Context,
+
+	// The source directory
+	src *dagger.Directory,
+) (string, error) {
+	return m.BaseContainer.
+		WithDirectory("/project", src).
+		WithWorkdir("/project").
+		WithExec(helper.ForgeCommand("git rev-parse --abbrev-ref HEAD")).
+		Stdout(ctx)
 }
 
 // BaseContainer permit to get the base container
