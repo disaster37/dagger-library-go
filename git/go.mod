@@ -23,7 +23,7 @@ require (
 )
 
 require (
-	dagger.io/dagger v0.13.7
+	dagger.io/dagger v0.13.7 // indirect
 	emperror.dev/errors v0.8.1
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
