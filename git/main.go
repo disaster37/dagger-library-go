@@ -37,10 +37,18 @@ func New(
 ) *Git {
 	git := &Git{}
 	if baseContainer != nil {
-		git.BaseContainer = baseContainer
+		git.BaseContainer = baseContainer.
+			WithWorkdir("/project")
 	} else {
-		git.BaseContainer = git.GetBaseContainer()
+		git.BaseContainer = dag.Container().
+			From("alpine:latest").
+			WithExec(helper.ForgeCommand("apk add --update git")).
+			WithWorkdir("/project")
 	}
+
+	git.BaseContainer = git.BaseContainer.
+		WithExec(helper.ForgeCommand("git config --global --add --bool push.autoSetupRemote true")).
+		WithExec(helper.ForgeCommand("git config --global --add safe.directory /project"))
 
 	return git
 }
@@ -52,19 +60,9 @@ func (m *Git) GetCurrentBranchName(
 	src *dagger.Directory,
 ) (string, error) {
 	return m.BaseContainer.
-		WithDirectory("/project", src).
-		WithWorkdir("/project").
+		WithDirectory(".", src).
 		WithExec(helper.ForgeCommand("git rev-parse --abbrev-ref HEAD")).
 		Stdout(ctx)
-}
-
-// BaseContainer permit to get the base container
-func (m *Git) GetBaseContainer() *dagger.Container {
-	return dag.Container().
-		From("alpine:latest").
-		WithExec(helper.ForgeCommand("apk add --update git")).
-		WithExec(helper.ForgeCommand("git config --global --add --bool push.autoSetupRemote true")).
-		WithExec(helper.ForgeCommand("git config --global --add safe.directory /project"))
 }
 
 func (m *Git) WithCustomContainer(c *dagger.Container) *Git {
@@ -121,8 +119,7 @@ func (m *Git) SetRepo(
 ) (*Git, error) {
 
 	m.BaseContainer = m.BaseContainer.
-		WithDirectory("/project", source).
-		WithWorkdir("/project").
+		WithDirectory(".", source).
 		WithExec(helper.ForgeScript(`
 git name-rev --name-only HEAD | grep tags
 RETCODE=$?
