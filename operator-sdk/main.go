@@ -457,7 +457,7 @@ func (h *OperatorSdk) Release(
 	// +optional
 	registryPassword *dagger.Secret,
 
-) (*dagger.Directory, error) {
+) (*OperatorSdk, error) {
 
 	var dir *dagger.Directory
 	var err error
@@ -604,8 +604,14 @@ func (h *OperatorSdk) Release(
 	// Generate current version file
 	dir = dir.WithNewFile("VERSION", version)
 
-	return dir, nil
+	h.Src = dir
 
+	return h, nil
+
+}
+
+func (h *OperatorSdk) GetSource() *dagger.Directory {
+	return h.Src
 }
 
 // GetVersion permit to compute the target sem version
