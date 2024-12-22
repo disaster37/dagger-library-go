@@ -196,6 +196,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
 		kubeconfig = h.Kube.Kube.Config()
+		installPromteheusCrd = true
 
 	} else {
 		kubeCtr = kubeCtr.
@@ -212,7 +213,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 	}
 
 	// Install Prometheus CRD
-	if kubeconfig == nil || installPromteheusCrd {
+	if installPromteheusCrd {
 		if _, err := kubeCtr.
 			WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml")).
 			WithExec(helper.ForgeCommand("kubectl apply --server-side=true -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-podmonitors.yaml")).
