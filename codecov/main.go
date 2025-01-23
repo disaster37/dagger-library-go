@@ -46,7 +46,7 @@ func New(
 	if version != "" {
 		urlCodecov = fmt.Sprintf("https://uploader.codecov.io/v%s/linux/codecov", version)
 	} else {
-		urlCodecov = "https://cli.codecov.io/latest/linux/codecov"
+		urlCodecov = "https://uploader.codecov.io/latest/linux/codecov"
 	}
 
 	if base != nil {
