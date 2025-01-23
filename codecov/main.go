@@ -89,10 +89,13 @@ func (h *Codecov) Upload(
 
 	// +optional
 	name string, // optional name
+
 	// +optional
 	verbose bool, // optional verbose output
+
 	// +optional
 	files []string, // optional list of coverage files
+
 	// +optional
 	flags []string, // optional additional flags for uploader
 ) (string, error) {
