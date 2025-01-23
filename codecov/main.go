@@ -91,22 +91,15 @@ func (h *Codecov) Upload(
 	name string, // optional name
 
 	// +optional
-	verbose bool, // optional verbose output
-
-	// +optional
 	files []string, // optional list of coverage files
 
 	// +optional
 	flags []string, // optional additional flags for uploader
 ) (string, error) {
-	cmd := []string{"/bin/codecov", "-t", "$CODECOV_TOKEN"}
+	cmd := []string{"/bin/codecov", "-t", "$CODECOV_TOKEN", "-v"}
 
 	if name != "" {
 		cmd = append(cmd, "-n", name)
-	}
-
-	if verbose {
-		cmd = append(cmd, "-v")
 	}
 
 	if len(files) > 0 {
