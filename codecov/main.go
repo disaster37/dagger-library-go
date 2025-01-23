@@ -25,10 +25,6 @@ import (
 type Codecov struct {
 	// The container
 	Container *dagger.Container
-
-	// The source directory
-	// +private
-	Src *dagger.Directory
 }
 
 // New initializes the golang dagger module
@@ -40,9 +36,6 @@ func New(
 	// The golang version to use when no go.mod
 	// +optional
 	version string,
-	// a path to a directory containing the source code
-	// +required
-	src *dagger.Directory,
 ) (*Codecov, error) {
 
 	var (
@@ -68,12 +61,10 @@ func New(
 	}
 
 	codeCov = codeCov.
-		WithDirectory("/project", src).
 		WithWorkdir("/project")
 
 	return &Codecov{
 		Container: codeCov,
-		Src:       src,
 	}, nil
 }
 
@@ -85,6 +76,9 @@ func (h *Codecov) WithContainer(ctn *dagger.Container) *Codecov {
 
 func (h *Codecov) Upload(
 	ctx context.Context,
+
+	// The source directory
+	src *dagger.Directory,
 
 	// The codecov token
 	token *dagger.Secret,
@@ -130,5 +124,7 @@ func (h *Codecov) Upload(
 		}
 	}
 
-	return h.Container.WithExec(cmd).Stdout(ctx)
+	return h.Container.
+		WithDirectory("/project", src).
+		WithExec(cmd).Stdout(ctx)
 }
