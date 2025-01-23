@@ -129,5 +129,5 @@ func (h *Codecov) Upload(
 
 	return h.Container.
 		WithDirectory("/project", src).
-		WithExec(cmd).Stdout(ctx)
+		WithExec([]string{"sh", "-c", strings.Join(cmd, " ")}).Stdout(ctx)
 }
