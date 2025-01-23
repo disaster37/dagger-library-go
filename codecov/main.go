@@ -18,7 +18,6 @@ import (
 	"context"
 	"dagger/codecov/internal/dagger"
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -83,10 +82,6 @@ func (h *Codecov) Upload(
 	// The codecov token
 	token *dagger.Secret,
 
-	// Inject all variable environment on Codecov container to auto discover them by Codecov upload
-	// +optional
-	injectCiEnvironment bool,
-
 	// +optional
 	name string, // optional name
 
@@ -111,16 +106,8 @@ func (h *Codecov) Upload(
 		cmd = append(cmd, flags...)
 	}
 
-	// Inject all current env on codecov container
-	if injectCiEnvironment {
-		for _, env := range os.Environ() {
-			if i := strings.Index(env, "="); i >= 0 {
-				h.Container = h.Container.WithEnvVariable(env[:i], env[i+1:])
-			}
-		}
-	}
-
 	return h.Container.
 		WithDirectory("/project", src).
+		WithSecretVariable("CODECOV_TOKEN", token).
 		WithExec([]string{"sh", "-c", strings.Join(cmd, " ")}).Stdout(ctx)
 }
