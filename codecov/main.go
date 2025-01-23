@@ -91,7 +91,7 @@ func (h *Codecov) Upload(
 	// +optional
 	flags []string, // optional additional flags for uploader
 ) (string, error) {
-	cmd := []string{"/bin/codecov", "-v", "do-upload", "-t", "$CODECOV_TOKEN"}
+	cmd := []string{"/bin/codecov", "-v", "upload-process", "-t", "$CODECOV_TOKEN"}
 
 	if name != "" {
 		cmd = append(cmd, "-n", name)
