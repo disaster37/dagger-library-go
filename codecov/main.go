@@ -43,9 +43,9 @@ func New(
 	)
 
 	if version != "" {
-		urlCodecov = fmt.Sprintf("https://cli.codecov.io/v%s/linux/codecov", version)
+		urlCodecov = fmt.Sprintf("https://upload.codecov.io/v%s/linux/codecov", version)
 	} else {
-		urlCodecov = "https://cli.codecov.io/latest/linux/codecov"
+		urlCodecov = "https://upload.codecov.io/latest/linux/codecov"
 	}
 
 	if base != nil {
@@ -91,7 +91,7 @@ func (h *Codecov) Upload(
 	// +optional
 	flags []string, // optional additional flags for uploader
 ) (string, error) {
-	cmd := []string{"/bin/codecov", "-v", "upload-process", "-t", "$CODECOV_TOKEN"}
+	cmd := []string{"/bin/codecov", "-t", "$CODECOV_TOKEN", "-v"}
 
 	if name != "" {
 		cmd = append(cmd, "-n", name)
