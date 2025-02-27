@@ -1,7 +1,9 @@
 {
   "name": "golang",
-  "engineVersion": "v0.14.0",
-  "sdk": "go",
+  "engineVersion": "v0.16.1",
+  "sdk": {
+    "source": "go"
+  },
   "dependencies": [
     {
       "name": "github",
@@ -13,6 +15,5 @@
       "source": "github.com/purpleclay/daggerverse/netrc@3893340aa32e2140d6181124740f0a0a23e59588",
       "pin": "3893340aa32e2140d6181124740f0a0a23e59588"
     }
-  ],
-  "source": "."
+  ]
 }

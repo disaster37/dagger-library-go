@@ -1,12 +1,15 @@
 {
   "name": "operator-sdk",
-  "engineVersion": "v0.14.0",
-  "sdk": "go",
+  "engineVersion": "v0.16.1",
+  "sdk": {
+    "source": "go"
+  },
+  "include": ["../golang"],
   "dependencies": [
     {
       "name": "docker",
       "source": "github.com/shykes/daggerverse/docker",
-      "pin": "a3f377083ddc015de801b7b04d0543bc5647b3f8"
+      "pin": "f82c283510bac0399451dff7ffbec0274bfc3bd4"
     },
     {
       "name": "github",
@@ -14,20 +17,19 @@
       "pin": "b2b06917e338519a04404347a105a7c3bb316472"
     },
     {
-      "name": "golang",
-      "source": "../golang",
-      "pin": ""
-    },
-    {
       "name": "k3s",
       "source": "github.com/marcosnils/daggerverse/k3s",
-      "pin": "2f737ceb800c4cdc69c6ca7f01e1f473fac9aac9"
+      "pin": "a5ffc7e6f34c3871ac1d1acad6b3be5f85dd308b"
     },
     {
       "name": "kind",
       "source": "github.com/aweris/daggerverse/kind",
       "pin": "3f551863c75b6bbd7f78f64c6a51fd677b73277e"
+    },
+    {
+      "name": "golang",
+      "source": "../golang",
+      "pin": ""
     }
-  ],
-  "source": "."
+  ]
 }
