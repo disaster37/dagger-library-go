@@ -4,7 +4,9 @@
   "sdk": {
     "source": "go"
   },
-  "include": ["../golang"],
+  "include": [
+    "../golang"
+  ],
   "dependencies": [
     {
       "name": "docker",
@@ -28,8 +30,7 @@
     },
     {
       "name": "golang",
-      "source": "../golang",
-      "pin": ""
+      "source": "../golang"
     }
   ]
 }
