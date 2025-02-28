@@ -18,6 +18,7 @@ import (
 	"context"
 	"dagger/helm/internal/dagger"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -111,8 +112,10 @@ func (m *Helm) WithRepository(
 
 ) *Helm {
 
-	usernameEnv := fmt.Sprintf("REGISTRY_USERNAME_%s", strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
-	passwordEnv := fmt.Sprintf("REGISTRY_PASSWORD_%s", strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
+	re := regexp.MustCompile(`(-|/)`)
+
+	usernameEnv := fmt.Sprintf("REGISTRY_USERNAME_%s", strings.ToUpper(re.ReplaceAllString(name, "_")))
+	passwordEnv := fmt.Sprintf("REGISTRY_PASSWORD_%s", strings.ToUpper(re.ReplaceAllString(name, "_")))
 	m.BaseHelmContainer = m.BaseHelmContainer.
 		WithSecretVariable(usernameEnv, username).
 		WithSecretVariable(passwordEnv, password)
