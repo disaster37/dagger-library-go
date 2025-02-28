@@ -110,8 +110,8 @@ func (h *Kube) Run(
 		WithEnvVariable("ENABLE_WEBHOOKS", "false").
 		WithEnvVariable("LOG_LEVEL", "trace").
 		WithEnvVariable("LOG_FORMATTER", "json").
-		WithExec(helper.ForgeCommand("go run cmd/main.go")).
+		WithEntrypoint(helper.ForgeCommand("go run cmd/main.go")).
 		AsService().
 		Start(ctx)
 }
-		*/
+*/

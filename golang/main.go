@@ -396,7 +396,7 @@ go install golang.org/x/tools/gopls@latest
 
 	return ctr.
 		WithExposedPort(4000).
-		WithExec(cmd).
+		WithEntrypoint(cmd).
 		AsService()
 }
 

@@ -460,7 +460,7 @@ spec:
 // Returns a newly initialized Kwok cluster
 func (m *Kwok) Server() *dagger.Service {
 	return m.Container.
-		WithExec(helper.ForgeCommandf("kwokctl logs kwok-controller -f --name %s", m.Name)).
+		WithEntrypoint(helper.ForgeCommandf("kwokctl logs kwok-controller -f --name %s", m.Name)).
 		Terminal().
 		AsService()
 }
