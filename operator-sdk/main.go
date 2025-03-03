@@ -185,7 +185,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 	var err error
 	var kubeService *dagger.Service
-	kubeCtr := h.Kube.Kube.Kubectl("version")
+	kubeCtr := h.Kube.Kubectl()
 
 	if kubeconfig == nil {
 		// Start kube cluster
@@ -193,7 +193,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeconfig = h.Kube.Kube.Config()
+		kubeconfig = h.Kube.Kubeconfig(false)
 		installPromteheusCrd = true
 
 	} else {
@@ -317,7 +317,7 @@ func (h *OperatorSdk) TestOlmOperator(
 	}
 
 	// Wait the time it install OLM operator
-	kubeCtn := h.Kube.Kube.Kubectl("get nodes").
+	kubeCtn := h.Kube.Kubectl().
 		WithExec([]string{"sleep", "120"})
 
 	//  Get some trace to troobleshooting if needed
@@ -353,7 +353,7 @@ func (h *OperatorSdk) RunOperator(
 
 	var err error
 	var kubeService *dagger.Service
-	kubeCtr := h.Kube.Kube.Kubectl("version")
+	kubeCtr := h.Kube.Kubectl()
 
 	if kubeconfig == nil {
 		// Start kube cluster
@@ -361,7 +361,7 @@ func (h *OperatorSdk) RunOperator(
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
-		kubeconfig = h.Kube.Kube.Config()
+		kubeconfig = h.Kube.Kubeconfig(false)
 
 	} else {
 		kubeCtr = kubeCtr.

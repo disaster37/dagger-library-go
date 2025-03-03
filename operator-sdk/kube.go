@@ -45,7 +45,7 @@ func (h *OperatorSdkKube) WithSource(
 }
 
 func (h *OperatorSdkKube) Kubectl() *dagger.Container {
-	return h.Kube.Kubectl("get nodes").
+	return h.Kube.Kubectl("version").
 		WithDirectory("src", h.Src).
 		WithWorkdir("/src")
 }
