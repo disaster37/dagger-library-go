@@ -20,9 +20,11 @@ func NewKube(
 	// The cluster name
 	name string,
 ) *OperatorSdkKube {
+
+	// Force rancher image because of issue https://github.com/k3s-io/k3s/issues/11857
 	return &OperatorSdkKube{
 		Src: src,
-		Kube: dag.K3S(name, dagger.K3SOpts{Image: "rancher/k3s:v1.30.8-k3s1"}).
+		Kube: dag.K3S(name, dagger.K3SOpts{Image: "rancher/k3s:v1.31.5-k3s1"}).
 			With(func(k *dagger.K3S) *dagger.K3S {
 				return k.WithContainer(
 					k.Container().
