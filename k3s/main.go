@@ -141,7 +141,7 @@ func (m *K3S) Kubectl(ctx context.Context, args string) *dagger.Container {
 		WithoutEntrypoint().
 		WithMountedCache("/cache/k3s", m.ConfigCache).
 		WithEnvVariable("CACHE", time.Now().String()).
-		WithFile("/.kube/config", m.Config(ctx, false), dagger.ContainerWithFileOpts{Permissions: 1001}).
+		WithFile("/.kube/config", m.Config(ctx, false), dagger.ContainerWithFileOpts{Permissions: 0600}).
 		WithUser("1001").
 		WithExec([]string{"sh", "-c", "kubectl " + args})
 }
@@ -154,6 +154,6 @@ func (m *K3S) Kns(ctx context.Context) *dagger.Container {
 		WithMountedCache("/cache/k3s", m.ConfigCache).
 		WithEnvVariable("CACHE", time.Now().String()).
 		WithEnvVariable("KUBECONFIG", "/.kube/config").
-		WithFile("/.kube/config", m.Config(ctx, false), dagger.ContainerWithFileOpts{Permissions: 1001}).
+		WithFile("/.kube/config", m.Config(ctx, false), dagger.ContainerWithFileOpts{Permissions: 0600}).
 		WithDefaultTerminalCmd([]string{"k9s"})
 }
