@@ -189,9 +189,7 @@ func (h *OperatorSdk) InstallOlmOperator(
 
 	if kubeconfig == nil {
 		// Start kube cluster
-		kubeService, err = h.Kube.Kube.
-			Server().
-			Start(ctx)
+		kubeService, err = h.Kube.KubeCluster(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}
@@ -359,9 +357,7 @@ func (h *OperatorSdk) RunOperator(
 
 	if kubeconfig == nil {
 		// Start kube cluster
-		kubeService, err = h.Kube.Kube.
-			Server().
-			Start(ctx)
+		kubeService, err = h.Kube.KubeCluster(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when start K3s")
 		}

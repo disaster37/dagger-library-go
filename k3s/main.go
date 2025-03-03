@@ -4,6 +4,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"dagger/k-3-s/internal/dagger"
@@ -74,13 +76,32 @@ func New(
 }
 
 // Returns a newly initialized kind cluster
-func (m *K3S) Server() *dagger.Service {
+func (m *K3S) Server(
+	// Alternative cluster CIDR.
+	// It needed when dagger run inside rancher
+	// +optional
+	clusterCidr string,
+
+	// Alternative service CIDR.
+	// It needed when dagger run inside rancher
+	// +optional
+	serviceCird string,
+) *dagger.Service {
+
+	args := []string{"k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --disable traefik --disable metrics-server --egress-selector-mode=disabled"}
+	if clusterCidr != "" {
+		args = append(args, fmt.Sprintf("--cluster-cidr=%s", clusterCidr))
+	}
+	if serviceCird != "" {
+		args = append(args, fmt.Sprintf("--service-cidr=%s", serviceCird))
+	}
+
 	return m.Container.
 		AsService(dagger.ContainerAsServiceOpts{
 			UseEntrypoint: true,
 			Args: []string{
 				"sh", "-c",
-				"echo $(ip route | grep src | awk '{print $NF}') && k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --cluster-cidr=10.44.0.0/16 --service-cidr=10.45.0.0/16 --disable traefik --disable metrics-server --egress-selector-mode=disabled",
+				strings.Join(args, " "),
 			},
 			InsecureRootCapabilities: true,
 		})
