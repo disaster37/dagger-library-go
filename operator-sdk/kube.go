@@ -63,7 +63,6 @@ func (h *OperatorSdkKube) KubeCluster(
 ) (*dagger.Service, error) {
 	return h.Kube.Server(dagger.K3SServerOpts{
 		ClusterCidr: "10.44.0.0/16",
-		ServiceCird: "10.45.0.0/16",
 	}).Start(ctx)
 }
 
