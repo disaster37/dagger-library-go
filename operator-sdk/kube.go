@@ -16,10 +16,13 @@ type OperatorSdkKube struct {
 func NewKube(
 	// The golang container
 	src *dagger.Directory,
+
+	// The cluster name
+	name string,
 ) *OperatorSdkKube {
 	return &OperatorSdkKube{
 		Src: src,
-		Kube: dag.K3S("test").
+		Kube: dag.K3S(name).
 			With(func(k *dagger.K3S) *dagger.K3S {
 				return k.WithContainer(
 					k.Container().

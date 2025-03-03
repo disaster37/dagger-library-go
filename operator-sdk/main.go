@@ -57,6 +57,10 @@ func New(
 	// +required
 	src *dagger.Directory,
 
+	// The k3s cluster name
+	// +required
+	clusterName string,
+
 	// Extra golang container
 	// +optional
 	container *dagger.Container,
@@ -136,7 +140,7 @@ func New(
 				WithFile("/usr/bin/opm", opmFile),
 		),
 		Docker: dockerCli,
-		Kube:   NewKube(src),
+		Kube:   NewKube(src, clusterName),
 	}, nil
 }
 
