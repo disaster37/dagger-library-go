@@ -88,7 +88,7 @@ func (m *K3S) Server(
 	serviceCird string,
 ) *dagger.Service {
 
-	args := []string{"k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --disable traefik --disable metrics-server --egress-selector-mode=agent"}
+	args := []string{"k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --cluster-domain test.local --disable traefik --disable metrics-server --egress-selector-mode=agent"}
 	if clusterCidr != "" {
 		args = append(args, fmt.Sprintf("--cluster-cidr=%s", clusterCidr))
 	}
