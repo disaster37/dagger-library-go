@@ -22,7 +22,7 @@ func NewKube(
 ) *OperatorSdkKube {
 	return &OperatorSdkKube{
 		Src: src,
-		Kube: dag.K3S(name).
+		Kube: dag.K3S(name, dagger.K3SOpts{Image: "rancher/k3s:v1.30.8-k3s1"}).
 			With(func(k *dagger.K3S) *dagger.K3S {
 				return k.WithContainer(
 					k.Container().
