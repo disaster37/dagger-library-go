@@ -80,7 +80,7 @@ func (m *K3S) Server() *dagger.Service {
 			UseEntrypoint: true,
 			Args: []string{
 				"sh", "-c",
-				"k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --disable traefik --disable metrics-server --egress-selector-mode=disabled",
+				"k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --cluster-cidr=10.44.0.0/16 --service-cidr=10.45.0.0/16 --disable traefik --disable metrics-server --egress-selector-mode=disabled",
 			},
 			InsecureRootCapabilities: true,
 		})
