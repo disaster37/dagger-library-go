@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"dagger/helm/internal/dagger"
 
@@ -46,7 +47,7 @@ func (m *Helm) Push(
 	chartName := dataChart["name"].(string)
 
 	// Package and push
-	_, err = m.HelmContainer.
+	stdout, err := m.HelmContainer.
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
 		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, version, registryUrl, repositoryName)).
@@ -55,6 +56,8 @@ func (m *Helm) Push(
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when package and push helm chart")
 	}
+
+	fmt.Println(stdout)
 
 	return chartFile, nil
 }

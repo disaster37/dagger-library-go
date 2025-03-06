@@ -24,6 +24,7 @@ func (m *Helm) Ci(
 	repository string,
 
 	// The helm paths
+	// +optional
 	// +default=["."]
 	helmPaths []string,
 
