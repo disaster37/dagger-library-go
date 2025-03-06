@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"dagger/helm/internal/dagger"
+	"dagger/helm/v2/internal/dagger"
 
 	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/lib/helper"

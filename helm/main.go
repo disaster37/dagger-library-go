@@ -16,7 +16,7 @@ package main
 
 import (
 	"context"
-	"dagger/helm/internal/dagger"
+	"dagger/helm/v2/internal/dagger"
 	"fmt"
 	"regexp"
 	"strings"

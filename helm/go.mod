@@ -1,4 +1,4 @@
-module dagger/helm
+module dagger/helm/v2
 
 go 1.23.0
 
