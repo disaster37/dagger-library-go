@@ -100,11 +100,11 @@ func (m *Helm) WithRepository(
 	isOci bool,
 
 	// The repository username
-	// +optional
+	// +required
 	username *dagger.Secret,
 
 	// The repository password
-	// +optional
+	// +required
 	password *dagger.Secret,
 
 ) *Helm {

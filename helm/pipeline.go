@@ -14,9 +14,13 @@ func (m *Helm) Ci(
 	ctx context.Context,
 
 	// The registry
+	// You need to provide it if run from CI
+	// +optional
 	registry string,
 
 	// The repository inside the registry
+	// You need to provide it if run from CI
+	// +optional
 	repository string,
 
 	// The helm paths
@@ -28,16 +32,22 @@ func (m *Helm) Ci(
 	ci CI,
 
 	// The image version to publish
+	// You need to provide it if run from CI
 	// +optional
 	version string,
 
 	// The registry username
+	// You need to provide it if run from CI
+	// +optional
 	registryUsername *dagger.Secret,
 
 	// The registry password
+	// You need to provide it if run from CI
+	// +optional
 	registryPassword *dagger.Secret,
 
 	// The git token
+	// You need to provide it if run from CI
 	// +optional
 	gitToken *dagger.Secret,
 
@@ -52,6 +62,30 @@ func (m *Helm) Ci(
 	gitBranch string,
 ) (dir *dagger.Directory, err error) {
 
+	if ci != "" {
+		if registry == "" {
+			panic("You need to set registry")
+		}
+		if repository == "" {
+			panic("You need to set repository")
+		}
+		if version == "" {
+			panic("You need to set version")
+		}
+		if registryUsername == nil {
+			panic("You need to set registry-username")
+		}
+		if registryPassword == nil {
+			panic("you need to set registry-password")
+		}
+		if gitToken == nil {
+			panic("you need to set git-token")
+		}
+		if gitRepoUrl == "" {
+			panic("you need to set git-repo-url")
+		}
+	}
+
 	if len(helmPaths) == 0 {
 		helmPaths = []string{"."}
 	}
@@ -59,14 +93,16 @@ func (m *Helm) Ci(
 	rootDir := m.Src
 
 	// Add repository
-	m = m.WithRepository(
-		ctx,
-		repository,
-		registry,
-		true,
-		registryUsername,
-		registryPassword,
-	)
+	if registry != "" {
+		m = m.WithRepository(
+			ctx,
+			repository,
+			registry,
+			true,
+			registryUsername,
+			registryPassword,
+		)
+	}
 
 	for _, helmPath := range helmPaths {
 
