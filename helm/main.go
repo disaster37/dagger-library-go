@@ -79,6 +79,8 @@ func New(
 	}
 	helm.YqContainer = helm.YqContainer.WithWorkdir("/source")
 
+	helm = helm.WithSource(src)
+
 	return helm
 }
 
