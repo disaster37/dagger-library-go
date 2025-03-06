@@ -16,7 +16,7 @@ package main
 
 import (
 	"context"
-	"dagger/helm/v2/internal/dagger"
+	"dagger/helm/internal/dagger"
 	"fmt"
 	"regexp"
 	"strings"
@@ -25,12 +25,18 @@ import (
 )
 
 type Helm struct {
-	BaseHelmContainer      *dagger.Container
-	BaseGeneratorContainer *dagger.Container
-	BaseYqContainer        *dagger.Container
+	// +private
+	Src                *dagger.Directory
+	HelmContainer      *dagger.Container
+	GeneratorContainer *dagger.Container
+	YqContainer        *dagger.Container
 }
 
 func New(
+	// The helm source
+	// +required
+	src *dagger.Directory,
+
 	// base helm container
 	// It need contain helm
 	// +optional
@@ -46,46 +52,34 @@ func New(
 	// +optional
 	baseYqContainer *dagger.Container,
 ) *Helm {
-	helm := &Helm{}
+	helm := &Helm{
+		Src: src,
+	}
 
 	if baseHelmContainer != nil {
-		helm.BaseHelmContainer = baseHelmContainer
+		helm.HelmContainer = baseHelmContainer
 	} else {
-		helm.BaseHelmContainer = helm.GetBaseHelmContainer()
+		helm.HelmContainer = dag.Container().From("alpine/helm:3.14.3")
 	}
+	helm.HelmContainer = helm.HelmContainer.WithWorkdir("/source")
 
 	if baseGeneratorContainer != nil {
-		helm.BaseGeneratorContainer = baseGeneratorContainer
+		helm.GeneratorContainer = baseGeneratorContainer
 	} else {
-		helm.BaseGeneratorContainer = helm.GetBaseGeneratorContainer()
+		helm.GeneratorContainer = dag.Container().
+			From("node:21-alpine").
+			WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 	}
+	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir("/source")
 
 	if baseYqContainer != nil {
-		helm.BaseYqContainer = baseYqContainer
+		helm.YqContainer = baseYqContainer
 	} else {
-		helm.BaseYqContainer = helm.GetBaseYqContainer()
+		helm.YqContainer = dag.Container().From("mikefarah/yq:4.35.2")
 	}
+	helm.YqContainer = helm.YqContainer.WithWorkdir("/source")
 
 	return helm
-}
-
-// BaseGeneratorContainer return the default image for readme-generator-for-helm
-func (m *Helm) GetBaseGeneratorContainer() *dagger.Container {
-	return dag.Container().
-		From("node:21-alpine").
-		WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
-}
-
-// BaseHelmContainer return the default image for helm
-func (m *Helm) GetBaseHelmContainer() *dagger.Container {
-	return dag.Container().
-		From("alpine/helm:3.14.3")
-}
-
-// BaseYqContainer return the default image for yq
-func (m *Helm) GetBaseYqContainer() *dagger.Container {
-	return dag.Container().
-		From("mikefarah/yq:4.35.2")
 }
 
 // WithRepository permit to login on private helm repository
@@ -93,12 +87,15 @@ func (m *Helm) WithRepository(
 	ctx context.Context,
 
 	// The repository name
+	// You need to set it when is not OCI format
+	// +optional
 	name string,
 
 	// The repository url
 	url string,
 
 	// Is it an OCI repository
+	// +optional
 	// +default=false
 	isOci bool,
 
@@ -112,18 +109,35 @@ func (m *Helm) WithRepository(
 
 ) *Helm {
 
+	if !isOci && name == "" {
+		panic("You need to provide name when is not OCI registry")
+	}
+
 	re := regexp.MustCompile(`(-|/)`)
 
 	usernameEnv := fmt.Sprintf("REGISTRY_USERNAME_%s", strings.ToUpper(re.ReplaceAllString(name, "_")))
 	passwordEnv := fmt.Sprintf("REGISTRY_PASSWORD_%s", strings.ToUpper(re.ReplaceAllString(name, "_")))
-	m.BaseHelmContainer = m.BaseHelmContainer.
+	m.HelmContainer = m.HelmContainer.
 		WithSecretVariable(usernameEnv, username).
 		WithSecretVariable(passwordEnv, password)
 	if isOci {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm registry login -u ${%s} -p ${%s} %s", usernameEnv, passwordEnv, url))
+		m.HelmContainer = m.HelmContainer.WithExec(helper.ForgeScript("helm registry login -u ${%s} -p ${%s} %s", usernameEnv, passwordEnv, url))
 	} else {
-		m.BaseHelmContainer = m.BaseHelmContainer.WithExec(helper.ForgeScript("helm repo add --username ${%s} --password ${%s} %s %s", usernameEnv, passwordEnv, name, url))
+		m.HelmContainer = m.HelmContainer.WithExec(helper.ForgeScript("helm repo add --username ${%s} --password ${%s} %s %s", usernameEnv, passwordEnv, name, url))
 	}
 
 	return m
+}
+
+// WithSource permit to update the current source
+func (h *Helm) WithSource(
+	// The source directory
+	// +required
+	src *dagger.Directory,
+) *Helm {
+	h.Src = src
+	h.HelmContainer = h.HelmContainer.WithDirectory(".", src)
+	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(".", src)
+	h.YqContainer = h.YqContainer.WithDirectory(".", src)
+	return h
 }

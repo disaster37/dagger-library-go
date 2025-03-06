@@ -3,30 +3,17 @@ package main
 import (
 	"context"
 
-	"dagger/helm/v2/internal/dagger"
+	"dagger/helm/internal/dagger"
 
 	"emperror.dev/errors"
-	"github.com/creasty/defaults"
 	"github.com/disaster37/dagger-library-go/lib/helper"
-	"github.com/gookit/validate"
 	"gopkg.in/yaml.v3"
 )
 
-type PushOption struct {
-	Source         *dagger.Directory `validate:"required"`
-	RegistryUrl    string            `validate:"required"`
-	RepositoryName string            `validate:"required"`
-	Version        string            `validate:"required"`
-	WithFiles      []*dagger.File
-}
-
-// Push helm chart on registry
+// Push helm chart on registry (OCI format only)
 // It will return the updated Chart.yaml file with the expected version
 func (m *Helm) Push(
 	ctx context.Context,
-
-	// the source directory
-	source *dagger.Directory,
 
 	// The registry url
 	registryUrl string,
@@ -37,34 +24,15 @@ func (m *Helm) Push(
 	// The version
 	version string,
 
-	// Files to inject on containers
-	// +optional
-	withFiles []*dagger.File,
 ) (chartFile *dagger.File, err error) {
-
-	option := &PushOption{
-		Source:         source,
-		RegistryUrl:    registryUrl,
-		RepositoryName: repositoryName,
-		Version:        version,
-		WithFiles:      withFiles,
-	}
-
-	if err = defaults.Set(option); err != nil {
-		return nil, err
-	}
-
-	if err = validate.Struct(option).ValidateErr(); err != nil {
-		return nil, err
-	}
 
 	// Update the chart version
 	chartFile = m.UpdateChart(
 		ctx,
-		source,
 		".version",
-		option.Version,
+		version,
 	)
+	m = m.WithSource(m.Src.WithFile("Chart.yaml", chartFile))
 
 	chartContends, err := chartFile.Contents(ctx)
 	if err != nil {
@@ -78,15 +46,10 @@ func (m *Helm) Push(
 	chartName := dataChart["name"].(string)
 
 	// Package and push
-
-	_, err = m.BaseHelmContainer.
-		WithDirectory("/project", source).
-		WithWorkdir("/project").
-		WithFile("Chart.yaml", chartFile).
-		WithFiles("/project", option.WithFiles).
+	_, err = m.HelmContainer.
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
-		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, option.Version, option.RegistryUrl, option.RepositoryName)).
+		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, version, registryUrl, repositoryName)).
 		Stdout(ctx)
 
 	if err != nil {
@@ -94,5 +57,4 @@ func (m *Helm) Push(
 	}
 
 	return chartFile, nil
-
 }

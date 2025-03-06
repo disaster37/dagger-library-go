@@ -3,5 +3,15 @@
   "engineVersion": "v0.16.1",
   "sdk": {
     "source": "go"
-  }
+  },
+  "include": [
+    "../lib",
+    "../git-module"
+  ],
+  "dependencies": [
+    {
+      "name": "git-module",
+      "source": "../git-module"
+    }
+  ]
 }

@@ -1,7 +1,10 @@
 {
-  "name": "git",
+  "name": "git-module",
   "engineVersion": "v0.16.1",
   "sdk": {
     "source": "go"
-  }
+  },
+  "include": [
+    "../lib"
+  ]
 }

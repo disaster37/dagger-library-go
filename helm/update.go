@@ -2,16 +2,13 @@ package main
 
 import (
 	"context"
-	"dagger/helm/v2/internal/dagger"
+	"dagger/helm/internal/dagger"
 	"fmt"
 )
 
 // Update Chart.yaml file
 func (m *Helm) UpdateChart(
 	ctx context.Context,
-
-	// the source directory
-	source *dagger.Directory,
 
 	// The key to update on yaml file
 	key string,
@@ -21,24 +18,17 @@ func (m *Helm) UpdateChart(
 
 ) (chartFile *dagger.File) {
 
-	chartFile = m.BaseYqContainer.
-		WithDirectory("/project", source).
-		WithWorkdir("/project").
+	return m.YqContainer.
 		WithExec(
 			[]string{"yq", "--inplace", fmt.Sprintf("%s = \"%s\"", key, value), "Chart.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
 		).
 		File("Chart.yaml")
-
-	return chartFile
 }
 
 // Update values.yaml file
 func (m *Helm) UpdateValues(
 	ctx context.Context,
-
-	// the source directory
-	source *dagger.Directory,
 
 	// The key to update on yaml file
 	key string,
@@ -48,14 +38,10 @@ func (m *Helm) UpdateValues(
 
 ) (valueFile *dagger.File) {
 
-	valueFile = m.BaseYqContainer.
-		WithDirectory("/project", source).
-		WithWorkdir("/project").
+	return m.YqContainer.
 		WithExec(
 			[]string{"yq", "--inplace", fmt.Sprintf("%s = \"%s\"", key, value), "values.yaml"},
 			dagger.ContainerWithExecOpts{InsecureRootCapabilities: true},
 		).
 		File("values.yaml")
-
-	return valueFile
 }
