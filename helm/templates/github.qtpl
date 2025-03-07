@@ -25,7 +25,6 @@
     registryPassword = "${{ secrets.GITHUB_TOKEN }}"
   }
 -%}
-
 name: "dagger"
 on:
   push:
