@@ -1,5 +1,4 @@
-{% func GenerateJenkins(branches []string, opts Opts) %}
-
+{%- func GenerateJenkins(branches []string, opts Opts) -%}
 pipeline {
     environment {
         REGISTRY_CREDENTIAL = credentials("<%s opts.RegistryCredential %>")
@@ -22,23 +21,23 @@ pipeline {
         stage('Dagger') {
             when {
                 beforeAgent true
-                {% if len(branches) == 1 %}
+                {%- if len(branches) == 1 -%}
                 anyOf {
                     changeRequest target: '{%s branches[0] %}'
                     branch '{%s branches[0] %}'
                     tag '*'
                 }
-                {% elseif len(branches) > 1  %}
+                {%- elseif len(branches) > 1  -%}
                 anyOf {
                     tag '*'
-                {% for _, branch := range branches %}
+                {%- for _, branch := range branches -%}
                     anyOf {
                         changeRequest target: '{%s branch %}'
                         branch '{%s branch %}'
                     }
-                {% endfor %}
+                {%- endfor -%}
                 }
-                {% endif %}
+                {%- endif -%}
             }
             steps {
                 sh "dagger call --src . ci --ci jenkins --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW"
@@ -46,4 +45,4 @@ pipeline {
         }
     }
 }
-{% endfunc %}
+{%- endfunc -%}

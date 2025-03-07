@@ -20,9 +20,7 @@ var (
 //line templates/jenkins.qtpl:1
 func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Opts) {
 //line templates/jenkins.qtpl:1
-	qw422016.N().S(`
-
-pipeline {
+	qw422016.N().S(`pipeline {
     environment {
         REGISTRY_CREDENTIAL = credentials("<%s opts.RegistryCredential %>")
         GIT_CREDENTIAL      = credentials("<%s opts.GitTokenCredential %>")
@@ -44,100 +42,95 @@ pipeline {
         stage('Dagger') {
             when {
                 beforeAgent true
-                `)
-//line templates/jenkins.qtpl:25
+`)
+//line templates/jenkins.qtpl:24
 	if len(branches) == 1 {
-//line templates/jenkins.qtpl:25
-		qw422016.N().S(`
-                anyOf {
+//line templates/jenkins.qtpl:24
+		qw422016.N().S(`                anyOf {
                     changeRequest target: '`)
-//line templates/jenkins.qtpl:27
+//line templates/jenkins.qtpl:26
 		qw422016.E().S(branches[0])
-//line templates/jenkins.qtpl:27
+//line templates/jenkins.qtpl:26
 		qw422016.N().S(`'
                     branch '`)
-//line templates/jenkins.qtpl:28
+//line templates/jenkins.qtpl:27
 		qw422016.E().S(branches[0])
-//line templates/jenkins.qtpl:28
+//line templates/jenkins.qtpl:27
 		qw422016.N().S(`'
                     tag '*'
                 }
-                `)
-//line templates/jenkins.qtpl:31
+`)
+//line templates/jenkins.qtpl:30
 	} else if len(branches) > 1 {
-//line templates/jenkins.qtpl:31
-		qw422016.N().S(`
-                anyOf {
+//line templates/jenkins.qtpl:30
+		qw422016.N().S(`                anyOf {
                     tag '*'
-                `)
-//line templates/jenkins.qtpl:34
+`)
+//line templates/jenkins.qtpl:33
 		for _, branch := range branches {
-//line templates/jenkins.qtpl:34
-			qw422016.N().S(`
-                    anyOf {
+//line templates/jenkins.qtpl:33
+			qw422016.N().S(`                    anyOf {
                         changeRequest target: '`)
-//line templates/jenkins.qtpl:36
+//line templates/jenkins.qtpl:35
 			qw422016.E().S(branch)
-//line templates/jenkins.qtpl:36
+//line templates/jenkins.qtpl:35
 			qw422016.N().S(`'
                         branch '`)
-//line templates/jenkins.qtpl:37
+//line templates/jenkins.qtpl:36
 			qw422016.E().S(branch)
-//line templates/jenkins.qtpl:37
+//line templates/jenkins.qtpl:36
 			qw422016.N().S(`'
                     }
-                `)
-//line templates/jenkins.qtpl:39
+`)
+//line templates/jenkins.qtpl:38
 		}
-//line templates/jenkins.qtpl:39
-		qw422016.N().S(`
-                }
-                `)
-//line templates/jenkins.qtpl:41
+//line templates/jenkins.qtpl:38
+		qw422016.N().S(`                }
+`)
+//line templates/jenkins.qtpl:40
 	}
-//line templates/jenkins.qtpl:41
-	qw422016.N().S(`
-            }
+//line templates/jenkins.qtpl:40
+	qw422016.N().S(`            }
             steps {
                 sh "dagger call --src . ci --ci jenkins --version ${VERSION} --registry `)
-//line templates/jenkins.qtpl:44
+//line templates/jenkins.qtpl:43
 	qw422016.E().S(opts.Registry)
-//line templates/jenkins.qtpl:44
+//line templates/jenkins.qtpl:43
 	qw422016.N().S(` --repository `)
-//line templates/jenkins.qtpl:44
+//line templates/jenkins.qtpl:43
 	qw422016.E().S(opts.Repository)
-//line templates/jenkins.qtpl:44
+//line templates/jenkins.qtpl:43
 	qw422016.N().S(` --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW"
             }
         }
     }
 }
 `)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 }
 
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 func WriteGenerateJenkins(qq422016 qtio422016.Writer, branches []string, opts Opts) {
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	StreamGenerateJenkins(qw422016, branches, opts)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	qt422016.ReleaseWriter(qw422016)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 }
 
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 func GenerateJenkins(branches []string, opts Opts) string {
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	WriteGenerateJenkins(qb422016, branches, opts)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	qs422016 := string(qb422016.B)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 	return qs422016
-//line templates/jenkins.qtpl:49
+//line templates/jenkins.qtpl:48
 }
