@@ -52,7 +52,6 @@ func StreamGenerateGithub(qw422016 *qt422016.Writer, branches []string, opts Opt
 
 //line templates/github.qtpl:28
 	qw422016.N().S(`
-
 name: "dagger"
 on:
   push:
@@ -61,8 +60,7 @@ on:
 //line templates/github.qtpl:34
 	for _, branch := range branches {
 //line templates/github.qtpl:34
-		qw422016.N().S(`
-      - `)
+		qw422016.N().S(`      - `)
 //line templates/github.qtpl:35
 		qw422016.E().S(branch)
 //line templates/github.qtpl:35
@@ -71,8 +69,7 @@ on:
 //line templates/github.qtpl:36
 	}
 //line templates/github.qtpl:36
-	qw422016.N().S(`
-    tags:
+	qw422016.N().S(`    tags:
       - "*"
   pull_request:
     branches:
@@ -80,8 +77,7 @@ on:
 //line templates/github.qtpl:41
 	for _, branch := range branches {
 //line templates/github.qtpl:41
-		qw422016.N().S(`
-      - `)
+		qw422016.N().S(`      - `)
 //line templates/github.qtpl:42
 		qw422016.E().S(branch)
 //line templates/github.qtpl:42
@@ -91,7 +87,6 @@ on:
 	}
 //line templates/github.qtpl:43
 	qw422016.N().S(`
-
 jobs:
   dagger:
     permissions:
