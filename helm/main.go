@@ -24,6 +24,9 @@ import (
 	"github.com/disaster37/dagger-library-go/lib/helper"
 )
 
+//go:generate go get -u github.com/valyala/quicktemplate/qtc
+//go:generate qtc -dir=templates
+
 type Helm struct {
 	// +private
 	Src                *dagger.Directory

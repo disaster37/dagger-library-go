@@ -1,0 +1,49 @@
+{% func GenerateJenkins(branches []string, opts Opts) %}
+
+pipeline {
+    environment {
+        REGISTRY_CREDENTIAL = credentials("<%s opts.RegistryCredential %>")
+        GIT_CREDENTIAL      = credentials("<%s opts.GitTokenCredential %>")
+        VERSION_TMP         = "${env.TAG_NAME == null ? "0.0.0-rc${BUILD_NUMBER}" : "${TAG_NAME.toLowerCase()}"}"
+        VERSION             = "${env.CHANGE_ID ==  null ? "${VERSION_TMP}" : "0.0.0-pr${CHANGE_ID}-${BUILD_NUMBER}"}"
+        BRANCH_NAME         = "${env.CHANGE_BRANCH == null ? "${GIT_BRANCH}" : "${CHANGE_BRANCH}"}"
+    }
+    options {
+        timeout time: 10, unit: 'MINUTES'
+    }
+    agent {
+        kubernetes {
+            inheritFrom 'dagger'
+            defaultContainer 'dagger'
+        }
+  }
+
+    stages {
+        stage('Dagger') {
+            when {
+                beforeAgent true
+                {% if len(branches) == 1 %}
+                anyOf {
+                    changeRequest target: '{%s branches[0] %}'
+                    branch '{%s branches[0] %}'
+                    tag '*'
+                }
+                {% elseif len(branches) > 1  %}
+                anyOf {
+                    tag '*'
+                {% for _, branch := range branches %}
+                    anyOf {
+                        changeRequest target: '{%s branch %}'
+                        branch '{%s branch %}'
+                    }
+                {% endfor %}
+                }
+                {% endif %}
+            }
+            steps {
+                sh "dagger call --src . ci --ci jenkins --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW"
+            }
+        }
+    }
+}
+{% endfunc %}

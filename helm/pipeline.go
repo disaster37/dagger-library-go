@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"dagger/helm/internal/dagger"
+	"dagger/helm/templates"
 
 	"emperror.dev/errors"
-	"github.com/disaster37/dagger-library-go/lib/ci"
+	cimodule "github.com/disaster37/dagger-library-go/lib/ci"
 )
 
-type CI ci.CI
+type CI cimodule.CI
 
 func (m *Helm) Ci(
 	ctx context.Context,
@@ -183,4 +184,95 @@ func (m *Helm) Ci(
 
 	return rootDir, nil
 
+}
+
+// GenerateCi permit to generate CI file
+func (m *Helm) GenerateCi(
+	ctx context.Context,
+
+	// The CI runner
+	ci CI,
+
+	// The branch from CI
+	// +default=["main"]
+	branches []string,
+
+	// The dagger version to use
+	// +default="latest"
+	daggerVersion string,
+
+	// The registry where to push helm chart
+	// Push to ghcr.io by default when you are on github CI
+	// +optional
+	registry string,
+
+	// The repository
+	// Push to current repository by default when you are on github CI
+	// +optional
+	repository string,
+
+	// The registry credential name
+	// Only used when Jenkins pipeline
+	// +optional
+	registryCredential string,
+
+	// The credential name for registry username
+	// Only used when Github pipeline
+	// Default it use the current user
+	// +optional
+	registryUsernameKey string,
+
+	// The credential name for registry password
+	// Only used when Github pipeline
+	// Default it use the current git token
+	registryPasswordKey string,
+
+	// The credential name for git token
+	// Only used for Jenkins pipeline
+	// +optional
+	gitTokenCredential string,
+
+) (*dagger.Directory, error) {
+
+	if len(branches) == 0 {
+		branches = []string{"main"}
+	}
+	if daggerVersion == "" {
+		daggerVersion = "latest"
+	}
+
+	dir := dag.Directory()
+
+	switch ci {
+	case CI(cimodule.Github):
+		fCi := templates.GenerateGithub(
+			branches,
+			templates.Opts{
+				DaggerVersion:              daggerVersion,
+				Registry:                   registry,
+				Repository:                 repository,
+				RegistryUsernameSecretName: registryUsernameKey,
+				RegistryPasswordSecretName: registryPasswordKey,
+			},
+		)
+
+		dir = dir.WithNewFile(".github/workflows/dagger.yaml", fCi)
+	case CI(cimodule.Jenkins):
+		fCi := templates.GenerateJenkins(
+			branches,
+			templates.Opts{
+				DaggerVersion:      daggerVersion,
+				Registry:           registry,
+				Repository:         repository,
+				RegistryCredential: registryCredential,
+				GitTokenCredential: gitTokenCredential,
+			},
+		)
+
+		dir = dir.WithNewFile("Jenkinsfile", fCi)
+	default:
+		return nil, errors.New("CI not supported")
+	}
+
+	return dir, nil
 }

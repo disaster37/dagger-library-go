@@ -1,0 +1,68 @@
+{% import "fmt" %}
+{% func GenerateGithub(branches []string, opts Opts) %}
+{% code
+
+  var(
+    registryUsername string
+    registryPassword string
+  )
+  if opts.Repository == "" {
+    opts.Repository = "${{ github.repository }}"
+  }
+  if opts.Registry == "" {
+    opts.Registry = "ghcr.io" 
+  }
+  if opts.Repository == "" {
+    opts.Repository = "${{ github.repository }}"
+  }
+  if opts.RegistryUsernameSecretName != "" {
+    registryUsername = fmt.Sprintf("${{ secrets.%s }}", opts.RegistryUsernameSecretName)
+  } else {
+    registryUsername = "${{ github.actor }}"
+  }
+  if opts.RegistryPasswordSecretName != "" {
+    registryPassword = fmt.Sprintf("${{ secrets.%s }}", opts.RegistryPasswordSecretName)
+  } else {
+    registryPassword = "${{ secrets.GITHUB_TOKEN }}"
+  }
+%}
+
+name: "dagger"
+on:
+  push:
+    branches:
+      {% for _, branch := range branches %}
+      - {%s branch %}
+      {% endfor %}
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      {% for _, branch := range branches %}
+      - {%s branch %}
+      {% endfor %}
+
+jobs:
+  dagger:
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Call Dagger Function
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: {%s opts.DaggerVersion %}
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+          verb: call
+          module: github.com/disaster37/dagger-library-go/helm@v2
+          args: --src . ci --ci github --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${{ github.repositoryUrl }} --git-branch ${BRANCH_NAME} --git-token env:GITHUB_TOKEN --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USERNAME: {%s registryUsername %}
+          REGISTRY_PASSWORD: {%s registryPassword %}
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event_name == 'pull_request' && format('0.0.0-pr.{0}.{1}', github.event.number, github.run.number) || format('0.0.0-rc.{0}', github.run_number) }}
+          BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_type == 'tag' && github.event.repository.default_branch  || github.ref_name }}
+{% endfunc %}
+
