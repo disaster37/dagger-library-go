@@ -200,6 +200,7 @@ func (m *Helm) GenerateCi(
 	// The dagger version to use
 	// Only used with Github
 	// Default use the current dagger version
+	// +optional
 	daggerVersion string,
 
 	// The registry where to push helm chart
