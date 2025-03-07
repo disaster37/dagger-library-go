@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/helm/internal/dagger"
 	"dagger/helm/templates"
+	"strings"
 
 	"emperror.dev/errors"
 	cimodule "github.com/disaster37/dagger-library-go/lib/ci"
@@ -197,6 +198,11 @@ func (m *Helm) GenerateCi(
 	// +default=["main"]
 	branches []string,
 
+	// The helm paths
+	// +optional
+	// +default=["."]
+	helmPaths []string,
+
 	// The dagger version to use
 	// Only used with Github
 	// Default use the current dagger version
@@ -259,6 +265,11 @@ func (m *Helm) GenerateCi(
 
 	dir := dag.Directory()
 	var opts templates.Opts
+	var helmPathOpt string
+
+	if len(helmPaths) > 0 {
+		helmPathOpt = strings.Join(helmPaths, "--helm-path ")
+	}
 
 	switch ci {
 	case CI(cimodule.Github):
@@ -269,6 +280,7 @@ func (m *Helm) GenerateCi(
 			DefaultBranchName:          defaultBranch,
 			RegistryUsernameSecretName: registryUsernameKey,
 			RegistryPasswordSecretName: registryPasswordKey,
+			HelmPathOpt:                helmPathOpt,
 		}
 		fCi := templates.GenerateGithub(branches, opts)
 
@@ -281,6 +293,7 @@ func (m *Helm) GenerateCi(
 			DefaultBranchName:  defaultBranch,
 			RegistryCredential: registryCredential,
 			GitTokenCredential: gitTokenCredential,
+			HelmPathOpt:                helmPathOpt,
 		}
 		fCi := templates.GenerateJenkins(branches, opts)
 

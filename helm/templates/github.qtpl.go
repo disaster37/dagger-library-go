@@ -117,7 +117,11 @@ jobs:
 //line templates/github.qtpl:61
 	qw422016.E().S(opts.Repository)
 //line templates/github.qtpl:61
-	qw422016.N().S(` --git-repo-url ${{ github.repositoryUrl }} --git-branch ${BRANCH_NAME} --git-token env:GITHUB_TOKEN --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD
+	qw422016.N().S(` --git-repo-url ${{ github.repositoryUrl }} --git-branch ${BRANCH_NAME} --git-token env:GITHUB_TOKEN --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD `)
+//line templates/github.qtpl:61
+	qw422016.E().S(opts.HelmPathOpt)
+//line templates/github.qtpl:61
+	qw422016.N().S(`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY_USERNAME: `)

@@ -64,7 +64,11 @@ dagger call -m '`)
 //line templates/dagger.md.qtpl:14
 	qw422016.E().S(module)
 //line templates/dagger.md.qtpl:14
-	qw422016.N().S(`' --src . ci export --path .
+	qw422016.N().S(`' --src . ci `)
+//line templates/dagger.md.qtpl:14
+	qw422016.E().S(opts.HelmPathOpt)
+//line templates/dagger.md.qtpl:14
+	qw422016.N().S(` export --path .
 
 # When need to get helm dependency from private registry
 dagger call -m '`)
@@ -75,7 +79,11 @@ dagger call -m '`)
 //line templates/dagger.md.qtpl:17
 	qw422016.E().S(opts.Registry)
 //line templates/dagger.md.qtpl:17
-	qw422016.N().S(` --registry-username env:SU_USERNAME --registry-password env:SU_PASSWORD -- export --path .
+	qw422016.N().S(` --registry-username env:SU_USERNAME --registry-password env:SU_PASSWORD `)
+//line templates/dagger.md.qtpl:17
+	qw422016.E().S(opts.HelmPathOpt)
+//line templates/dagger.md.qtpl:17
+	qw422016.N().S(` export --path .
 `)
 //line templates/dagger.md.qtpl:17
 	qw422016.N().S("`")

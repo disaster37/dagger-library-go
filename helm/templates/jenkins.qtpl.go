@@ -117,7 +117,11 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
 //line templates/jenkins.qtpl:44
 	qw422016.E().S(opts.Repository)
 //line templates/jenkins.qtpl:44
-	qw422016.N().S(` --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW"
+	qw422016.N().S(` --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW `)
+//line templates/jenkins.qtpl:44
+	qw422016.E().S(opts.HelmPathOpt)
+//line templates/jenkins.qtpl:44
+	qw422016.N().S(`"
             }
         }
     }
