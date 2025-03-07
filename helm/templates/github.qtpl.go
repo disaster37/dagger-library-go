@@ -57,7 +57,7 @@ name: "dagger"
 on:
   push:
     branches:
-      `)
+`)
 //line templates/github.qtpl:34
 	for _, branch := range branches {
 //line templates/github.qtpl:34
@@ -67,7 +67,7 @@ on:
 		qw422016.E().S(branch)
 //line templates/github.qtpl:35
 		qw422016.N().S(`
-      `)
+`)
 //line templates/github.qtpl:36
 	}
 //line templates/github.qtpl:36
@@ -76,7 +76,7 @@ on:
       - "*"
   pull_request:
     branches:
-      `)
+`)
 //line templates/github.qtpl:41
 	for _, branch := range branches {
 //line templates/github.qtpl:41
@@ -86,7 +86,7 @@ on:
 		qw422016.E().S(branch)
 //line templates/github.qtpl:42
 		qw422016.N().S(`
-      `)
+`)
 //line templates/github.qtpl:43
 	}
 //line templates/github.qtpl:43

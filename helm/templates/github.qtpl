@@ -31,16 +31,16 @@ name: "dagger"
 on:
   push:
     branches:
-      {% for _, branch := range branches %}
+      {%- for _, branch := range branches %}
       - {%s branch %}
-      {% endfor %}
+      {%- endfor %}
     tags:
       - "*"
   pull_request:
     branches:
-      {% for _, branch := range branches %}
+      {%- for _, branch := range branches %}
       - {%s branch %}
-      {% endfor %}
+      {%- endfor %}
 
 jobs:
   dagger:
