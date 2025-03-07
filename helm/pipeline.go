@@ -289,7 +289,7 @@ func (m *Helm) GenerateCi(
 		return nil, errors.New("CI not supported")
 	}
 
-	dir = dir.WithNewFile("dagger.md", templates.GenerateDagger(opts))
+	dir = dir.WithNewFile("DAGGER.md", templates.GenerateDagger(opts))
 
 	return dir, nil
 }
