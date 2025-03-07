@@ -183,9 +183,16 @@ func (m *GitModule) CommitAndPush(
 	if err != nil {
 		return "", errors.Wrap(err, "Error when get token")
 	}
-	m.Container = m.Container.
-		WithNewFile("/.git-credentials", fmt.Sprintf(`%s://%s@%s`, u.Scheme, tokenPlain, u.Host)).
-		WithExec([]string{"git", "config", "--global", "credential.helper", "store --file /.git-credentials"})
+	switch m.Ci {
+	case CI(ci.Github):
+		m.Container = m.Container.
+			WithNewFile("/.git-credentials", fmt.Sprintf(`%s://%s@%s`, u.Scheme, tokenPlain, u.Host)).
+			WithExec([]string{"git", "config", "--global", "credential.helper", "store --file /.git-credentials"})
+	default:
+		m.Container = m.Container.
+			WithNewFile("/.git-credentials", fmt.Sprintf(`%s://git:%s@%s`, u.Scheme, tokenPlain, u.Host)).
+			WithExec([]string{"git", "config", "--global", "credential.helper", "store --file /.git-credentials"})
+	}
 
 	// Configure branch
 	if branchName != "" {
