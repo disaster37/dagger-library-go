@@ -34,7 +34,12 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
 	qw422016.N().S(`')
         VERSION_TMP         = "${env.TAG_NAME == null ? "0.0.0-rc${BUILD_NUMBER}" : "${TAG_NAME.toLowerCase()}"}"
         VERSION             = "${env.CHANGE_ID ==  null ? "${VERSION_TMP}" : "0.0.0-pr${CHANGE_ID}-${BUILD_NUMBER}"}"
-        BRANCH_NAME         = "${env.CHANGE_BRANCH == null ? "${GIT_BRANCH}" : "${CHANGE_BRANCH}"}"
+        BRANCH_NAME_TMP     = "${env.CHANGE_BRANCH == null ? "${GIT_BRANCH}" : "${CHANGE_BRANCH}"}"
+        BRANCH_NAME         = "${env.TAG_NAME == null ? "${BRANCH_NAME_TMP}" : "`)
+//line templates/jenkins.qtpl:9
+	qw422016.E().S(opts.DefaultBranchName)
+//line templates/jenkins.qtpl:9
+	qw422016.N().S(`"}"
     }
     options {
         timeout time: 10, unit: 'MINUTES'
@@ -51,94 +56,94 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
             when {
                 beforeAgent true
 `)
-//line templates/jenkins.qtpl:24
+//line templates/jenkins.qtpl:25
 	if len(branches) == 1 {
-//line templates/jenkins.qtpl:24
+//line templates/jenkins.qtpl:25
 		qw422016.N().S(`                anyOf {
                     changeRequest target: '`)
-//line templates/jenkins.qtpl:26
+//line templates/jenkins.qtpl:27
 		qw422016.E().S(branches[0])
-//line templates/jenkins.qtpl:26
+//line templates/jenkins.qtpl:27
 		qw422016.N().S(`'
                     branch '`)
-//line templates/jenkins.qtpl:27
+//line templates/jenkins.qtpl:28
 		qw422016.E().S(branches[0])
-//line templates/jenkins.qtpl:27
+//line templates/jenkins.qtpl:28
 		qw422016.N().S(`'
                     tag '*'
                 }
 `)
-//line templates/jenkins.qtpl:30
+//line templates/jenkins.qtpl:31
 	} else if len(branches) > 1 {
-//line templates/jenkins.qtpl:30
+//line templates/jenkins.qtpl:31
 		qw422016.N().S(`                anyOf {
                     tag '*'
 `)
-//line templates/jenkins.qtpl:33
+//line templates/jenkins.qtpl:34
 		for _, branch := range branches {
-//line templates/jenkins.qtpl:33
+//line templates/jenkins.qtpl:34
 			qw422016.N().S(`                    anyOf {
                         changeRequest target: '`)
-//line templates/jenkins.qtpl:35
+//line templates/jenkins.qtpl:36
 			qw422016.E().S(branch)
-//line templates/jenkins.qtpl:35
+//line templates/jenkins.qtpl:36
 			qw422016.N().S(`'
                         branch '`)
-//line templates/jenkins.qtpl:36
+//line templates/jenkins.qtpl:37
 			qw422016.E().S(branch)
-//line templates/jenkins.qtpl:36
+//line templates/jenkins.qtpl:37
 			qw422016.N().S(`'
                     }
 `)
-//line templates/jenkins.qtpl:38
+//line templates/jenkins.qtpl:39
 		}
-//line templates/jenkins.qtpl:38
+//line templates/jenkins.qtpl:39
 		qw422016.N().S(`                }
 `)
-//line templates/jenkins.qtpl:40
+//line templates/jenkins.qtpl:41
 	}
-//line templates/jenkins.qtpl:40
+//line templates/jenkins.qtpl:41
 	qw422016.N().S(`            }
             steps {
                 sh "dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src . ci --ci jenkins --version ${VERSION} --registry `)
-//line templates/jenkins.qtpl:43
+//line templates/jenkins.qtpl:44
 	qw422016.E().S(opts.Registry)
-//line templates/jenkins.qtpl:43
+//line templates/jenkins.qtpl:44
 	qw422016.N().S(` --repository `)
-//line templates/jenkins.qtpl:43
+//line templates/jenkins.qtpl:44
 	qw422016.E().S(opts.Repository)
-//line templates/jenkins.qtpl:43
+//line templates/jenkins.qtpl:44
 	qw422016.N().S(` --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW"
             }
         }
     }
 }
 `)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 }
 
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 func WriteGenerateJenkins(qq422016 qtio422016.Writer, branches []string, opts Opts) {
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	StreamGenerateJenkins(qw422016, branches, opts)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	qt422016.ReleaseWriter(qw422016)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 }
 
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 func GenerateJenkins(branches []string, opts Opts) string {
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	WriteGenerateJenkins(qb422016, branches, opts)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	qs422016 := string(qb422016.B)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 	return qs422016
-//line templates/jenkins.qtpl:48
+//line templates/jenkins.qtpl:49
 }

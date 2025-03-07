@@ -213,6 +213,12 @@ func (m *Helm) GenerateCi(
 	// +optional
 	repository string,
 
+	// The default branch name
+	// It's needed to commit change from a tag
+	// +optional
+	// +default="main"
+	defaultBranch string,
+
 	// The registry credential name
 	// Only used when Jenkins pipeline
 	// +optional
@@ -247,6 +253,9 @@ func (m *Helm) GenerateCi(
 			return nil, err
 		}
 	}
+	if defaultBranch == "" {
+		defaultBranch = "main"
+	}
 
 	dir := dag.Directory()
 
@@ -258,6 +267,7 @@ func (m *Helm) GenerateCi(
 				DaggerVersion:              daggerVersion,
 				Registry:                   registry,
 				Repository:                 repository,
+				DefaultBranchName:          defaultBranch,
 				RegistryUsernameSecretName: registryUsernameKey,
 				RegistryPasswordSecretName: registryPasswordKey,
 			},
@@ -271,6 +281,7 @@ func (m *Helm) GenerateCi(
 				DaggerVersion:      daggerVersion,
 				Registry:           registry,
 				Repository:         repository,
+				DefaultBranchName:  defaultBranch,
 				RegistryCredential: registryCredential,
 				GitTokenCredential: gitTokenCredential,
 			},

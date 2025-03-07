@@ -64,6 +64,6 @@ jobs:
           REGISTRY_USERNAME: {%s registryUsername %}
           REGISTRY_PASSWORD: {%s registryPassword %}
           VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event_name == 'pull_request' && format('0.0.0-pr.{0}.{1}', github.event.number, github.run_number) || format('0.0.0-rc.{0}', github.run_number) }}
-          BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_type == 'tag' && github.event.repository.default_branch  || github.ref_name }}
+          BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_type == 'tag' && {%s opts.DefaultBranchName %} || github.ref_name }}
 {% endfunc %}
 

@@ -8,4 +8,5 @@ type Opts struct {
 	GitTokenCredential         string
 	RegistryUsernameSecretName string
 	RegistryPasswordSecretName string
+	DefaultBranchName          string
 }
