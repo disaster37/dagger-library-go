@@ -1,7 +1,6 @@
 {%- import "fmt" -%}
 {%- func GenerateGithub(branches []string, opts Opts) -%}
 {%- code
-
   var(
     registryUsername string
     registryPassword string
