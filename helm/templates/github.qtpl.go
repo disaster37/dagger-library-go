@@ -104,7 +104,11 @@ jobs:
 	qw422016.N().S(`
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           verb: call
-          module: github.com/disaster37/dagger-library-go/helm@v2
+          module: `)
+//line templates/github.qtpl:60
+	qw422016.E().S(module)
+//line templates/github.qtpl:60
+	qw422016.N().S(`
           args: --src . ci --ci github --version ${VERSION} --registry `)
 //line templates/github.qtpl:61
 	qw422016.E().S(opts.Registry)

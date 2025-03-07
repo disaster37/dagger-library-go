@@ -105,7 +105,11 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
 //line templates/jenkins.qtpl:41
 	qw422016.N().S(`            }
             steps {
-                sh "dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src . ci --ci jenkins --version ${VERSION} --registry `)
+                sh "dagger call -m '`)
+//line templates/jenkins.qtpl:44
+	qw422016.E().S(module)
+//line templates/jenkins.qtpl:44
+	qw422016.N().S(`' --src . ci --ci jenkins --version ${VERSION} --registry `)
 //line templates/jenkins.qtpl:44
 	qw422016.E().S(opts.Registry)
 //line templates/jenkins.qtpl:44

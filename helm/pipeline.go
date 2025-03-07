@@ -258,39 +258,38 @@ func (m *Helm) GenerateCi(
 	}
 
 	dir := dag.Directory()
+	var opts templates.Opts
 
 	switch ci {
 	case CI(cimodule.Github):
-		fCi := templates.GenerateGithub(
-			branches,
-			templates.Opts{
-				DaggerVersion:              daggerVersion,
-				Registry:                   registry,
-				Repository:                 repository,
-				DefaultBranchName:          defaultBranch,
-				RegistryUsernameSecretName: registryUsernameKey,
-				RegistryPasswordSecretName: registryPasswordKey,
-			},
-		)
+		opts = templates.Opts{
+			DaggerVersion:              daggerVersion,
+			Registry:                   registry,
+			Repository:                 repository,
+			DefaultBranchName:          defaultBranch,
+			RegistryUsernameSecretName: registryUsernameKey,
+			RegistryPasswordSecretName: registryPasswordKey,
+		}
+		fCi := templates.GenerateGithub(branches, opts)
 
 		dir = dir.WithNewFile(".github/workflows/dagger.yaml", fCi)
 	case CI(cimodule.Jenkins):
-		fCi := templates.GenerateJenkins(
-			branches,
-			templates.Opts{
-				DaggerVersion:      daggerVersion,
-				Registry:           registry,
-				Repository:         repository,
-				DefaultBranchName:  defaultBranch,
-				RegistryCredential: registryCredential,
-				GitTokenCredential: gitTokenCredential,
-			},
-		)
+		opts = templates.Opts{
+			DaggerVersion:      daggerVersion,
+			Registry:           registry,
+			Repository:         repository,
+			DefaultBranchName:  defaultBranch,
+			RegistryCredential: registryCredential,
+			GitTokenCredential: gitTokenCredential,
+		}
+		fCi := templates.GenerateJenkins(branches, opts)
 
 		dir = dir.WithNewFile("Jenkinsfile", fCi)
 	default:
 		return nil, errors.New("CI not supported")
 	}
+
+	dir = dir.WithNewFile("dagger.md", templates.GenerateDagger(opts))
 
 	return dir, nil
 }
