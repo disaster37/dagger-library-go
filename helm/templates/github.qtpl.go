@@ -22,9 +22,6 @@ var (
 
 //line templates/github.qtpl:2
 func StreamGenerateGithub(qw422016 *qt422016.Writer, branches []string, opts Opts) {
-//line templates/github.qtpl:2
-	qw422016.N().S(`
-`)
 //line templates/github.qtpl:5
 	var (
 		registryUsername string
