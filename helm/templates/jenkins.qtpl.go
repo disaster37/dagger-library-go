@@ -22,16 +22,16 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
 //line templates/jenkins.qtpl:1
 	qw422016.N().S(`pipeline {
     environment {
-        REGISTRY_CREDENTIAL = credentials("`)
+        REGISTRY_CREDENTIAL = credentials('`)
 //line templates/jenkins.qtpl:4
 	qw422016.E().S(opts.RegistryCredential)
 //line templates/jenkins.qtpl:4
-	qw422016.N().S(`")
-        GIT_CREDENTIAL      = credentials("`)
+	qw422016.N().S(`')
+        GIT_CREDENTIAL      = credentials('`)
 //line templates/jenkins.qtpl:5
 	qw422016.E().S(opts.GitTokenCredential)
 //line templates/jenkins.qtpl:5
-	qw422016.N().S(`")
+	qw422016.N().S(`')
         VERSION_TMP         = "${env.TAG_NAME == null ? "0.0.0-rc${BUILD_NUMBER}" : "${TAG_NAME.toLowerCase()}"}"
         VERSION             = "${env.CHANGE_ID ==  null ? "${VERSION_TMP}" : "0.0.0-pr${CHANGE_ID}-${BUILD_NUMBER}"}"
         BRANCH_NAME         = "${env.CHANGE_BRANCH == null ? "${GIT_BRANCH}" : "${CHANGE_BRANCH}"}"
@@ -100,7 +100,7 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
 //line templates/jenkins.qtpl:40
 	qw422016.N().S(`            }
             steps {
-                sh "dagger call -m "github.com/disaster37/dagger-library-go/helm@v2" --src . ci --ci jenkins --version ${VERSION} --registry `)
+                sh "dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src . ci --ci jenkins --version ${VERSION} --registry `)
 //line templates/jenkins.qtpl:43
 	qw422016.E().S(opts.Registry)
 //line templates/jenkins.qtpl:43

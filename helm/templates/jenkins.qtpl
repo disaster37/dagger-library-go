@@ -1,8 +1,8 @@
 {%- func GenerateJenkins(branches []string, opts Opts) -%}
 pipeline {
     environment {
-        REGISTRY_CREDENTIAL = credentials("{%s opts.RegistryCredential %}")
-        GIT_CREDENTIAL      = credentials("{%s opts.GitTokenCredential %}")
+        REGISTRY_CREDENTIAL = credentials('{%s opts.RegistryCredential %}')
+        GIT_CREDENTIAL      = credentials('{%s opts.GitTokenCredential %}')
         VERSION_TMP         = "${env.TAG_NAME == null ? "0.0.0-rc${BUILD_NUMBER}" : "${TAG_NAME.toLowerCase()}"}"
         VERSION             = "${env.CHANGE_ID ==  null ? "${VERSION_TMP}" : "0.0.0-pr${CHANGE_ID}-${BUILD_NUMBER}"}"
         BRANCH_NAME         = "${env.CHANGE_BRANCH == null ? "${GIT_BRANCH}" : "${CHANGE_BRANCH}"}"
