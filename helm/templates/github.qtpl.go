@@ -50,38 +50,41 @@ func StreamGenerateGithub(qw422016 *qt422016.Writer, branches []string, opts Opt
 //line templates/github.qtpl:27
 	qw422016.N().S(`name: "dagger"
 on:
+  release:
+    types:
+      - created
   push:
     branches:
 `)
-//line templates/github.qtpl:32
+//line templates/github.qtpl:35
 	for _, branch := range branches {
-//line templates/github.qtpl:32
+//line templates/github.qtpl:35
 		qw422016.N().S(`      - `)
-//line templates/github.qtpl:33
+//line templates/github.qtpl:36
 		qw422016.E().S(branch)
-//line templates/github.qtpl:33
+//line templates/github.qtpl:36
 		qw422016.N().S(`
 `)
-//line templates/github.qtpl:34
+//line templates/github.qtpl:37
 	}
-//line templates/github.qtpl:34
+//line templates/github.qtpl:37
 	qw422016.N().S(`    tags:
       - "*"
   pull_request:
     branches:
 `)
-//line templates/github.qtpl:39
+//line templates/github.qtpl:42
 	for _, branch := range branches {
-//line templates/github.qtpl:39
+//line templates/github.qtpl:42
 		qw422016.N().S(`      - `)
-//line templates/github.qtpl:40
+//line templates/github.qtpl:43
 		qw422016.E().S(branch)
-//line templates/github.qtpl:40
+//line templates/github.qtpl:43
 		qw422016.N().S(`
 `)
-//line templates/github.qtpl:41
+//line templates/github.qtpl:44
 	}
-//line templates/github.qtpl:41
+//line templates/github.qtpl:44
 	qw422016.N().S(`
 jobs:
   dagger:
@@ -95,62 +98,62 @@ jobs:
         uses: dagger/dagger-for-github@v7
         with:
           version: `)
-//line templates/github.qtpl:54
+//line templates/github.qtpl:57
 	qw422016.E().S(opts.DaggerVersion)
-//line templates/github.qtpl:54
+//line templates/github.qtpl:57
 	qw422016.N().S(`
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           verb: call
           module: github.com/disaster37/dagger-library-go/helm@v2
           args: --src . ci --ci github --version ${VERSION} --registry `)
-//line templates/github.qtpl:58
+//line templates/github.qtpl:61
 	qw422016.E().S(opts.Registry)
-//line templates/github.qtpl:58
+//line templates/github.qtpl:61
 	qw422016.N().S(` --repository `)
-//line templates/github.qtpl:58
+//line templates/github.qtpl:61
 	qw422016.E().S(opts.Repository)
-//line templates/github.qtpl:58
+//line templates/github.qtpl:61
 	qw422016.N().S(` --git-repo-url ${{ github.repositoryUrl }} --git-branch ${BRANCH_NAME} --git-token env:GITHUB_TOKEN --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY_USERNAME: `)
-//line templates/github.qtpl:61
+//line templates/github.qtpl:64
 	qw422016.E().S(registryUsername)
-//line templates/github.qtpl:61
+//line templates/github.qtpl:64
 	qw422016.N().S(`
           REGISTRY_PASSWORD: `)
-//line templates/github.qtpl:62
+//line templates/github.qtpl:65
 	qw422016.E().S(registryPassword)
-//line templates/github.qtpl:62
+//line templates/github.qtpl:65
 	qw422016.N().S(`
           VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event_name == 'pull_request' && format('0.0.0-pr.{0}.{1}', github.event.number, github.run_number) || format('0.0.0-rc.{0}', github.run_number) }}
           BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_type == 'tag' && github.event.repository.default_branch  || github.ref_name }}
 `)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 }
 
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 func WriteGenerateGithub(qq422016 qtio422016.Writer, branches []string, opts Opts) {
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	StreamGenerateGithub(qw422016, branches, opts)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	qt422016.ReleaseWriter(qw422016)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 }
 
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 func GenerateGithub(branches []string, opts Opts) string {
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	WriteGenerateGithub(qb422016, branches, opts)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	qs422016 := string(qb422016.B)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 	return qs422016
-//line templates/github.qtpl:65
+//line templates/github.qtpl:68
 }

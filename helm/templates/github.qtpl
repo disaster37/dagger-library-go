@@ -27,6 +27,9 @@
 -%}
 name: "dagger"
 on:
+  release:
+    types:
+      - created
   push:
     branches:
       {%- for _, branch := range branches -%}
