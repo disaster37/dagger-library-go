@@ -198,7 +198,8 @@ func (m *Helm) GenerateCi(
 	branches []string,
 
 	// The dagger version to use
-	// +default="latest"
+	// Only used with Github
+	// Default use the current dagger version
 	daggerVersion string,
 
 	// The registry where to push helm chart
@@ -225,6 +226,7 @@ func (m *Helm) GenerateCi(
 	// The credential name for registry password
 	// Only used when Github pipeline
 	// Default it use the current git token
+	// +optional
 	registryPasswordKey string,
 
 	// The credential name for git token
@@ -233,12 +235,16 @@ func (m *Helm) GenerateCi(
 	gitTokenCredential string,
 
 ) (*dagger.Directory, error) {
+	var err error
 
 	if len(branches) == 0 {
 		branches = []string{"main"}
 	}
 	if daggerVersion == "" {
-		daggerVersion = "latest"
+		daggerVersion, err = dag.Version(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	dir := dag.Directory()
