@@ -269,7 +269,7 @@ func (m *Helm) GenerateCi(
 	var helmPathOpt string
 
 	if len(helmPaths) > 0 {
-		helmPathOpt = fmt.Sprintf("--helm-path  %s", strings.Join(helmPaths, "--helm-path "))
+		helmPathOpt = fmt.Sprintf("--helm-paths  %s", strings.Join(helmPaths, "--helm-paths "))
 	}
 
 	switch ci {
