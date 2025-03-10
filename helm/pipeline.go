@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/helm/internal/dagger"
 	"dagger/helm/templates"
+	"fmt"
 	"strings"
 
 	"emperror.dev/errors"
@@ -268,7 +269,7 @@ func (m *Helm) GenerateCi(
 	var helmPathOpt string
 
 	if len(helmPaths) > 0 {
-		helmPathOpt = strings.Join(helmPaths, "--helm-path ")
+		helmPathOpt = fmt.Sprintf("--helm-path  %s", strings.Join(helmPaths, "--helm-path "))
 	}
 
 	switch ci {
@@ -293,7 +294,7 @@ func (m *Helm) GenerateCi(
 			DefaultBranchName:  defaultBranch,
 			RegistryCredential: registryCredential,
 			GitTokenCredential: gitTokenCredential,
-			HelmPathOpt:                helmPathOpt,
+			HelmPathOpt:        helmPathOpt,
 		}
 		fCi := templates.GenerateJenkins(branches, opts)
 
