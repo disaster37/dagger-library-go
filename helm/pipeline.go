@@ -132,12 +132,12 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
 			}
-			chart := &chart.Chart{}
+			chart := &chart.Metadata{}
 			if err := yaml.Unmarshal([]byte(fChart), chart); err != nil {
 				return nil, errors.Wrap(err, "Error when unmarshall 'Chart.yaml'")
 			}
 
-			vTarget, err := semver.StrictNewVersion(chart.Metadata.Version)
+			vTarget, err := semver.StrictNewVersion(chart.Version)
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when convert to semver the current helm version")
 			}
