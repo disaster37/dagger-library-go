@@ -146,13 +146,13 @@ func (h *Helm) WithSource(
 
 	// Add source
 	h.HelmContainer = h.HelmContainer.
-		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory)).
+		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory), dagger.ContainerWithExecOpts{InsecureRootCapabilities: true}).
 		WithDirectory(".", src)
 	h.GeneratorContainer = h.GeneratorContainer.
-		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory)).
+		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory), dagger.ContainerWithExecOpts{InsecureRootCapabilities: true}).
 		WithDirectory(".", src)
 	h.YqContainer = h.YqContainer.
-		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory)).
+		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory), dagger.ContainerWithExecOpts{InsecureRootCapabilities: true}).
 		WithDirectory(".", src)
 	return h
 }
