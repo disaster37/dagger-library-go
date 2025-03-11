@@ -58,7 +58,7 @@ jobs:
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           verb: call
           module: {%s module %}
-          args: --src . ci --ci github --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${{ github.repositoryUrl }} --git-branch ${BRANCH_NAME} --git-token env:GITHUB_TOKEN --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD {%s opts.HelmPathOpt %}
+          args: --src . ci --ci github --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${{ github.repositoryUrl }} --git-branch ${BRANCH_NAME} --git-token env:GITHUB_TOKEN --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD {%s opts.HelmPathOpt %} export --path .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY_USERNAME: {%s registryUsername %}

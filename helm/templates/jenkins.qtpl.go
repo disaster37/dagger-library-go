@@ -49,7 +49,7 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
             inheritFrom 'dagger'
             defaultContainer 'dagger'
         }
-  }
+    }
 
     stages {
         stage('Dagger') {
@@ -121,7 +121,7 @@ func StreamGenerateJenkins(qw422016 *qt422016.Writer, branches []string, opts Op
 //line templates/jenkins.qtpl:44
 	qw422016.E().S(opts.HelmPathOpt)
 //line templates/jenkins.qtpl:44
-	qw422016.N().S(`"
+	qw422016.N().S(` export --path ."
             }
         }
     }

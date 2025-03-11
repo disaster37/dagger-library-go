@@ -16,7 +16,7 @@ pipeline {
             inheritFrom 'dagger'
             defaultContainer 'dagger'
         }
-  }
+    }
 
     stages {
         stage('Dagger') {
@@ -41,7 +41,7 @@ pipeline {
                 {%- endif -%}
             }
             steps {
-                sh "dagger call -m '{%s module %}' --src . ci --ci jenkins --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW {%s opts.HelmPathOpt %}"
+                sh "dagger call -m '{%s module %}' --src . ci --ci jenkins --version ${VERSION} --registry {%s opts.Registry %} --repository {%s opts.Repository %} --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} --git-token env:GIT_CREDENTIAL_PSW --registry-username env:REGISTRY_CREDENTIAL_USR --registry-password env:REGISTRY_CREDENTIAL_PSW {%s opts.HelmPathOpt %} export --path ."
             }
         }
     }

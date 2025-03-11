@@ -121,7 +121,7 @@ jobs:
 //line templates/github.qtpl:61
 	qw422016.E().S(opts.HelmPathOpt)
 //line templates/github.qtpl:61
-	qw422016.N().S(`
+	qw422016.N().S(` export --path .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY_USERNAME: `)
@@ -135,11 +135,11 @@ jobs:
 //line templates/github.qtpl:65
 	qw422016.N().S(`
           VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event_name == 'pull_request' && format('0.0.0-pr.{0}.{1}', github.event.number, github.run_number) || format('0.0.0-rc.{0}', github.run_number) }}
-          BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_type == 'tag' && `)
+          BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_type == 'tag' && '`)
 //line templates/github.qtpl:67
 	qw422016.E().S(opts.DefaultBranchName)
 //line templates/github.qtpl:67
-	qw422016.N().S(` || github.ref_name }}
+	qw422016.N().S(`' || github.ref_name }}
 `)
 //line templates/github.qtpl:68
 }
