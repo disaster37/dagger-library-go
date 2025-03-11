@@ -201,6 +201,8 @@ func (m *Helm) Ci(
 				m = m.WithSource(m.Src.WithFile(filename, chartFile))
 			}
 
+			fmt.Printf("Publish helm chart on oci://%s/%s:%s", registry, repository, localVersion)
+
 		}
 
 		rootDir = rootDir.WithDirectory(helmPath, m.Src)
