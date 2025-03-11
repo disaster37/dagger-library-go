@@ -33,7 +33,6 @@ func (m *Helm) GenerateSchema(
 			WithExec(helper.ForgeCommandf("readme-generator -c %s -s %s --values values.yaml", configFile, targetFile))
 	}
 	schemaFile = container.File(targetFile)
-	m = m.WithSource(m.Src.WithFile(targetFile, schemaFile))
 
 	return schemaFile, nil
 }

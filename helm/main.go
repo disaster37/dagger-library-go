@@ -145,9 +145,9 @@ func (h *Helm) WithSource(
 	h.Src = src
 
 	// Add source
-	h.HelmContainer = h.HelmContainer.WithDirectory(sourceDirectory, src)
-	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(sourceDirectory, src)
-	h.YqContainer = h.YqContainer.WithDirectory(sourceDirectory, src)
+	h.HelmContainer = h.HelmContainer.WithDirectory(".", src)
+	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(".", src)
+	h.YqContainer = h.YqContainer.WithDirectory(".", src)
 
 	return h
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"dagger/helm/internal/dagger"
 
@@ -33,7 +32,7 @@ func (m *Helm) Push(
 		".version",
 		version,
 	)
-	m = m.WithSource(m.Src.WithFile("Chart.yaml", chartFile))
+	helmModule := m.WithSource(m.Src.WithFile("Chart.yaml", chartFile))
 
 	chartContends, err := chartFile.Contents(ctx)
 	if err != nil {
@@ -47,7 +46,7 @@ func (m *Helm) Push(
 	chartName := dataChart["name"].(string)
 
 	// Package and push
-	stdout, err := m.HelmContainer.
+	_, err = helmModule.HelmContainer.
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
 		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, version, registryUrl, repositoryName)).
@@ -56,8 +55,6 @@ func (m *Helm) Push(
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when package and push helm chart")
 	}
-
-	fmt.Println(stdout)
 
 	return chartFile, nil
 }
