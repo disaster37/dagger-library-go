@@ -94,31 +94,34 @@ func (m *Helm) Ci(
 		if gitRepoUrl == "" {
 			panic("you need to set git-repo-url")
 		}
-	}
 
-	v, err := semver.StrictNewVersion(version)
-	if err != nil {
-		return nil, errors.Wrap(err, "The version is not semver")
-	}
-	if v.Prerelease() != "" {
-		isRelease = true
-	} else {
-		// read the current helm version
-		fChart, err := m.Src.File("Chart.yaml").Contents(ctx)
+		v, err := semver.StrictNewVersion(version)
 		if err != nil {
-			return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
+			return nil, errors.Wrap(err, "The version is not semver")
 		}
-		chart := &chart.Chart{}
-		if err := yaml.Unmarshal([]byte(fChart), chart); err != nil {
-			return nil, errors.Wrap(err, "Error when unmarshall 'Chart.yaml'")
-		}
+		if v.Prerelease() == "" {
+			isRelease = true
+		} else {
+			// read the current helm version
+			fChart, err := m.Src.File("Chart.yaml").Contents(ctx)
+			if err != nil {
+				return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
+			}
+			chart := &chart.Chart{}
+			if err := yaml.Unmarshal([]byte(fChart), chart); err != nil {
+				return nil, errors.Wrap(err, "Error when unmarshall 'Chart.yaml'")
+			}
 
-		vTarget, err := semver.StrictNewVersion(chart.Metadata.Version)
-		vTarget.IncPatch()
-		if _, err = vTarget.SetPrerelease(v.Prerelease()); err != nil {
-			return nil, errors.Wrap(err, "Error when forge next release version")
+			vTarget, err := semver.StrictNewVersion(chart.Metadata.Version)
+			if err != nil {
+				return nil, errors.Wrap(err, "Error when convert to semver the current helm version")
+			}
+			vTarget.IncPatch()
+			if _, err = vTarget.SetPrerelease(v.Prerelease()); err != nil {
+				return nil, errors.Wrap(err, "Error when forge next release version")
+			}
+			version = vTarget.String()
 		}
-		version = vTarget.String()
 	}
 
 	if len(helmPaths) == 0 {
