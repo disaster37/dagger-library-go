@@ -8,6 +8,7 @@ require (
 	emperror.dev/errors v0.8.1
 	github.com/99designs/gqlgen v0.17.63
 	github.com/Khan/genqlient v0.7.0
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/disaster37/dagger-library-go/lib v0.0.0-20250227103511-2533a680ecf2
 	github.com/valyala/quicktemplate v1.8.0
 	github.com/vektah/gqlparser/v2 v2.5.21
@@ -28,6 +29,7 @@ require (
 	golang.org/x/sync v0.11.0
 	google.golang.org/grpc v1.68.0
 	gopkg.in/yaml.v3 v3.0.1
+	helm.sh/helm/v3 v3.17.1
 )
 
 require (

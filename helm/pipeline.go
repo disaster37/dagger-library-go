@@ -8,7 +8,10 @@ import (
 	"strings"
 
 	"emperror.dev/errors"
+	"github.com/Masterminds/semver/v3"
 	cimodule "github.com/disaster37/dagger-library-go/lib/ci"
+	"gopkg.in/yaml.v3"
+	"helm.sh/helm/v3/pkg/chart"
 )
 
 type CI cimodule.CI
@@ -67,6 +70,7 @@ func (m *Helm) Ci(
 ) (dir *dagger.Directory, err error) {
 
 	var filename string
+	isRelease := false
 
 	if ci != "" {
 		if registry == "" {
@@ -90,6 +94,31 @@ func (m *Helm) Ci(
 		if gitRepoUrl == "" {
 			panic("you need to set git-repo-url")
 		}
+	}
+
+	v, err := semver.StrictNewVersion(version)
+	if err != nil {
+		return nil, errors.Wrap(err, "The version is not semver")
+	}
+	if v.Prerelease() != "" {
+		isRelease = true
+	} else {
+		// read the current helm version
+		fChart, err := m.Src.File("Chart.yaml").Contents(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
+		}
+		chart := &chart.Chart{}
+		if err := yaml.Unmarshal([]byte(fChart), chart); err != nil {
+			return nil, errors.Wrap(err, "Error when unmarshall 'Chart.yaml'")
+		}
+
+		vTarget, err := semver.StrictNewVersion(chart.Metadata.Version)
+		vTarget.IncPatch()
+		if _, err = vTarget.SetPrerelease(v.Prerelease()); err != nil {
+			return nil, errors.Wrap(err, "Error when forge next release version")
+		}
+		version = vTarget.String()
 	}
 
 	if len(helmPaths) == 0 {
@@ -160,7 +189,12 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when get file name")
 			}
-			m = m.WithSource(m.Src.WithFile(filename, chartFile))
+
+			// Add chartFile only when is the release
+			if isRelease {
+				m = m.WithSource(m.Src.WithFile(filename, chartFile))
+			}
+
 		}
 
 		rootDir = rootDir.WithDirectory(helmPath, m.Src)
