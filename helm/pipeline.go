@@ -115,7 +115,7 @@ func (m *Helm) Ci(
 		m = m.WithSource(rootDir.Directory(helmPath))
 
 		// Skip Schema and readme if values.yaml not exist
-		if m.Src.File("values.yaml") != nil {
+		if _, err := m.Src.File("values.yaml").Sync(ctx); err == nil {
 			// Generate helm schema
 			schemaFile, err := m.GenerateSchema("", "")
 			if err != nil {
