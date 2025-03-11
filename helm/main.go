@@ -27,6 +27,8 @@ import (
 //go:generate go get -u github.com/valyala/quicktemplate/qtc
 //go:generate qtc -dir=templates
 
+const sourceDirectory = "/source"
+
 type Helm struct {
 	// +private
 	Src                *dagger.Directory
@@ -64,7 +66,7 @@ func New(
 	} else {
 		helm.HelmContainer = dag.Container().From("alpine/helm:3.14.3")
 	}
-	helm.HelmContainer = helm.HelmContainer.WithWorkdir("/source")
+	helm.HelmContainer = helm.HelmContainer.WithWorkdir(sourceDirectory)
 
 	if baseGeneratorContainer != nil {
 		helm.GeneratorContainer = baseGeneratorContainer
@@ -73,14 +75,14 @@ func New(
 			From("node:21-alpine").
 			WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 	}
-	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir("/source")
+	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir(sourceDirectory)
 
 	if baseYqContainer != nil {
 		helm.YqContainer = baseYqContainer
 	} else {
 		helm.YqContainer = dag.Container().From("mikefarah/yq:4.35.2")
 	}
-	helm.YqContainer = helm.YqContainer.WithWorkdir("/source")
+	helm.YqContainer = helm.YqContainer.WithWorkdir(sourceDirectory)
 
 	helm = helm.WithSource(src)
 
@@ -141,8 +143,16 @@ func (h *Helm) WithSource(
 	src *dagger.Directory,
 ) *Helm {
 	h.Src = src
-	h.HelmContainer = h.HelmContainer.WithDirectory(".", src)
-	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(".", src)
-	h.YqContainer = h.YqContainer.WithDirectory(".", src)
+
+	// Add source
+	h.HelmContainer = h.HelmContainer.
+		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory)).
+		WithDirectory(".", src)
+	h.GeneratorContainer = h.GeneratorContainer.
+		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory)).
+		WithDirectory(".", src)
+	h.YqContainer = h.YqContainer.
+		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory)).
+		WithDirectory(".", src)
 	return h
 }
