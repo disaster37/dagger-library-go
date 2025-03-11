@@ -116,7 +116,6 @@ func (m *Helm) Ci(
 	for _, helmPath := range helmPaths {
 
 		currentHelmModule := m.WithWorkDir(helmPath)
-		currentDirectory := m.Src.Directory(helmPath)
 
 		// Forge target version
 		localVersion := version
@@ -158,7 +157,7 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when get file name")
 			}
-			currentDirectory = currentDirectory.WithFile(filename, schemaFile)
+			currentHelmModule = currentHelmModule.WithSource(currentHelmModule.Src.WithFile(filename, schemaFile))
 
 			// Generate readme
 			readmeFile, err := currentHelmModule.GenerateDocumentation("", "")
@@ -169,10 +168,8 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when get file name")
 			}
-			currentDirectory = currentDirectory.WithFile(filename, readmeFile)
+			currentHelmModule = currentHelmModule.WithSource(currentHelmModule.Src.WithFile(filename, readmeFile))
 
-			// Update current directory on all container for next steps
-			currentHelmModule = currentHelmModule.WithDirectory(helmPath, currentDirectory)
 		}
 
 		//Lint helm chart
@@ -198,10 +195,10 @@ func (m *Helm) Ci(
 			}
 
 			// Add chartFile
-			currentDirectory = currentDirectory.WithFile(filename, chartFile)
+			currentHelmModule = currentHelmModule.WithSource(currentHelmModule.Src.WithFile(filename, chartFile))
 		}
 
-		rootDir = rootDir.WithDirectory(helmPath, currentDirectory)
+		rootDir = rootDir.WithDirectory(helmPath, currentHelmModule.Src)
 	}
 
 	// Commit and push

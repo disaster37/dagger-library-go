@@ -152,33 +152,14 @@ func (h *Helm) WithSource(
 	return h
 }
 
-// WithSource permit to update the current source
-func (h *Helm) WithDirectory(
-
-	// The target path
-	// +required
-	path string,
-
-	// The source directory
-	// +required
-	src *dagger.Directory,
-) *Helm {
-	h.Src = src
-
-	// Add source
-	h.HelmContainer = h.HelmContainer.WithDirectory(path, src)
-	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(path, src)
-	h.YqContainer = h.YqContainer.WithDirectory(path, src)
-
-	return h
-}
-
 // WithWorkDir change the working directory on all containers
 func (h *Helm) WithWorkDir(
 	// The path where to go as working directory
 	// +required
 	path string,
 ) *Helm {
+
+	h.Src = h.Src.Directory(path)
 
 	// Add source
 	h.HelmContainer = h.HelmContainer.WithWorkdir(path)
