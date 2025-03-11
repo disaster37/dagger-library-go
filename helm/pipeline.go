@@ -118,15 +118,12 @@ func (m *Helm) Ci(
 		m = m.WithSource(rootDir.Directory(helmPath))
 
 		// Forge target version
-		isRelease := false
 		localVersion := version
 		v, err := semver.StrictNewVersion(version)
 		if err != nil {
 			return nil, errors.Wrap(err, "The version is not semver")
 		}
-		if v.Prerelease() == "" {
-			isRelease = true
-		} else {
+		if v.Prerelease() != "" {
 			// read the current helm version
 			fChart, err := m.Src.File("Chart.yaml").Contents(ctx)
 			if err != nil {
@@ -196,13 +193,8 @@ func (m *Helm) Ci(
 				return nil, errors.Wrap(err, "Error when get file name")
 			}
 
-			// Add chartFile only when is the release
-			if isRelease {
-				m = m.WithSource(m.Src.WithFile(filename, chartFile))
-			}
-
-			fmt.Printf("Publish helm chart on oci://%s/%s:%s", registry, repository, localVersion)
-
+			// Add chartFile
+			m = m.WithSource(m.Src.WithFile(filename, chartFile))
 		}
 
 		rootDir = rootDir.WithDirectory(helmPath, m.Src)
