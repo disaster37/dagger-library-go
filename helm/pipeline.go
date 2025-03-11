@@ -70,7 +70,6 @@ func (m *Helm) Ci(
 ) (dir *dagger.Directory, err error) {
 
 	var filename string
-	isRelease := false
 
 	if ci != "" {
 		if registry == "" {
@@ -94,7 +93,33 @@ func (m *Helm) Ci(
 		if gitRepoUrl == "" {
 			panic("you need to set git-repo-url")
 		}
+	}
 
+	if len(helmPaths) == 0 {
+		helmPaths = []string{"."}
+	}
+
+	rootDir := m.Src
+
+	// Add repository
+	if registry != "" {
+		m = m.WithRepository(
+			ctx,
+			repository,
+			registry,
+			true,
+			registryUsername,
+			registryPassword,
+		)
+	}
+
+	for _, helmPath := range helmPaths {
+
+		m = m.WithSource(rootDir.Directory(helmPath))
+
+		// Forge target version
+		isRelease := false
+		localVersion := version
 		v, err := semver.StrictNewVersion(version)
 		if err != nil {
 			return nil, errors.Wrap(err, "The version is not semver")
@@ -120,31 +145,8 @@ func (m *Helm) Ci(
 			if _, err = vTarget.SetPrerelease(v.Prerelease()); err != nil {
 				return nil, errors.Wrap(err, "Error when forge next release version")
 			}
-			version = vTarget.String()
+			localVersion = vTarget.String()
 		}
-	}
-
-	if len(helmPaths) == 0 {
-		helmPaths = []string{"."}
-	}
-
-	rootDir := m.Src
-
-	// Add repository
-	if registry != "" {
-		m = m.WithRepository(
-			ctx,
-			repository,
-			registry,
-			true,
-			registryUsername,
-			registryPassword,
-		)
-	}
-
-	for _, helmPath := range helmPaths {
-
-		m = m.WithSource(rootDir.Directory(helmPath))
 
 		// Skip Schema and readme if values.yaml not exist
 		if _, err := m.Src.File("values.yaml").Sync(ctx); err == nil {
@@ -183,7 +185,7 @@ func (m *Helm) Ci(
 				ctx,
 				registry,
 				repository,
-				version,
+				localVersion,
 			)
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when push helm chart")
