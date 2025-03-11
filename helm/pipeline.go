@@ -115,7 +115,8 @@ func (m *Helm) Ci(
 
 	for _, helmPath := range helmPaths {
 
-		m = m.WithSource(rootDir.Directory(helmPath))
+		currentHelmModule := m.WithWorkDir(helmPath)
+		currentDirectory := m.Src.Directory(helmPath)
 
 		// Forge target version
 		localVersion := version
@@ -125,7 +126,7 @@ func (m *Helm) Ci(
 		}
 		if v.Prerelease() != "" {
 			// read the current helm version
-			fChart, err := m.Src.File("Chart.yaml").Contents(ctx)
+			fChart, err := currentHelmModule.Src.File("Chart.yaml").Contents(ctx)
 			if err != nil {
 				return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
 			}
@@ -147,9 +148,9 @@ func (m *Helm) Ci(
 		}
 
 		// Skip Schema and readme if values.yaml not exist
-		if _, err := m.Src.File("values.yaml").Sync(ctx); err == nil {
+		if _, err := currentHelmModule.Src.File("values.yaml").Sync(ctx); err == nil {
 			// Generate helm schema
-			schemaFile, err := m.GenerateSchema("", "")
+			schemaFile, err := currentHelmModule.GenerateSchema("", "")
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when generate schema")
 			}
@@ -157,10 +158,10 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when get file name")
 			}
-			m = m.WithSource(m.Src.WithFile(filename, schemaFile))
+			currentDirectory = currentDirectory.WithFile(filename, schemaFile)
 
 			// Generate readme
-			readmeFile, err := m.GenerateDocumentation("", "")
+			readmeFile, err := currentHelmModule.GenerateDocumentation("", "")
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when generate documentation")
 			}
@@ -168,18 +169,21 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when get file name")
 			}
-			m = m.WithSource(m.Src.WithFile(filename, readmeFile))
+			currentDirectory = currentDirectory.WithFile(filename, readmeFile)
+
+			// Update current directory on all container for next steps
+			currentHelmModule = currentHelmModule.WithDirectory(helmPath, currentDirectory)
 		}
 
 		//Lint helm chart
-		_, err = m.Lint(ctx)
+		_, err = currentHelmModule.Lint(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when lint chart")
 		}
 
 		// Push helm chart
 		if ci != "" {
-			chartFile, err := m.Push(
+			chartFile, err := currentHelmModule.Push(
 				ctx,
 				registry,
 				repository,
@@ -194,10 +198,10 @@ func (m *Helm) Ci(
 			}
 
 			// Add chartFile
-			m = m.WithSource(m.Src.WithFile(filename, chartFile))
+			currentDirectory = currentDirectory.WithFile(filename, chartFile)
 		}
 
-		rootDir = rootDir.WithDirectory(helmPath, m.Src)
+		rootDir = rootDir.WithDirectory(helmPath, currentDirectory)
 	}
 
 	// Commit and push

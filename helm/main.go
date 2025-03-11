@@ -145,14 +145,45 @@ func (h *Helm) WithSource(
 	h.Src = src
 
 	// Add source
-	h.HelmContainer = h.HelmContainer.
-		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory), dagger.ContainerWithExecOpts{InsecureRootCapabilities: true}).
-		WithDirectory(".", src)
-	h.GeneratorContainer = h.GeneratorContainer.
-		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory), dagger.ContainerWithExecOpts{InsecureRootCapabilities: true}).
-		WithDirectory(".", src)
-	h.YqContainer = h.YqContainer.
-		WithExec(helper.ForgeCommandf("rm -rf %s", sourceDirectory), dagger.ContainerWithExecOpts{InsecureRootCapabilities: true}).
-		WithDirectory(".", src)
+	h.HelmContainer = h.HelmContainer.WithDirectory(sourceDirectory, src)
+	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(sourceDirectory, src)
+	h.YqContainer = h.YqContainer.WithDirectory(sourceDirectory, src)
+
+	return h
+}
+
+// WithSource permit to update the current source
+func (h *Helm) WithDirectory(
+
+	// The target path
+	// +required
+	path string,
+
+	// The source directory
+	// +required
+	src *dagger.Directory,
+) *Helm {
+	h.Src = src
+
+	// Add source
+	h.HelmContainer = h.HelmContainer.WithDirectory(path, src)
+	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(path, src)
+	h.YqContainer = h.YqContainer.WithDirectory(path, src)
+
+	return h
+}
+
+// WithWorkDir change the working directory on all containers
+func (h *Helm) WithWorkDir(
+	// The path where to go as working directory
+	// +required
+	path string,
+) *Helm {
+
+	// Add source
+	h.HelmContainer = h.HelmContainer.WithWorkdir(path)
+	h.GeneratorContainer = h.GeneratorContainer.WithWorkdir(path)
+	h.YqContainer = h.YqContainer.WithWorkdir(path)
+
 	return h
 }
