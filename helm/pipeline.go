@@ -141,8 +141,9 @@ func (m *Helm) Ci(
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when convert to semver the current helm version")
 			}
-			vTarget.IncPatch()
-			if _, err = vTarget.SetPrerelease(v.Prerelease()); err != nil {
+			*vTarget = vTarget.IncPatch()
+			*vTarget, err = vTarget.SetPrerelease(v.Prerelease())
+			if err != nil {
 				return nil, errors.Wrap(err, "Error when forge next release version")
 			}
 			localVersion = vTarget.String()
