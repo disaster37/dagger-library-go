@@ -115,7 +115,8 @@ func (m *Helm) Ci(
 
 	for _, helmPath := range helmPaths {
 
-		currentHelmModule := m.WithSource(rootDir).WithWorkDir(helmPath)
+		m.Src = rootDir
+		currentHelmModule := m.WithWorkDir(helmPath)
 
 		// Forge target version
 		localVersion := version
