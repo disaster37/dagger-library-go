@@ -66,6 +66,8 @@ func (m *Helm) Ci(
 	gitBranch string,
 ) (dir *dagger.Directory, err error) {
 
+	var filename string
+
 	if ci != "" {
 		if registry == "" {
 			panic("You need to set registry")
@@ -112,27 +114,30 @@ func (m *Helm) Ci(
 
 		m = m.WithSource(rootDir.Directory(helmPath))
 
-		// Generate helm schema
-		schemaFile, err := m.GenerateSchema("", "")
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when generate schema")
-		}
-		filename, err := schemaFile.Name(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when get file name")
-		}
-		m = m.WithSource(m.Src.WithFile(filename, schemaFile))
+		// Skip Schema and readme if values.yaml not exist
+		if m.Src.File("values.yaml") != nil {
+			// Generate helm schema
+			schemaFile, err := m.GenerateSchema("", "")
+			if err != nil {
+				return nil, errors.Wrap(err, "Error when generate schema")
+			}
+			filename, err = schemaFile.Name(ctx)
+			if err != nil {
+				return nil, errors.Wrap(err, "Error when get file name")
+			}
+			m = m.WithSource(m.Src.WithFile(filename, schemaFile))
 
-		// Generate readme
-		readmeFile, err := m.GenerateDocumentation("", "")
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when generate documentation")
+			// Generate readme
+			readmeFile, err := m.GenerateDocumentation("", "")
+			if err != nil {
+				return nil, errors.Wrap(err, "Error when generate documentation")
+			}
+			filename, err = readmeFile.Name(ctx)
+			if err != nil {
+				return nil, errors.Wrap(err, "Error when get file name")
+			}
+			m = m.WithSource(m.Src.WithFile(filename, readmeFile))
 		}
-		filename, err = readmeFile.Name(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error when get file name")
-		}
-		m = m.WithSource(m.Src.WithFile(filename, readmeFile))
 
 		//Lint helm chart
 		_, err = m.Lint(ctx)
