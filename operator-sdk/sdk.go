@@ -155,7 +155,17 @@ func (h *OperatorSdkSdk) GenerateManifests(
 	// The CRD version to generate
 	// +optional
 	crdVersion string,
+
+	// The path where search the source
+	// +optional
+	// +default="./..."
+	path string,
+
 ) (*dagger.Directory, error) {
+
+	if path == "" {
+		path = "./..."
+	}
 
 	// Read the project file to get the project name. Use it to generate roleName to avoid colision with another operators
 	pFile, err := h.Container.File("PROJECT").Contents(ctx)
@@ -178,9 +188,9 @@ func (h *OperatorSdkSdk) GenerateManifests(
 	}
 
 	return h.Container.
-		WithExec([]string{"controller-gen", fmt.Sprintf("rbac:roleName=%s", roleName), crdSubCommand, "webhook", "paths=./...", "output:crd:artifacts:config=config/crd/bases"}).
+		WithExec([]string{"controller-gen", fmt.Sprintf("rbac:roleName=%s", roleName), crdSubCommand, "webhook", fmt.Sprintf("paths=%s", path), "output:crd:artifacts:config=config/crd/bases"}).
 		WithExec([]string{"crd", "clean-crd", "--crd-file", "config/crd/bases/*.yaml"}).
-		WithExec([]string{"controller-gen", "object:headerFile=hack/boilerplate.go.txt", "paths=./..."}).
+		WithExec([]string{"controller-gen", "object:headerFile=hack/boilerplate.go.txt", fmt.Sprintf("paths=%s", path)}).
 		Directory("."), nil
 }
 

@@ -487,7 +487,7 @@ func (h *OperatorSdk) Release(
 	lastCatalogName := fmt.Sprintf("%s:latest", catalogName)
 
 	// Generate manifests
-	dir, err = h.Sdk.GenerateManifests(ctx, crdVersion)
+	dir, err = h.Sdk.GenerateManifests(ctx, crdVersion, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when generate manifests")
 	}
