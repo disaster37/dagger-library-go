@@ -491,8 +491,6 @@ func (g *Golang) Lint(
 		"run",
 		"--timeout",
 		"5m",
-		"--go",
-		g.Version,
 		"--out-format",
 		format,
 	}
