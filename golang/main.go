@@ -453,15 +453,7 @@ func (g *Golang) Vulncheck(ctx context.Context) (string, error) {
 // Lint the target project using golangci-lint
 func (g *Golang) Lint(
 	ctx context.Context,
-	// the type of report that should be generated
-	// +optional
-	// +default="colored-line-number"
-	format string,
 ) (string, error) {
-
-	if format == "" {
-		format = "colored-line-number"
-	}
 
 	ctr := g.Container
 	if _, err := ctr.WithExec([]string{"golangci-lint", "version"}).Sync(ctx); err != nil {
@@ -491,8 +483,7 @@ func (g *Golang) Lint(
 		"run",
 		"--timeout",
 		"5m",
-		"--out-format",
-		format,
+		"--output.text.colors",
 	}
 
 	if g.Private != nil {
