@@ -20,6 +20,10 @@
       "pin": "b2b06917e338519a04404347a105a7c3bb316472"
     },
     {
+      "name": "golang",
+      "source": "../golang"
+    },
+    {
       "name": "k3s",
       "source": "../k3s"
     },
@@ -27,10 +31,6 @@
       "name": "kind",
       "source": "github.com/aweris/daggerverse/kind",
       "pin": "3f551863c75b6bbd7f78f64c6a51fd677b73277e"
-    },
-    {
-      "name": "golang",
-      "source": "../golang"
     }
   ]
 }
