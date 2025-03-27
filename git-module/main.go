@@ -194,6 +194,14 @@ func (m *GitModule) CommitAndPush(
 			WithExec([]string{"git", "config", "--global", "credential.helper", "store --file /.git-credentials"})
 	}
 
+	// Configure git massage
+	if message == "" {
+		message = "Commit from CI"
+	}
+	if m.Ci == CI(ci.Github) {
+		message = fmt.Sprintf("%s [skip ci]", message)
+	}
+
 	// Configure branch
 	if branchName != "" {
 		currentBranch, err := m.GetCurrentBranchName(ctx)
@@ -204,18 +212,15 @@ func (m *GitModule) CommitAndPush(
 		if currentBranch != branchName {
 			m.Container = m.Container.
 				WithExec(helper.ForgeScript(`
+git add -A
+if [ -n "\$(git status --untracked-files=no --porcelain)" ]; then
+	git commit -m "%s"
+fi
 git fetch origin %s:%s
 git checkout %s
-			`, branchName, branchName, branchName))
+git merge %s
+			`, message, branchName, branchName, branchName, currentBranch))
 		}
-	}
-
-	// Configure git massage
-	if message == "" {
-		message = "Commit from CI"
-	}
-	if m.Ci == CI(ci.Github) {
-		message = fmt.Sprintf("%s [skip ci]", message)
 	}
 
 	return m.Container.
