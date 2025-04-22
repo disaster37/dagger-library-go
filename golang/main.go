@@ -508,7 +508,7 @@ func (g *Golang) Format(ctx context.Context) (*dagger.Directory, error) {
 
 	cmd := []string{"gofumpt", "-w", "-d", "."}
 
-	return ctr.WithExec(cmd).Directory(goWorkDir), nil
+	return ctr.WithExec(cmd, dagger.ContainerWithExecOpts{Expect: dagger.ReturnTypeAny}).Directory(goWorkDir), nil
 }
 
 // WithSource permit to update the current source on sdk container
