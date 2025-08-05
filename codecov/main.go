@@ -19,8 +19,6 @@ import (
 	"dagger/codecov/internal/dagger"
 	"fmt"
 	"strings"
-
-	"dagger.io/dagger/dag"
 )
 
 type Codecov struct {
