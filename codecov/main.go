@@ -19,6 +19,8 @@ import (
 	"dagger/codecov/internal/dagger"
 	"fmt"
 	"strings"
+
+	"dagger.io/dagger/dag"
 )
 
 type Codecov struct {
@@ -53,7 +55,7 @@ func New(
 	} else {
 		codeCov = dag.Container().
 			From("cgr.dev/chainguard/wolfi-base").
-			WithExec([]string{"apk", "add", "curl", "git"}).
+			WithExec([]string{"apk", "add", "--update", "curl", "git"}).
 			WithExec([]string{"curl", "-o", "/bin/codecov", "-s", urlCodecov}).
 			WithExec([]string{"chmod", "+x", "/bin/codecov"}).
 			WithExec([]string{"ls", "-lah", "/bin/codecov"})
