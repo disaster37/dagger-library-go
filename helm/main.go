@@ -66,6 +66,7 @@ func New(
 	} else {
 		helm.HelmContainer = dag.Container().From("alpine/helm:3.14.3")
 	}
+	helm.HelmContainer = helm.HelmContainer.WithWorkdir(sourceDirectory)
 
 	if baseGeneratorContainer != nil {
 		helm.GeneratorContainer = baseGeneratorContainer
@@ -74,17 +75,16 @@ func New(
 			From("node:21-alpine").
 			WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
 	}
+	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir(sourceDirectory)
 
 	if baseYqContainer != nil {
 		helm.YqContainer = baseYqContainer
 	} else {
 		helm.YqContainer = dag.Container().From("mikefarah/yq:4.35.2")
 	}
+	helm.YqContainer = helm.YqContainer.WithWorkdir(sourceDirectory)
 
 	helm = helm.WithSource(src)
-	helm.HelmContainer = helm.HelmContainer.WithWorkdir(sourceDirectory)
-	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir(sourceDirectory)
-	helm.YqContainer = helm.YqContainer.WithWorkdir(sourceDirectory)
 
 	return helm
 }
@@ -145,9 +145,9 @@ func (h *Helm) WithSource(
 	h.Src = src
 
 	// Add source
-	h.HelmContainer = h.HelmContainer.WithDirectory(sourceDirectory, src)
-	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(sourceDirectory, src)
-	h.YqContainer = h.YqContainer.WithDirectory(sourceDirectory, src)
+	h.HelmContainer = h.HelmContainer.WithDirectory(".", src)
+	h.GeneratorContainer = h.GeneratorContainer.WithDirectory(".", src)
+	h.YqContainer = h.YqContainer.WithDirectory(".", src)
 
 	return h
 }
