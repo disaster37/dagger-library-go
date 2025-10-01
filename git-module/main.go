@@ -21,6 +21,7 @@ import (
 	"dagger/git-module/internal/dagger"
 	"fmt"
 
+	"dagger.io/dagger/dag"
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/ci"
 	"github.com/disaster37/dagger-library-go/lib/helper"
@@ -229,6 +230,7 @@ git merge %s
 			`
 if [ -n "\$(git status --untracked-files=no --porcelain)" ]; then
 	git commit -m "%s"
+	git pull --rebase
 	git push
 fi
 		`, message)).
