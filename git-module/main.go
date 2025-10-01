@@ -21,7 +21,6 @@ import (
 	"dagger/git-module/internal/dagger"
 	"fmt"
 
-	"dagger.io/dagger/dag"
 	"emperror.dev/errors"
 	"github.com/disaster37/dagger-library-go/lib/ci"
 	"github.com/disaster37/dagger-library-go/lib/helper"

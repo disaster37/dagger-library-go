@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.2
 
 require (
+	dagger.io/dagger v0.16.1
 	emperror.dev/errors v0.8.1
 	github.com/disaster37/dagger-library-go/lib v0.0.0-20250227103511-2533a680ecf2
 )
@@ -12,11 +13,13 @@ require (
 require (
 	github.com/99designs/gqlgen v0.17.63
 	github.com/Khan/genqlient v0.7.0
+	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.23.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.21
