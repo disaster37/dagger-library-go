@@ -466,7 +466,7 @@ func (g *Golang) Lint(
 		cmd := []string{
 			"curl",
 			"-sSfL",
-			"https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh",
+			"https://raw.githubusercontent.com/golangci/golangci-lint/main/install.sh",
 			"|",
 			"sh",
 			"-s",
