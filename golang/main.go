@@ -453,6 +453,8 @@ func (g *Golang) Vulncheck(ctx context.Context) (string, error) {
 // Lint the target project using golangci-lint
 func (g *Golang) Lint(
 	ctx context.Context,
+	// default=true
+	autoFix bool,
 ) (string, error) {
 
 	ctr := g.Container
@@ -478,12 +480,18 @@ func (g *Golang) Lint(
 		ctr = ctr.WithExec([]string{"bash", "-c", strings.Join(cmd, " ")})
 	}
 
+	var fix string
+	if autoFix {
+		fix = "--fix"
+	}
+
 	cmd := []string{
 		"golangci-lint",
 		"run",
 		"--timeout",
 		"5m",
 		"--output.text.colors",
+		fix,
 	}
 
 	if g.Private != nil {
@@ -519,4 +527,30 @@ func (h *Golang) WithSource(
 ) *Golang {
 	h.Container = h.Container.WithDirectory(".", src)
 	return h
+}
+
+// Stateless checker
+func (b *Golang) CheckDirectory(
+	ctx context.Context,
+	// Directory to run checks on
+	source *dagger.Directory) (string, error) {
+	return "", nil
+}
+
+// Stateless formatter
+func (b *Golang) FormatDirectory(
+	// Directory to format
+	source *dagger.Directory,
+) *dagger.Directory {
+	return nil
+}
+
+// Stateless formatter
+func (b *Golang) FormatFile(
+	// Directory with go module
+	source *dagger.Directory,
+	// File path to format
+	path string,
+) *dagger.Directory {
+	return nil
 }

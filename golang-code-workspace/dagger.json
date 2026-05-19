@@ -1,0 +1,16 @@
+{
+  "name": "golang-code-workspace",
+  "engineVersion": "v0.20.8",
+  "sdk": {
+    "source": "go"
+  },
+  "include": [
+    "../golang"
+  ],
+  "dependencies": [
+    {
+      "name": "golang",
+      "source": "../golang"
+    }
+  ]
+}

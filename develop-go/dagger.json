@@ -1,0 +1,26 @@
+{
+  "name": "develop-go",
+  "engineVersion": "v0.20.8",
+  "sdk": {
+    "source": "go"
+  },
+  "include": [
+    "../code-workspace",
+    "../golang-code-workspace"
+  ],
+  "dependencies": [
+    {
+      "name": "github-issue",
+      "source": "github.com/kpenfound/dag/github-issue@main",
+      "pin": "9e6dad0e1e3a30afa82dd7e5663b5aa421cf25e7"
+    },
+    {
+      "name": "code-workspace",
+      "source": "../code-workspace"
+    },
+    {
+      "name": "golang-code-workspace",
+      "source": "../golang-code-workspace"
+    }
+  ]
+}
