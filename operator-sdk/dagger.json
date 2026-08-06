@@ -5,6 +5,7 @@
     "source": "go"
   },
   "include": [
+    "../lib",
     "../golang",
     "../k3s"
   ],

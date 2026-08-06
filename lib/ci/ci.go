@@ -9,6 +9,9 @@ const (
 	// Jenkins CI
 	Jenkins CI = "jenkins"
 
+	// GitLab CI
+	Gitlab CI = "gitlab"
+
 	// Default CI
 	Dagger CI = "dagger"
 )

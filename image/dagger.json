@@ -1,7 +1,11 @@
 {
   "name": "image",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.20.8",
   "sdk": {
     "source": "go"
-  }
+  },
+  "include": [
+    "../lib"
+  ],
+  "disableDefaultFunctionCaching": true
 }

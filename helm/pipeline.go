@@ -3,13 +3,11 @@ package main
 import (
 	"context"
 	"dagger/helm/internal/dagger"
-	"dagger/helm/templates"
-	"fmt"
-	"strings"
 
 	"emperror.dev/errors"
 	"github.com/Masterminds/semver/v3"
 	cimodule "github.com/disaster37/dagger-library-go/lib/ci"
+	"github.com/disaster37/dagger-library-go/lib/pipeline"
 	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/chart"
 )
@@ -67,31 +65,38 @@ func (m *Helm) Ci(
 	// You need to provide it when you are on PullRequest or on Tag
 	// +optional
 	gitBranch string,
+
+	// Dry-run: skip push and git commit/push even when --ci is set.
+	// +optional
+	dryRun bool,
 ) (dir *dagger.Directory, err error) {
 
 	var filename string
 
-	if ci != "" {
+	isCI := ci != ""
+	isGitPush := isCI && !dryRun
+
+	if isCI {
 		if registry == "" {
-			panic("You need to set registry")
+			return nil, errors.New("You need to set registry")
 		}
 		if repository == "" {
-			panic("You need to set repository")
+			return nil, errors.New("You need to set repository")
 		}
 		if version == "" {
-			panic("You need to set version")
+			return nil, errors.New("You need to set version")
 		}
 		if registryUsername == nil {
-			panic("You need to set registry-username")
+			return nil, errors.New("You need to set registry-username")
 		}
 		if registryPassword == nil {
-			panic("you need to set registry-password")
+			return nil, errors.New("you need to set registry-password")
 		}
 		if gitToken == nil {
-			panic("you need to set git-token")
+			return nil, errors.New("you need to set git-token")
 		}
 		if gitRepoUrl == "" {
-			panic("you need to set git-repo-url")
+			return nil, errors.New("you need to set git-repo-url")
 		}
 	}
 
@@ -180,7 +185,7 @@ func (m *Helm) Ci(
 		}
 
 		// Push helm chart
-		if ci != "" {
+		if isCI {
 			chartFile, err := currentHelmModule.Push(
 				ctx,
 				registry,
@@ -203,7 +208,7 @@ func (m *Helm) Ci(
 	}
 
 	// Commit and push
-	if ci != "" {
+	if isGitPush {
 
 		_, err = dag.GitModule(
 			rootDir,
@@ -229,66 +234,73 @@ func (m *Helm) Ci(
 
 }
 
-// GenerateCi permit to generate CI file
+// GenerateCi generates CI pipeline files for the given CI system.
 func (m *Helm) GenerateCi(
 	ctx context.Context,
 
-	// The CI runner
+	// The CI runner: github, jenkins, or gitlab
+	// +required
 	ci CI,
 
-	// The branch from CI
+	// Branches that trigger the pipeline
+	// +optional
 	// +default=["main"]
 	branches []string,
 
-	// The helm paths
+	// Helm chart directory paths
 	// +optional
 	// +default=["."]
 	helmPaths []string,
 
-	// The dagger version to use
-	// Only used with Github
-	// Default use the current dagger version
+	// Dagger CLI version to use in CI (empty = engine default)
 	// +optional
 	daggerVersion string,
 
-	// The registry where to push helm chart
-	// Push to ghcr.io by default when you are on github CI
+	// OCI registry URL. Empty = renderer default (ghcr.io on GitHub).
 	// +optional
 	registry string,
 
-	// The repository
-	// Push to current repository by default when you are on github CI
+	// Repository path inside the registry.
 	// +optional
 	repository string,
 
-	// The default branch name
-	// It's needed to commit change from a tag
+	// Branch commits land here when running on a tag.
 	// +optional
 	// +default="main"
 	defaultBranch string,
 
-	// The registry credential name
-	// Only used when Jenkins pipeline
+	// Configurable dagger module reference.
 	// +optional
-	registryCredential string,
+	// +default="github.com/disaster37/dagger-library-go/helm@v2"
+	moduleRef string,
 
-	// The credential name for registry username
-	// Only used when Github pipeline
-	// Default it use the current user
+	// GitHub: secret name for registry username (empty = github.actor).
 	// +optional
 	registryUsernameKey string,
 
-	// The credential name for registry password
-	// Only used when Github pipeline
-	// Default it use the current git token
+	// GitHub: secret name for registry password (empty = GITHUB_TOKEN).
 	// +optional
 	registryPasswordKey string,
 
-	// The credential name for git token
-	// Only used for Jenkins pipeline
+	// Jenkins: credential id for registry username/password.
+	// +optional
+	registryCredential string,
+
+	// Jenkins: credential id for git token.
 	// +optional
 	gitTokenCredential string,
 
+	// GitLab: CI/CD variable name for registry username.
+	// +optional
+	registryUsernameVar string,
+
+	// GitLab: CI/CD variable name for registry password.
+	// +optional
+	registryPasswordVar string,
+
+	// GitLab: CI/CD variable name for git token.
+	// +optional
+	gitTokenVar string,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -304,47 +316,81 @@ func (m *Helm) GenerateCi(
 	if defaultBranch == "" {
 		defaultBranch = "main"
 	}
+	if moduleRef == "" {
+		moduleRef = "github.com/disaster37/dagger-library-go/helm@v2"
+	}
+	if len(helmPaths) == 0 {
+		helmPaths = []string{"."}
+	}
+
+	// Build helm path flags
+	var helmPathsArgs []string
+	for _, p := range helmPaths {
+		helmPathsArgs = append(helmPathsArgs, "--helm-paths", p)
+	}
+
+	// Determine placeholder bindings based on CI
+	registryUserBinding, registryPassBinding, gitTokenBinding, err := pipeline.ResolveCredentialBindings(cimodule.CI(ci), pipeline.CredentialConfig{
+		RegistryUsernameKey: registryUsernameKey,
+		RegistryPasswordKey: registryPasswordKey,
+		RegistryCredential:  registryCredential,
+		GitTokenCredential:  gitTokenCredential,
+		RegistryUsernameVar: registryUsernameVar,
+		RegistryPasswordVar: registryPasswordVar,
+		GitTokenVar:         gitTokenVar,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when resolve credential bindings")
+	}
+
+	// Build PipelineSpec
+	spec := pipeline.PipelineSpec{
+		CI:            cimodule.CI(ci),
+		ModuleRef:     moduleRef,
+		DaggerVersion: daggerVersion,
+		Branches:      branches,
+		DefaultBranch: defaultBranch,
+		Triggers: pipeline.Triggers{
+			Push:        true,
+			PullRequest: true,
+			Tag:         true,
+		},
+		Job: pipeline.Job{
+			Function: "ci",
+			Args: append([]string{
+				"--src", ".",
+				"--registry", registry,
+				"--repository", repository,
+				"--ci", string(ci),
+				"--version", "{{version}}",
+				"--registry-username", "{{registry-username}}",
+				"--registry-password", "{{registry-password}}",
+				"--git-token", "{{git-token}}",
+				"--git-repo-url", "{{git-repo-url}}",
+				"--git-branch", "{{branch}}",
+			}, helmPathsArgs...),
+			Placeholders: map[string]pipeline.Binding{
+				pipeline.PhVersion:      {Kind: pipeline.BindingExpr, Ref: ""},
+				pipeline.PhRegistryUser:  registryUserBinding,
+				pipeline.PhRegistryPass:  registryPassBinding,
+				pipeline.PhGitToken:      gitTokenBinding,
+				pipeline.PhGitRepoURL:   {Kind: pipeline.BindingExpr, Ref: ""},
+				pipeline.PhBranch:       {Kind: pipeline.BindingExpr, Ref: ""},
+			},
+		},
+		Registry:   registry,
+		Repository: repository,
+	}
+
+	files, err := pipeline.Render(spec)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when render CI pipeline")
+	}
 
 	dir := dag.Directory()
-	var opts templates.Opts
-	var helmPathOpt string
-
-	if len(helmPaths) > 0 {
-		helmPathOpt = fmt.Sprintf("--helm-paths  %s", strings.Join(helmPaths, "--helm-paths "))
+	for path, content := range files {
+		dir = dir.WithNewFile(path, content)
 	}
-
-	switch ci {
-	case CI(cimodule.Github):
-		opts = templates.Opts{
-			DaggerVersion:              daggerVersion,
-			Registry:                   registry,
-			Repository:                 repository,
-			DefaultBranchName:          defaultBranch,
-			RegistryUsernameSecretName: registryUsernameKey,
-			RegistryPasswordSecretName: registryPasswordKey,
-			HelmPathOpt:                helmPathOpt,
-		}
-		fCi := templates.GenerateGithub(branches, opts)
-
-		dir = dir.WithNewFile(".github/workflows/dagger.yaml", fCi)
-	case CI(cimodule.Jenkins):
-		opts = templates.Opts{
-			DaggerVersion:      daggerVersion,
-			Registry:           registry,
-			Repository:         repository,
-			DefaultBranchName:  defaultBranch,
-			RegistryCredential: registryCredential,
-			GitTokenCredential: gitTokenCredential,
-			HelmPathOpt:        helmPathOpt,
-		}
-		fCi := templates.GenerateJenkins(branches, opts)
-
-		dir = dir.WithNewFile("Jenkinsfile", fCi)
-	default:
-		return nil, errors.New("CI not supported")
-	}
-
-	dir = dir.WithNewFile("DAGGER.md", templates.GenerateDagger(opts))
 
 	return dir, nil
 }

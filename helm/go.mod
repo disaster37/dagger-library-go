@@ -8,7 +8,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/dagger/otel-go v1.43.0
 	github.com/disaster37/dagger-library-go/lib v0.0.0-20250227103511-2533a680ecf2
-	github.com/valyala/quicktemplate v1.8.0
 	github.com/vektah/gqlparser/v2 v2.5.36
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/trace v1.45.0
@@ -44,7 +43,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sosodev/duration v1.4.0 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.41.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
