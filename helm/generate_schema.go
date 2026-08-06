@@ -25,13 +25,15 @@ func (m *Helm) GenerateSchema(
 		targetFile = "values.schema.json"
 	}
 
-	if configFile == "" {
-		container = container.
-			WithExec(helper.ForgeCommandf("readme-generator -s %s --values values.yaml", targetFile))
-	} else {
-		container = container.
-			WithExec(helper.ForgeCommandf("readme-generator -c %s -s %s --values values.yaml", configFile, targetFile))
+	if err = validatePathArg("targetFile", targetFile); err != nil {
+		return nil, err
 	}
+	if err = validatePathArg("configFile", configFile); err != nil {
+		return nil, err
+	}
+
+	container = container.
+		WithExec(helper.ForgeCommandf("readme-generator schema%s -v values.yaml -s %s", configArg(configFile), targetFile))
 	schemaFile = container.File(targetFile)
 
 	return schemaFile, nil

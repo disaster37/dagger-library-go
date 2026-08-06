@@ -1,6 +1,6 @@
 {
   "name": "helm",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.20.8",
   "sdk": {
     "source": "go"
   },
@@ -13,5 +13,6 @@
       "name": "git-module",
       "source": "../git-module"
     }
-  ]
+  ],
+  "disableDefaultFunctionCaching": true
 }

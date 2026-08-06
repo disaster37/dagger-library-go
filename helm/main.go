@@ -71,9 +71,10 @@ func New(
 	if baseGeneratorContainer != nil {
 		helm.GeneratorContainer = baseGeneratorContainer
 	} else {
+		// ghcr.io/disaster37/readme-generator-for-helm:0.0.3
+		// digest: sha256:9db59f792ee3ab535e1dba3bfda3516697420b35d3a248defaf2e0f551b7deb1
 		helm.GeneratorContainer = dag.Container().
-			From("node:21-alpine").
-			WithExec(helper.ForgeCommand("npm install -g @bitnami/readme-generator-for-helm"))
+			From("ghcr.io/disaster37/readme-generator-for-helm:0.0.3")
 	}
 	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir(sourceDirectory)
 
@@ -167,4 +168,23 @@ func (h *Helm) WithWorkDir(
 	h.YqContainer = h.YqContainer.WithWorkdir(path)
 
 	return h
+}
+
+// configArg returns the -c flag fragment for readme-generator commands
+// when a config file is specified, or an empty string otherwise.
+func configArg(configFile string) string {
+	if configFile != "" {
+		return " -c " + configFile
+	}
+	return ""
+}
+
+// validatePathArg returns an error if the path argument contains spaces.
+// Spaces would cause ForgeCommand's strings.Split to fragment the argument
+// into multiple exec args, enabling flag/argument smuggling.
+func validatePathArg(name, value string) error {
+	if strings.Contains(value, " ") {
+		return fmt.Errorf("invalid %s: must not contain spaces", name)
+	}
+	return nil
 }

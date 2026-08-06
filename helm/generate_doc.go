@@ -25,13 +25,15 @@ func (m *Helm) GenerateDocumentation(
 		targetFile = "README.md"
 	}
 
-	if configFile == "" {
-		container = container.
-			WithExec(helper.ForgeCommandf("readme-generator -r %s --values values.yaml", targetFile))
-	} else {
-		container = container.
-			WithExec(helper.ForgeCommandf("readme-generator -c %s -r %s --values values.yaml", configFile, targetFile))
+	if err = validatePathArg("targetFile", targetFile); err != nil {
+		return nil, err
 	}
+	if err = validatePathArg("configFile", configFile); err != nil {
+		return nil, err
+	}
+
+	container = container.
+		WithExec(helper.ForgeCommandf("readme-generator readme%s -v values.yaml -r %s", configArg(configFile), targetFile))
 	readmeFile = container.File(targetFile)
 
 	return readmeFile, nil
