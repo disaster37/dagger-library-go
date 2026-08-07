@@ -61,17 +61,15 @@ func New(
 	if baseHelmContainer != nil {
 		helm.HelmContainer = baseHelmContainer
 	} else {
-		helm.HelmContainer = dag.Container().From("alpine/helm:3.14.3")
+		helm.HelmContainer = dag.Container().From("alpine/helm:latest")
 	}
 	helm.HelmContainer = helm.HelmContainer.WithWorkdir(sourceDirectory)
 
 	if baseGeneratorContainer != nil {
 		helm.GeneratorContainer = baseGeneratorContainer
 	} else {
-		// ghcr.io/disaster37/readme-generator-for-helm:0.0.3
-		// digest: sha256:9db59f792ee3ab535e1dba3bfda3516697420b35d3a248defaf2e0f551b7deb1
 		helm.GeneratorContainer = dag.Container().
-			From("ghcr.io/disaster37/readme-generator-for-helm:0.0.3")
+			From("ghcr.io/disaster37/readme-generator-for-helm:latest")
 	}
 	helm.GeneratorContainer = helm.GeneratorContainer.WithWorkdir(sourceDirectory)
 
