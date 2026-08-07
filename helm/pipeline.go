@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
 	"dagger/helm/internal/dagger"
 
 	"emperror.dev/errors"
@@ -270,8 +273,8 @@ func (m *Helm) GenerateCi(
 	defaultBranch string,
 
 	// Configurable dagger module reference.
+	// Defaults to this module's current version (auto-detected).
 	// +optional
-	// +default="github.com/disaster37/dagger-library-go/helm@v2"
 	moduleRef string,
 
 	// GitHub: secret name for registry username (empty = github.actor).
@@ -317,7 +320,7 @@ func (m *Helm) GenerateCi(
 		defaultBranch = "main"
 	}
 	if moduleRef == "" {
-		moduleRef = "github.com/disaster37/dagger-library-go/helm@v2"
+		moduleRef = fmt.Sprintf("github.com/disaster37/dagger-library-go/helm@%s", strings.TrimSpace(ModuleVersion))
 	}
 	if len(helmPaths) == 0 {
 		helmPaths = []string{"."}

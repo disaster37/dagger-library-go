@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
 	"dagger/operator-sdk/internal/dagger"
 
 	"emperror.dev/errors"
@@ -42,8 +45,8 @@ func (m *OperatorSdk) GenerateCi(
 	defaultBranch string,
 
 	// Configurable dagger module reference.
+	// Defaults to this module's current version (auto-detected).
 	// +optional
-	// +default="github.com/disaster37/dagger-library-go/operator-sdk@v2"
 	moduleRef string,
 
 	// GitHub: secret name for registry username (empty = github.actor).
@@ -89,7 +92,7 @@ func (m *OperatorSdk) GenerateCi(
 		defaultBranch = "main"
 	}
 	if moduleRef == "" {
-		moduleRef = "github.com/disaster37/dagger-library-go/operator-sdk@v2"
+		moduleRef = fmt.Sprintf("github.com/disaster37/dagger-library-go/operator-sdk@%s", strings.TrimSpace(ModuleVersion))
 	}
 
 	// Determine placeholder bindings based on CI

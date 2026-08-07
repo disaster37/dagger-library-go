@@ -5,7 +5,7 @@ Dagger module for Go project lifecycle: build, test, lint, format, vulnerability
 ## Quick start
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/golang@v2 --src . ci export --path .
+dagger call -m github.com/disaster37/dagger-library-go/golang@2.0.4 --src . ci export --path .
 ```
 
 ## Functions
@@ -40,7 +40,7 @@ Generates a CI pipeline file for GitHub Actions, Jenkins, or GitLab CI.
 | `branches` | `["main"]` | Branches that trigger the pipeline |
 | `daggerVersion` | current | Dagger CLI version |
 | `defaultBranch` | `main` | Branch used for tag commits |
-| `moduleRef` | `github.com/disaster37/dagger-library-go/golang@v2` | Configurable module reference |
+| `moduleRef` | auto (current version) | Configurable module reference |
 | `registryUsernameKey` | — | GitHub secret name for username |
 | `registryPasswordKey` | — | GitHub secret name for password |
 | `registryCredential` | — | Jenkins credential ID for registry |

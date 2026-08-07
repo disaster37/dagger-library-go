@@ -5,7 +5,7 @@ Dagger module for Helm chart lifecycle: lint, schema/docs generation, version bu
 ## Quick start
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@v2 --src . ci export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . ci export --path .
 ```
 
 ## Functions
@@ -133,7 +133,7 @@ Generates a CI pipeline file and a `DAGGER.md` usage guide.
 | `registry` | auto | OCI registry URL (GitHub default: `ghcr.io`) |
 | `repository` | auto | Repository path (GitHub default: `${{ github.repository }}`) |
 | `defaultBranch` | `main` | Branch used for tag commits |
-| `moduleRef` | `github.com/disaster37/dagger-library-go/helm@v2` | Configurable dagger module reference |
+| `moduleRef` | auto (current version) | Configurable dagger module reference |
 | `registryCredential` | — | Jenkins credential ID for registry |
 | `registryUsernameKey` | — | GitHub secret name for username |
 | `registryPasswordKey` | — | GitHub secret name for password |
@@ -147,7 +147,7 @@ Generates a CI pipeline file and a `DAGGER.md` usage guide.
 ### GitHub Actions
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@v2 \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 \
   --src . generate-ci --ci github \
   --branches main --branches develop \
   --helm-paths charts/myapp \
@@ -176,7 +176,7 @@ dagger call -m helm --src . generate-ci --ci github --module-ref github.com/myor
 ### Jenkins
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@v2 \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 \
   --src . generate-ci --ci jenkins \
   --branches main \
   --helm-paths charts/myapp \
@@ -197,7 +197,7 @@ This creates a `Jenkinsfile` at the repository root.
 ### GitLab CI
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@v2 \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 \
   --src . generate-ci --ci gitlab \
   --branches main \
   --helm-paths charts/myapp \
@@ -221,7 +221,7 @@ This creates a `.gitlab-ci.yml` at the repository root.
 With `--ci` omitted, `ci` skips push and git commit. Use `--dry-run` to skip push/commit even when `--ci` is set:
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@v2 --src . ci --ci github --dry-run export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . ci --ci github --dry-run export --path .
 ```
 
 This runs all steps (lint, schema, docs) but skips registry push and git commit/push.

@@ -34,7 +34,7 @@ Generates a CI pipeline file for GitHub Actions, Jenkins, or GitLab CI.
 | `registry` | auto | OCI registry URL (GitHub default: `ghcr.io`) |
 | `repository` | auto | Repository path (GitHub default: `${{ github.repository }}`) |
 | `defaultBranch` | `main` | Branch used for tag commits |
-| `moduleRef` | `github.com/disaster37/dagger-library-go/image@v2` | Configurable module reference |
+| `moduleRef` | auto (current version) | Configurable module reference |
 | `registryUsernameKey` | — | GitHub secret name for username |
 | `registryPasswordKey` | — | GitHub secret name for password |
 | `registryCredential` | — | Jenkins credential ID for registry |

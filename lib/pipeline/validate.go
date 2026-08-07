@@ -29,7 +29,7 @@ func Validate(spec *PipelineSpec) error {
 		return fmt.Errorf("ModuleRef is required")
 	}
 	if !strings.Contains(spec.ModuleRef, "@") {
-		return fmt.Errorf("ModuleRef must contain '@' (e.g. 'github.com/org/repo/mod@v2'), got: %s", spec.ModuleRef)
+		return fmt.Errorf("ModuleRef must contain '@' (e.g. 'github.com/org/repo/mod@2.0.3'), got: %s", spec.ModuleRef)
 	}
 
 	// Branches default ["main"]

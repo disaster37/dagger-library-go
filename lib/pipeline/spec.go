@@ -5,7 +5,7 @@ import "github.com/disaster37/dagger-library-go/lib/ci"
 // PipelineSpec is a CI-agnostic description of a release/CI pipeline.
 type PipelineSpec struct {
 	CI              ci.CI
-	ModuleRef       string            // e.g. "github.com/disaster37/dagger-library-go/helm@v2" (required)
+	ModuleRef       string            // e.g. "github.com/disaster37/dagger-library-go/helm@2.0.3" (required)
 	DaggerVersion   string            // empty = engine default
 	Branches        []string          // default ["main"]
 	DefaultBranch   string            // default "main"; branch commits land here on tag
