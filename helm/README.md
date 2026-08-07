@@ -23,12 +23,16 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . ci exp
 
 Change the source directory or working directory on all internal containers.
 
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src /path/to/chart with-workdir --path subchart lint
+```
+
 ### `WithRepository`
 
 Authenticate against a private Helm registry (OCI or classic).
 
 ```bash
-dagger call -m helm --src . with-repository \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . with-repository \
   --name myrepo --url https://charts.example.com \
   --username env:MY_USER --password env:MY_PASS \
   lint
@@ -47,12 +51,16 @@ dagger call -m helm --src . with-repository \
 Lint the chart (runs `helm dependency update` + `helm lint .`).
 
 ```bash
-dagger call -m helm --src /path/to/chart lint
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src /path/to/chart lint
 ```
 
 ### `GenerateSchema`
 
 Generate `values.schema.json` from `values.yaml` using `readme-generator-for-helm`.
+
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . generate-schema export --path .
+```
 
 | Arg | Default | Description |
 |-----|---------|-------------|
@@ -63,6 +71,10 @@ Generate `values.schema.json` from `values.yaml` using `readme-generator-for-hel
 
 Generate `README.md` parameter table from `values.yaml`.
 
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src /path/to/chart generate-documentation export --path .
+```
+
 | Arg | Default | Description |
 |-----|---------|-------------|
 | `targetFile` | `README.md` | Output file name |
@@ -71,6 +83,10 @@ Generate `README.md` parameter table from `values.yaml`.
 ### `MigrateValuesTags`
 
 Rewrite legacy array index syntax in values.yaml comments (`[0]` → `[]`).
+
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . migrate-values-tags export --path ./values.yaml
+```
 
 | Arg | Default | Description |
 |-----|---------|-------------|
@@ -83,12 +99,17 @@ Rewrite legacy array index syntax in values.yaml comments (`[0]` → `[]`).
 Set a YAML key in `Chart.yaml` or `values.yaml` using `yq`.
 
 ```bash
-dagger call -m helm --src . update-chart --key .version --value 1.2.3
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . update-chart --key .version --value 1.2.3 export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . update-values --key .image.tag --value latest export --path .
 ```
 
 ### `Push`
 
 Package and push a chart to an OCI registry. Returns the updated `Chart.yaml`.
+
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src /path/to/chart push --registry-url ghcr.io --repository-name myorg/mychart --version 1.2.3 export --path .
+```
 
 | Arg | Required | Description |
 |-----|----------|-------------|
@@ -103,6 +124,15 @@ Orchestrates the complete release workflow:
 1. Authenticate to registry (if `--registry` is set)
 2. For each `--helm-paths`: generate schema, generate docs, lint, push
 3. Commit & push changes back (if `--ci` is set and `--dry-run` is not set)
+
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . ci \
+  --registry ghcr.io --repository myorg/helm-charts \
+  --ci github --version 1.2.3 \
+  --registry-username env:REGISTRY_USER --registry-password env:REGISTRY_PASS \
+  --git-token env:GITHUB_TOKEN --git-repo-url https://github.com/myorg/repo \
+  --git-branch main export --path .
+```
 
 | Arg | Required (CI mode) | Description |
 |-----|--------------------|-------------|
@@ -123,6 +153,10 @@ Version handling: if `version` has a prerelease suffix (e.g. `0.0.0-rc`), it bum
 ### `GenerateCi` — Generate CI pipeline files
 
 Generates a CI pipeline file and a `DAGGER.md` usage guide.
+
+```bash
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . generate-ci --ci github --helm-paths charts/myapp export --path .
+```
 
 | Arg | Default | Description |
 |-----|---------|-------------|
@@ -166,7 +200,7 @@ This creates:
 
 **Override module ref:**
 ```bash
-dagger call -m helm --src . generate-ci --ci github --module-ref github.com/myorg/helm@v3 export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.4 --src . generate-ci --ci github --module-ref github.com/myorg/helm@v3 export --path .
 ```
 
 **Required GitHub secrets:**
