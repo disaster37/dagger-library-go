@@ -1,6 +1,6 @@
 module dagger/image
 
-go 1.25.0
+go 1.23.2
 
 require (
 	emperror.dev/errors v0.8.1
