@@ -5,7 +5,7 @@ Dagger module for Go project lifecycle: build, test, lint, format, vulnerability
 ## Quick start
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/golang@2.0.6 --src . ci export --path .
+dagger call -m github.com/disaster37/dagger-library-go/golang@2.0.7 --src . ci export --path .
 ```
 
 ## Functions
