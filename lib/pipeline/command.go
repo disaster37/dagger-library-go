@@ -8,11 +8,15 @@ type envDecl struct {
 	Binding Binding
 }
 
-// assembleShellCommand builds the `dagger call -m <ref> <function> <args...>` shell string
+// assembleShellCommand builds the `dagger call -m <ref> [--src <dir>] <function> <args...>` shell string
 // with {{placeholder}} replaced by $ENV_VAR references. Used by RenderDaggerMd.
 func assembleShellCommand(spec PipelineSpec) (cmd string, envDecls []envDecl, err error) {
 	var parts []string
-	parts = append(parts, "dagger", "call", "-m", shellQuote(spec.ModuleRef), shellQuote(spec.Job.Function))
+	parts = append(parts, "dagger", "call", "-m", shellQuote(spec.ModuleRef))
+	if spec.SrcDir != "" {
+		parts = append(parts, "--src", shellQuote(spec.SrcDir))
+	}
+	parts = append(parts, shellQuote(spec.Job.Function))
 
 	var decls []envDecl
 

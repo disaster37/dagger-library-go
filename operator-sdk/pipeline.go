@@ -116,6 +116,7 @@ func (m *OperatorSdk) GenerateCi(
 		DaggerVersion: daggerVersion,
 		Branches:      branches,
 		DefaultBranch: defaultBranch,
+		SrcDir:        ".",
 		Triggers: pipeline.Triggers{
 			Push:        true,
 			PullRequest: true,
@@ -124,7 +125,6 @@ func (m *OperatorSdk) GenerateCi(
 		Job: pipeline.Job{
 			Function: "release",
 			Args: []string{
-				"--src", ".",
 				"--version", "{{version}}",
 				"--registry", registry,
 				"--repository", repository,

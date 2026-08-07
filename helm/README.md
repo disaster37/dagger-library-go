@@ -5,7 +5,7 @@ Dagger module for Helm chart lifecycle: lint, schema/docs generation, version bu
 ## Quick start
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . ci export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . ci export --path .
 ```
 
 ## Functions
@@ -24,7 +24,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . ci exp
 Change the source directory or working directory on all internal containers.
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to/chart with-workdir --path subchart lint
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src /path/to/chart with-workdir --path subchart lint
 ```
 
 ### `WithRepository`
@@ -32,7 +32,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to
 Authenticate against a private Helm registry (OCI or classic).
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . with-repository \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . with-repository \
   --name myrepo --url https://charts.example.com \
   --username env:MY_USER --password env:MY_PASS \
   lint
@@ -51,7 +51,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . with-r
 Lint the chart (runs `helm dependency update` + `helm lint .`).
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to/chart lint
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src /path/to/chart lint
 ```
 
 ### `GenerateSchema`
@@ -59,7 +59,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to
 Generate `values.schema.json` from `values.yaml` using `readme-generator-for-helm`.
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . generate-schema export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . generate-schema export --path .
 ```
 
 | Arg | Default | Description |
@@ -72,7 +72,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . genera
 Generate `README.md` parameter table from `values.yaml`.
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to/chart generate-documentation export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src /path/to/chart generate-documentation export --path .
 ```
 
 | Arg | Default | Description |
@@ -85,7 +85,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to
 Rewrite legacy array index syntax in values.yaml comments (`[0]` → `[]`).
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . migrate-values-tags export --path ./values.yaml
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . migrate-values-tags export --path ./values.yaml
 ```
 
 | Arg | Default | Description |
@@ -99,8 +99,8 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . migrat
 Set a YAML key in `Chart.yaml` or `values.yaml` using `yq`.
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . update-chart --key .version --value 1.2.3 export --path .
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . update-values --key .image.tag --value latest export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . update-chart --key .version --value 1.2.3 export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . update-values --key .image.tag --value latest export --path .
 ```
 
 ### `Push`
@@ -108,7 +108,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . update
 Package and push a chart to an OCI registry. Returns the updated `Chart.yaml`.
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src /path/to/chart push --registry-url ghcr.io --repository-name myorg/mychart --version 1.2.3 export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src /path/to/chart push --registry-url ghcr.io --repository-name myorg/mychart --version 1.2.3 export --path .
 ```
 
 | Arg | Required | Description |
@@ -126,7 +126,7 @@ Orchestrates the complete release workflow:
 3. Commit & push changes back (if `--ci` is set and `--dry-run` is not set)
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . ci \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . ci \
   --registry ghcr.io --repository myorg/helm-charts \
   --ci github --version 1.2.3 \
   --registry-username env:REGISTRY_USER --registry-password env:REGISTRY_PASS \
@@ -155,7 +155,7 @@ Version handling: if `version` has a prerelease suffix (e.g. `0.0.0-rc`), it bum
 Generates a CI pipeline file and a `DAGGER.md` usage guide.
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . generate-ci --ci github --helm-paths charts/myapp export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . generate-ci --ci github --helm-paths charts/myapp export --path .
 ```
 
 | Arg | Default | Description |
@@ -181,7 +181,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . genera
 ### GitHub Actions
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 \
   --src . generate-ci --ci github \
   --branches main --branches develop \
   --helm-paths charts/myapp \
@@ -200,7 +200,7 @@ This creates:
 
 **Override module ref:**
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . generate-ci --ci github --module-ref github.com/myorg/helm@v3 export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . generate-ci --ci github --module-ref github.com/myorg/helm@v3 export --path .
 ```
 
 **Required GitHub secrets:**
@@ -210,7 +210,7 @@ dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . genera
 ### Jenkins
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 \
   --src . generate-ci --ci jenkins \
   --branches main \
   --helm-paths charts/myapp \
@@ -231,7 +231,7 @@ This creates a `Jenkinsfile` at the repository root.
 ### GitLab CI
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 \
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 \
   --src . generate-ci --ci gitlab \
   --branches main \
   --helm-paths charts/myapp \
@@ -255,7 +255,7 @@ This creates a `.gitlab-ci.yml` at the repository root.
 With `--ci` omitted, `ci` skips push and git commit. Use `--dry-run` to skip push/commit even when `--ci` is set:
 
 ```bash
-dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.9 --src . ci --ci github --dry-run export --path .
+dagger call -m github.com/disaster37/dagger-library-go/helm@2.0.10 --src . ci --ci github --dry-run export --path .
 ```
 
 This runs all steps (lint, schema, docs) but skips registry push and git commit/push.

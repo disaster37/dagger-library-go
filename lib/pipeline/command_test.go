@@ -8,9 +8,10 @@ import (
 func TestAssembleShellCommand_Basic(t *testing.T) {
 	spec := PipelineSpec{
 		ModuleRef: "github.com/org/mod@v2",
+		SrcDir:    ".",
 		Job: Job{
 			Function: "ci",
-			Args:     []string{"--src", "."},
+			Args:     []string{},
 			Placeholders: map[string]Binding{
 				PhVersion: {Kind: BindingExpr, Ref: ""},
 			},
@@ -21,7 +22,7 @@ func TestAssembleShellCommand_Basic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	expected := "dagger call -m 'github.com/org/mod@v2' 'ci' --src ."
+	expected := "dagger call -m 'github.com/org/mod@v2' --src '.' 'ci'"
 	if cmd != expected {
 		t.Errorf("expected '%s', got '%s'", expected, cmd)
 	}

@@ -27,7 +27,7 @@ pipeline {
                 }
             }
             steps {
-                sh "dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' 'ci' --src '.' --ci 'github' --version ${VERSION} --registry-username 'env:REGISTRY_CREDENTIAL_USR' --registry-password 'env:REGISTRY_CREDENTIAL_PSW' --git-token 'env:GIT_CREDENTIAL_PSW' --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} export --path ."
+                sh "dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src '.' 'ci' --ci 'github' --version ${VERSION} --registry-username 'env:REGISTRY_CREDENTIAL_USR' --registry-password 'env:REGISTRY_CREDENTIAL_PSW' --git-token 'env:GIT_CREDENTIAL_PSW' --git-repo-url ${GIT_URL} --git-branch ${BRANCH_NAME} export --path ."
             }
         }
     }

@@ -353,6 +353,7 @@ func (m *Helm) GenerateCi(
 		DaggerVersion: daggerVersion,
 		Branches:      branches,
 		DefaultBranch: defaultBranch,
+		SrcDir:        ".",
 		Triggers: pipeline.Triggers{
 			Push:        true,
 			PullRequest: true,
@@ -361,7 +362,6 @@ func (m *Helm) GenerateCi(
 		Job: pipeline.Job{
 			Function: "ci",
 			Args: append([]string{
-				"--src", ".",
 				"--registry", registry,
 				"--repository", repository,
 				"--ci", string(ci),

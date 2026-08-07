@@ -13,6 +13,7 @@ type PipelineSpec struct {
 	Job             Job
 	Registry        string            // empty = no push; renderer omits push flags
 	Repository      string            // required when Registry != ""
+	SrcDir          string            // directory to pass as --src for the constructor (default ".")
 	VersionStrategy VersionStrategy
 	TimeoutMinutes  int               // 0 = renderer default (GitHub: none, Jenkins: 10, GitLab: 30)
 	ExtraFiles      map[string]string // additional filename->content emitted alongside

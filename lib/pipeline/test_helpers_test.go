@@ -18,6 +18,7 @@ func testSpec(ciStr string) PipelineSpec {
 		ModuleRef:     "github.com/disaster37/dagger-library-go/helm@v2",
 		Branches:      []string{"main"},
 		DefaultBranch: "main",
+		SrcDir:        ".",
 		Triggers: Triggers{
 			Push:        true,
 			PullRequest: true,
@@ -27,7 +28,6 @@ func testSpec(ciStr string) PipelineSpec {
 		Job: Job{
 			Function: "ci",
 			Args: []string{
-				"--src", ".",
 				"--ci", "github",
 				"--version", "{{version}}",
 				"--registry-username", "{{registry-username}}",
@@ -62,16 +62,15 @@ func testSpecNoRegistry() PipelineSpec {
 		ModuleRef:     "github.com/disaster37/dagger-library-go/helm@v2",
 		Branches:      []string{"main"},
 		DefaultBranch: "main",
+		SrcDir:        ".",
 		Triggers: Triggers{
 			Push:        true,
 			PullRequest: true,
 			Tag:         true,
 		},
 		Job: Job{
-			Function: "ci",
-			Args: []string{
-				"--src", ".",
-			},
+			Function:     "ci",
+			Args:         []string{},
 			Placeholders: map[string]Binding{},
 		},
 	}

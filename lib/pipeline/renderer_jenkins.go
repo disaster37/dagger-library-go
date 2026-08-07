@@ -68,7 +68,11 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 	// Shell-quote ModuleRef, Job.Function, and literal arg values to prevent
 	// command injection. ModuleRef uses single-quote shell quoting (not Groovy quotes).
 	safeArgs := quoteArgsForShell(args)
-	fullCmd := fmt.Sprintf("dagger call -m %s %s %s export --path .", shellQuote(spec.ModuleRef), shellQuote(spec.Job.Function), strings.Join(safeArgs, " "))
+	srcPrefix := ""
+	if spec.SrcDir != "" {
+		srcPrefix = fmt.Sprintf("--src %s ", shellQuote(spec.SrcDir))
+	}
+	fullCmd := fmt.Sprintf("dagger call -m %s %s%s %s export --path .", shellQuote(spec.ModuleRef), srcPrefix, shellQuote(spec.Job.Function), strings.Join(safeArgs, " "))
 
 	// Build Groovy
 	g.writeln("pipeline {")

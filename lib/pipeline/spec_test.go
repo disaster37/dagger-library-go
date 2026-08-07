@@ -11,13 +11,14 @@ func TestSpec_Fields(t *testing.T) {
 		CI:        ci.Github,
 		ModuleRef: "github.com/foo/bar@v2",
 		Branches:  []string{"main", "develop"},
+		SrcDir:    ".",
 		Triggers: Triggers{
 			Push:    true,
 			Release: true,
 		},
 		Job: Job{
 			Function: "ci",
-			Args:     []string{"--src", "."},
+			Args:     []string{},
 			Placeholders: map[string]Binding{
 				PhVersion: {Kind: BindingExpr, Ref: "expression"},
 			},

@@ -140,6 +140,7 @@ func (m *Golang) GenerateCi(
 		DaggerVersion: daggerVersion,
 		Branches:      branches,
 		DefaultBranch: defaultBranch,
+		SrcDir:        ".",
 		Triggers: pipeline.Triggers{
 			Push:        true,
 			PullRequest: true,
@@ -147,9 +148,7 @@ func (m *Golang) GenerateCi(
 		},
 		Job: pipeline.Job{
 			Function: "ci",
-			Args: []string{
-				"--src", ".",
-			},
+			Args:     []string{},
 			Placeholders: map[string]pipeline.Binding{
 				pipeline.PhVersion:      {Kind: pipeline.BindingExpr, Ref: ""},
 				pipeline.PhBranch:       {Kind: pipeline.BindingExpr, Ref: ""},
