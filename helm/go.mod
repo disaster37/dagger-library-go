@@ -1,6 +1,6 @@
 module dagger/helm
 
-go 1.23.2
+go 1.25.0
 
 require (
 	emperror.dev/errors v0.8.1
