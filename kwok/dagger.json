@@ -3,5 +3,8 @@
   "engineVersion": "v0.16.1",
   "sdk": {
     "source": "go"
-  }
+  },
+  "include": [
+    "../lib"
+  ]
 }

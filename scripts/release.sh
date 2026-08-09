@@ -16,11 +16,11 @@ fi
 OLD_VERSION=$(head -1 helm/VERSION | tr -d '[:space:]')
 echo "Bumping from $OLD_VERSION to $NEW_VERSION"
 
-for module in helm golang image operator-sdk; do
+for module in helm golang image operator-sdk kwok; do
     echo "$NEW_VERSION" > "$module/VERSION"
 done
 
-for module in helm golang image operator-sdk; do
+for module in helm golang image operator-sdk kwok; do
     if [ -f "$module/README.md" ]; then
         sed -i "s/@${OLD_VERSION}/@${NEW_VERSION}/g" "$module/README.md"
     fi
