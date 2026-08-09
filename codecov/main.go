@@ -17,8 +17,8 @@ package main
 import (
 	"context"
 	"dagger/codecov/internal/dagger"
+	"dagger/codecov/internal/uploadcmd"
 	"fmt"
-	"strings"
 )
 
 type Codecov struct {
@@ -26,44 +26,33 @@ type Codecov struct {
 	Container *dagger.Container
 }
 
-// New initializes the golang dagger module
+// New initializes the codecov dagger module
 func New(
 	ctx context.Context,
 	// A custom base image containing a codecov uploader
 	// +optional
 	base *dagger.Container,
-	// The golang version to use when no go.mod
+	// The codecov uploader version to download (default: latest)
 	// +optional
 	version string,
 ) (*Codecov, error) {
-
-	var (
-		codeCov    *dagger.Container
-		urlCodecov string
-	)
-
+	urlCodecov := "https://uploader.codecov.io/latest/linux/codecov"
 	if version != "" {
 		urlCodecov = fmt.Sprintf("https://uploader.codecov.io/v%s/linux/codecov", version)
-	} else {
-		urlCodecov = "https://uploader.codecov.io/latest/linux/codecov"
 	}
 
-	if base != nil {
-		codeCov = base
-	} else {
+	codeCov := base
+	if base == nil {
 		codeCov = dag.Container().
 			From("cgr.dev/chainguard/wolfi-base").
 			WithExec([]string{"apk", "add", "--update", "curl", "git"}).
-			WithExec([]string{"curl", "-o", "/bin/codecov", "-s", urlCodecov}).
+			WithExec([]string{"curl", "-fL", "-o", "/bin/codecov", "-s", urlCodecov}).
 			WithExec([]string{"chmod", "+x", "/bin/codecov"}).
-			WithExec([]string{"ls", "-lah", "/bin/codecov"})
+			WithExec([]string{"/bin/codecov", "--version"})
 	}
 
-	codeCov = codeCov.
-		WithWorkdir("/project")
-
 	return &Codecov{
-		Container: codeCov,
+		Container: codeCov.WithWorkdir("/project"),
 	}, nil
 }
 
@@ -73,6 +62,9 @@ func (h *Codecov) WithContainer(ctn *dagger.Container) *Codecov {
 	return h
 }
 
+// Upload uploads coverage reports to Codecov. The token is passed only via
+// the CODECOV_TOKEN secret environment variable; the uploader binary is
+// executed directly so argument values reach it unmodified.
 func (h *Codecov) Upload(
 	ctx context.Context,
 
@@ -91,23 +83,10 @@ func (h *Codecov) Upload(
 	// +optional
 	flags []string, // optional additional flags for uploader
 ) (string, error) {
-	cmd := []string{"/bin/codecov", "-t", "$CODECOV_TOKEN", "-v"}
-
-	if name != "" {
-		cmd = append(cmd, "-n", name)
-	}
-
-	if len(files) > 0 {
-		cmd = append(cmd, "-f")
-		cmd = append(cmd, files...)
-	}
-
-	if len(flags) > 0 {
-		cmd = append(cmd, flags...)
-	}
+	cmd := uploadcmd.Build(name, files, flags)
 
 	return h.Container.
 		WithDirectory("/project", src).
 		WithSecretVariable("CODECOV_TOKEN", token).
-		WithExec([]string{"sh", "-c", strings.Join(cmd, " ")}).Stdout(ctx)
+		WithExec(cmd).Stdout(ctx)
 }
