@@ -121,10 +121,22 @@ func (m *Helm) Ci(
 		)
 	}
 
+	var ociUrls []string
+
 	for _, helmPath := range helmPaths {
 
 		// Init state
 		currentHelmModule := m.WithWorkDir(sourceDirectory).WithSource(rootDir).WithWorkDir(helmPath)
+
+		// Read Chart.yaml to get chart metadata
+		fChart, err := currentHelmModule.Src.File("Chart.yaml").Contents(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
+		}
+		chartMeta := &chart.Metadata{}
+		if err := yaml.Unmarshal([]byte(fChart), chartMeta); err != nil {
+			return nil, errors.Wrap(err, "Error when unmarshall 'Chart.yaml'")
+		}
 
 		// Forge target version
 		localVersion := version
@@ -133,17 +145,7 @@ func (m *Helm) Ci(
 			return nil, errors.Wrap(err, "The version is not semver")
 		}
 		if v.Prerelease() != "" {
-			// read the current helm version
-			fChart, err := currentHelmModule.Src.File("Chart.yaml").Contents(ctx)
-			if err != nil {
-				return nil, errors.Wrap(err, "File 'Chart.yaml' not found")
-			}
-			chart := &chart.Metadata{}
-			if err := yaml.Unmarshal([]byte(fChart), chart); err != nil {
-				return nil, errors.Wrap(err, "Error when unmarshall 'Chart.yaml'")
-			}
-
-			vTarget, err := semver.StrictNewVersion(chart.Version)
+			vTarget, err := semver.StrictNewVersion(chartMeta.Version)
 			if err != nil {
 				return nil, errors.Wrap(err, "Error when convert to semver the current helm version")
 			}
@@ -153,6 +155,11 @@ func (m *Helm) Ci(
 				return nil, errors.Wrap(err, "Error when forge next release version")
 			}
 			localVersion = vTarget.String()
+		}
+
+		// Track OCI URL for summary
+		if isCI {
+			ociUrls = append(ociUrls, fmt.Sprintf("oci://%s/%s/%s:%s", registry, repository, chartMeta.Name, localVersion))
 		}
 
 		// Skip Schema and readme if values.yaml not exist
@@ -230,6 +237,13 @@ func (m *Helm) Ci(
 			)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error when commit/push")
+		}
+	}
+
+	// Print OCI URLs summary
+	if len(ociUrls) > 0 {
+		for _, url := range ociUrls {
+			fmt.Println(url)
 		}
 	}
 

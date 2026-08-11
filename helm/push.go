@@ -46,10 +46,13 @@ func (m *Helm) Push(
 	chartName := dataChart["name"].(string)
 
 	// Package and push
+	ociUrl := "oci://" + registryUrl + "/" + repositoryName + "/" + chartName + ":" + version
+
 	_, err = helmModule.HelmContainer.
 		WithExec(helper.ForgeCommand("helm dependency update")).
 		WithExec(helper.ForgeCommand("helm package -u .")).
 		WithExec(helper.ForgeCommandf("helm push %s-%s.tgz oci://%s/%s", chartName, version, registryUrl, repositoryName)).
+		WithExec(helper.ForgeCommandf("echo 'OCI URL: %s'", ociUrl)).
 		Stdout(ctx)
 
 	if err != nil {
