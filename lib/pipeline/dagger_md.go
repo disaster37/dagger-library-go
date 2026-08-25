@@ -5,13 +5,10 @@ import (
 	"strings"
 )
 
-// RenderDaggerMd produces a generic DAGGER.md local-usage doc using
-// env:VAR placeholders for secrets.
-func RenderDaggerMd(spec PipelineSpec) string {
-	var b strings.Builder
-
+// renderLocalCommand builds the `dagger call` shell command with
+// env:VAR placeholders for local usage.
+func renderLocalCommand(spec PipelineSpec) string {
 	cmd, _, _ := assembleShellCommand(spec)
-	// Build the command without placeholders for local usage
 	localCmd := cmd
 	for ph, binding := range spec.Job.Placeholders {
 		token := "$" + strings.ToUpper(strings.ReplaceAll(ph, "-", "_"))
@@ -24,6 +21,15 @@ func RenderDaggerMd(spec PipelineSpec) string {
 			localCmd = strings.ReplaceAll(localCmd, token, binding.Ref)
 		}
 	}
+	return localCmd
+}
+
+// RenderDaggerMd produces a generic DAGGER.md local-usage doc using
+// env:VAR placeholders for secrets.
+func RenderDaggerMd(spec PipelineSpec) string {
+	var b strings.Builder
+
+	localCmd := renderLocalCommand(spec)
 
 	b.WriteString("# dagger\n\n")
 	b.WriteString("## Run ci on local\n\n")
@@ -33,6 +39,13 @@ func RenderDaggerMd(spec PipelineSpec) string {
 	b.WriteString("# Default local execution\n")
 	b.WriteString(localCmd)
 	b.WriteString(" export --path .\n")
+	b.WriteString("```\n\n")
+	b.WriteString("## Run ci without pushing the helm chart\n\n")
+	b.WriteString("Same as above, but skip the helm chart push and the git commit/push.\n")
+	b.WriteString("\n\n```bash\n")
+	b.WriteString("# Dry-run execution\n")
+	b.WriteString(localCmd)
+	b.WriteString(" --dry-run true export --path .\n")
 	b.WriteString("```\n")
 
 	return b.String()
