@@ -3,7 +3,7 @@ package main
 import (
 	"dagger/helm/internal/dagger"
 
-	"github.com/disaster37/dagger-library-go/lib/helper"
+	"github.com/disaster37/dagger-library-go/lib/v2/helper"
 )
 
 // GenerateSchema permit to generate helm schema

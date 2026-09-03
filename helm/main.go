@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/disaster37/dagger-library-go/lib/helper"
+	"github.com/disaster37/dagger-library-go/lib/v2/helper"
 )
 
 const sourceDirectory = "/source"

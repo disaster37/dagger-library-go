@@ -3,7 +3,7 @@ package pipeline
 import (
 	"fmt"
 
-	"github.com/disaster37/dagger-library-go/lib/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/ci"
 )
 
 // Supported returns the CI systems this library can render.

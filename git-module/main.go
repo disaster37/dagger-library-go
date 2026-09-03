@@ -22,8 +22,8 @@ import (
 	"fmt"
 
 	"emperror.dev/errors"
-	"github.com/disaster37/dagger-library-go/lib/ci"
-	"github.com/disaster37/dagger-library-go/lib/helper"
+	"github.com/disaster37/dagger-library-go/lib/v2/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/helper"
 )
 
 type CI ci.CI

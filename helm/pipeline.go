@@ -9,8 +9,8 @@ import (
 
 	"emperror.dev/errors"
 	"github.com/Masterminds/semver/v3"
-	cimodule "github.com/disaster37/dagger-library-go/lib/ci"
-	"github.com/disaster37/dagger-library-go/lib/pipeline"
+	cimodule "github.com/disaster37/dagger-library-go/lib/v2/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/pipeline"
 	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/chart"
 )

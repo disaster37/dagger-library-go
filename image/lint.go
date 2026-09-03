@@ -5,7 +5,7 @@ import (
 	"dagger/image/internal/dagger"
 
 	"github.com/creasty/defaults"
-	"github.com/disaster37/dagger-library-go/lib/helper"
+	"github.com/disaster37/dagger-library-go/lib/v2/helper"
 	"github.com/gookit/validate"
 )
 

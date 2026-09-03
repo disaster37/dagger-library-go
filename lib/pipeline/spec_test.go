@@ -3,7 +3,7 @@ package pipeline
 import (
 	"testing"
 
-	"github.com/disaster37/dagger-library-go/lib/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/ci"
 )
 
 func TestSpec_Fields(t *testing.T) {

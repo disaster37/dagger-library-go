@@ -8,8 +8,8 @@ import (
 	"dagger/golang/internal/dagger"
 
 	"emperror.dev/errors"
-	cimodule "github.com/disaster37/dagger-library-go/lib/ci"
-	"github.com/disaster37/dagger-library-go/lib/pipeline"
+	cimodule "github.com/disaster37/dagger-library-go/lib/v2/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/pipeline"
 )
 
 type CI cimodule.CI

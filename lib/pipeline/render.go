@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/disaster37/dagger-library-go/lib/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/ci"
 )
 
 // Renderer turns a PipelineSpec into a map of output-path -> content.

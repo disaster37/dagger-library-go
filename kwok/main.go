@@ -16,7 +16,7 @@ import (
 
 	"dagger/kwok/internal/dagger"
 
-	"github.com/disaster37/dagger-library-go/lib/helper"
+	"github.com/disaster37/dagger-library-go/lib/v2/helper"
 )
 
 // entrypoint to setup cgroup nesting since kwok only does it

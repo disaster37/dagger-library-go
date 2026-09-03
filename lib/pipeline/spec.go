@@ -1,6 +1,6 @@
 package pipeline
 
-import "github.com/disaster37/dagger-library-go/lib/ci"
+import "github.com/disaster37/dagger-library-go/lib/v2/ci"
 
 // PipelineSpec is a CI-agnostic description of a release/CI pipeline.
 type PipelineSpec struct {

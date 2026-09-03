@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/disaster37/dagger-library-go/lib/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/ci"
 )
 
 var update = flag.Bool("update", false, "update golden files")

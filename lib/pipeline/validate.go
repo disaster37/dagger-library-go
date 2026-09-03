@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/disaster37/dagger-library-go/lib/ci"
+	"github.com/disaster37/dagger-library-go/lib/v2/ci"
 )
 
 // Validate enforces required fields and applies defaults. Never panics.
