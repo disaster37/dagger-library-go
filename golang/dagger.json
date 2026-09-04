@@ -1,6 +1,6 @@
 {
   "name": "golang",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.21.8",
   "sdk": {
     "source": "go"
   },
@@ -15,5 +15,6 @@
       "source": "github.com/purpleclay/daggerverse/netrc@3893340aa32e2140d6181124740f0a0a23e59588",
       "pin": "3893340aa32e2140d6181124740f0a0a23e59588"
     }
-  ]
+  ],
+  "disableDefaultFunctionCaching": true
 }

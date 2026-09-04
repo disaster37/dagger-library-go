@@ -1,7 +1,8 @@
 {
   "name": "codecov",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.21.8",
   "sdk": {
     "source": "go"
-  }
+  },
+  "disableDefaultFunctionCaching": true
 }
