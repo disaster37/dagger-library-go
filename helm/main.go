@@ -132,6 +132,35 @@ func (m *Helm) WithRepository(
 	return m
 }
 
+// WithExtraChartRepository permit to login on an extra private helm repository for chart dependencies
+func (m *Helm) WithExtraChartRepository(
+	ctx context.Context,
+
+	// The repository name
+	// You need to set it when url is not OCI
+	// +optional
+	name string,
+
+	// The repository url
+	// If prefix is oci://, it's an OCI repository
+	// +required
+	url string,
+
+	// The repository username
+	// +required
+	username *dagger.Secret,
+
+	// The repository password
+	// +required
+	password *dagger.Secret,
+) *Helm {
+	isOci := strings.HasPrefix(url, "oci://")
+	if isOci {
+		url = strings.TrimPrefix(url, "oci://")
+	}
+	return m.WithRepository(ctx, name, url, isOci, username, password)
+}
+
 // WithSource permit to update the current source
 func (h *Helm) WithSource(
 	// The source directory
