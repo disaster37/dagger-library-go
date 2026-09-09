@@ -17,6 +17,30 @@ import (
 
 type CI cimodule.CI
 
+type ExtraChartRepository struct {
+	// The repository name
+	// You need to set it when isOci is false
+	// +optional
+	Repository string
+
+	// The repository URL
+	// +required
+	URL string
+
+	// Is it an OCI repository
+	// +optional
+	// +default=false
+	IsOci bool
+
+	// The registry username
+	// +required
+	Username *dagger.Secret
+
+	// The registry password
+	// +required
+	Password *dagger.Secret
+}
+
 func (m *Helm) Ci(
 	ctx context.Context,
 
@@ -69,6 +93,10 @@ func (m *Helm) Ci(
 	// +optional
 	gitBranch string,
 
+	// Extra chart repositories with credentials for helm dependency update
+	// +optional
+	extraChartRepositories []ExtraChartRepository,
+
 	// Dry-run: skip push and git commit/push even when --ci is set.
 	// +optional
 	dryRun bool,
@@ -118,6 +146,18 @@ func (m *Helm) Ci(
 			true,
 			registryUsername,
 			registryPassword,
+		)
+	}
+
+	// Add extra chart dependency repositories
+	for _, extraRepo := range extraChartRepositories {
+		m = m.WithRepository(
+			ctx,
+			extraRepo.Repository,
+			extraRepo.URL,
+			extraRepo.IsOci,
+			extraRepo.Username,
+			extraRepo.Password,
 		)
 	}
 
