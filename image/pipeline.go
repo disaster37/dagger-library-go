@@ -14,21 +14,86 @@ import (
 
 type CI cimodule.CI
 
-// Ci runs lint and build as a single CI entrypoint.
+// Ci runs lint, build, and push (when enabled) as a single CI entrypoint.
 func (m *Image) Ci(
 	ctx context.Context,
+
 	// Source directory
 	// +required
 	source *dagger.Directory,
+
 	// Dockerfile path
 	// +optional
+	// +default="Dockerfile"
 	dockerfile string,
-) (*ImageBuild, error) {
-	if _, err := m.Lint(ctx, source, dockerfile, "error"); err != nil {
+
+	// Run in ci: push the image to the registry
+	// +optional
+	ci bool,
+
+	// The registry server
+	// +optional
+	registry string,
+
+	// The repository name
+	// +optional
+	repositoryName string,
+
+	// The image version to publish
+	// +optional
+	version string,
+
+	// The registry username
+	// +optional
+	registryUsername *dagger.Secret,
+
+	// The registry password
+	// +optional
+	registryPassword *dagger.Secret,
+
+	// Dry-run: skip the push and its requirement checks even when ci is set
+	// +optional
+	dryRun bool,
+) (*dagger.Directory, error) {
+
+	// Lint image
+	stdout, err := m.Lint(ctx, source, dockerfile, "error")
+	if err != nil {
 		return nil, errors.Wrap(err, "Error when lint Dockerfile")
 	}
+	fmt.Println(stdout)
 
-	return m.Build(source, dockerfile, nil), nil
+	// Build image, and force evaluation to catch build failures
+	image := m.Build(source, dockerfile, nil)
+	if _, err = image.GetContainer().Sync(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when build image")
+	}
+
+	// Push image
+	if ci && !dryRun {
+		if registry == "" {
+			return nil, errors.New("You must provide registry")
+		}
+		if repositoryName == "" {
+			return nil, errors.New("You must provide repositoryName")
+		}
+		if version == "" {
+			return nil, errors.New("You must provide the version")
+		}
+		if stdout, err = image.Push(
+			ctx,
+			repositoryName,
+			version,
+			registryUsername,
+			registryPassword,
+			registry,
+		); err != nil {
+			return nil, errors.Wrap(err, "Error when push image on registry")
+		}
+		fmt.Println(stdout)
+	}
+
+	return source, nil
 }
 
 // GenerateCi generates CI pipeline files for the given CI system.
@@ -39,6 +104,11 @@ func (m *Image) GenerateCi(
 	// +required
 	ci CI,
 
+	// Dockerfile path to lint and build
+	// +optional
+	// +default="Dockerfile"
+	dockerfile string,
+
 	// Branches that trigger the pipeline
 	// +optional
 	// +default=["main"]
@@ -48,11 +118,13 @@ func (m *Image) GenerateCi(
 	// +optional
 	daggerVersion string,
 
-	// OCI registry URL. Empty = renderer default (ghcr.io on GitHub).
+	// OCI registry URL where the image is pushed.
+	// Required by the generated pipeline (it runs with --ci true).
 	// +optional
 	registry string,
 
 	// Repository path inside the registry.
+	// Required when registry is set.
 	// +optional
 	repository string,
 
@@ -142,16 +214,19 @@ func (m *Image) GenerateCi(
 			Function: "ci",
 			Args: []string{
 				"--source", ".",
+				"--dockerfile", dockerfile,
+				"--ci=true",
+				"--registry", registry,
+				"--repository-name", repository,
+				"--version", "{{version}}",
 				"--registry-username", "{{registry-username}}",
 				"--registry-password", "{{registry-password}}",
 			},
 			Placeholders: map[string]pipeline.Binding{
 				pipeline.PhVersion:      {Kind: pipeline.BindingExpr, Ref: ""},
-				pipeline.PhBranch:       {Kind: pipeline.BindingExpr, Ref: ""},
 				pipeline.PhRegistryUser: registryUserBinding,
 				pipeline.PhRegistryPass: registryPassBinding,
 				pipeline.PhGitToken:     gitTokenBinding,
-				pipeline.PhGitRepoURL:  {Kind: pipeline.BindingExpr, Ref: ""},
 			},
 		},
 		Registry:   registry,

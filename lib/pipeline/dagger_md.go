@@ -45,7 +45,7 @@ func RenderDaggerMd(spec PipelineSpec) string {
 	b.WriteString("\n\n```bash\n")
 	b.WriteString("# Dry-run execution\n")
 	b.WriteString(localCmd)
-	b.WriteString(" --dry-run true export --path .\n")
+	b.WriteString(" --dry-run=true export --path .\n")
 	b.WriteString("```\n")
 
 	return b.String()
