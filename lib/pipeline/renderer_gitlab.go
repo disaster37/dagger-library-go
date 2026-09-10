@@ -62,7 +62,10 @@ func (r *GitLabRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 	if spec.SrcDir != "" {
 		srcPrefix = fmt.Sprintf("--src %s ", shellQuote(spec.SrcDir))
 	}
-	fullCmd := fmt.Sprintf("dagger call -m %s %s%s %s export --path .", shellQuote(spec.ModuleRef), srcPrefix, shellQuote(spec.Job.Function), strings.Join(safeArgs, " "))
+	fullCmd := fmt.Sprintf("dagger call -m %s %s%s %s", shellQuote(spec.ModuleRef), srcPrefix, shellQuote(spec.Job.Function), strings.Join(safeArgs, " "))
+	if !spec.NoExport {
+		fullCmd += " export --path ."
+	}
 
 	defaultTimeout := spec.TimeoutMinutes
 	if defaultTimeout <= 0 {

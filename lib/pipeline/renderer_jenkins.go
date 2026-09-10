@@ -37,7 +37,7 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 	}
 	escapedDefaultBranch := groovyEscapeDQ(spec.DefaultBranch)
 
-	args := buildCIArgs(spec, func(ph string, b Binding) string {
+	resolver := func(ph string, b Binding) string {
 		switch ph {
 		case PhVersion:
 			return "${VERSION}"
@@ -63,7 +63,9 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 			}
 			return ""
 		}
-	})
+	}
+
+	args := buildCIArgs(spec, resolver)
 
 	// Shell-quote ModuleRef, Job.Function, and literal arg values to prevent
 	// command injection. ModuleRef uses single-quote shell quoting (not Groovy quotes).
@@ -72,9 +74,30 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 	if spec.SrcDir != "" {
 		srcPrefix = fmt.Sprintf("--src %s ", shellQuote(spec.SrcDir))
 	}
-	fullCmd := fmt.Sprintf("dagger call -m %s %s%s %s export --path .", shellQuote(spec.ModuleRef), srcPrefix, shellQuote(spec.Job.Function), strings.Join(safeArgs, " "))
+	fullCmd := fmt.Sprintf("dagger call -m %s %s%s %s", shellQuote(spec.ModuleRef), srcPrefix, shellQuote(spec.Job.Function), strings.Join(safeArgs, " "))
+	if !spec.NoExport {
+		fullCmd += " export --path ."
+	}
+
+	useKubernetes := spec.DaggerKubernetesToken != ""
+	var kubeCmd string
+	if useKubernetes {
+		// Build command for daggerKubernetes step (single-quoted module ref, unquoted args)
+		kubeSrcPrefix := ""
+		if spec.SrcDir != "" {
+			kubeSrcPrefix = fmt.Sprintf("--src %s ", spec.SrcDir)
+		}
+		kubeCmd = fmt.Sprintf("dagger call -m '%s' %s%s %s", spec.ModuleRef, kubeSrcPrefix, spec.Job.Function, strings.Join(args, " "))
+		if !spec.NoExport {
+			kubeCmd += " export --path ."
+		}
+	}
 
 	// Build Groovy
+	if useKubernetes {
+		g.writeln("@Library('dagger-kubernetes') _")
+		g.writeln("")
+	}
 	g.writeln("pipeline {")
 	g.indent++
 
@@ -86,6 +109,9 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 	g.writeln(`VERSION             = "${env.CHANGE_ID ==  null ? "${VERSION_TMP}" : "0.0.0-pr${CHANGE_ID}-${BUILD_NUMBER}"}"`)
 	g.writeln(`BRANCH_NAME_TMP     = "${env.CHANGE_BRANCH == null ? "${GIT_BRANCH}" : "${CHANGE_BRANCH}"}"`)
 	g.writeln(fmt.Sprintf(`BRANCH_NAME         = "${env.TAG_NAME == null ? "${BRANCH_NAME_TMP}" : "%s"}"`, escapedDefaultBranch))
+	if useKubernetes {
+		g.writeln(fmt.Sprintf("DAGGER_KUBERNETES_TOKEN = credentials(%s)", g.groovyString(spec.DaggerKubernetesToken)))
+	}
 	g.closeBlock()
 
 	// Options block
@@ -107,7 +133,12 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 
 	// Stages block
 	g.openBlock("stages")
-	g.openBlock(fmt.Sprintf("stage(%s)", groovyString(spec.Job.Function)))
+
+	stageName := spec.Job.Function
+	if useKubernetes {
+		stageName = "Dagger"
+	}
+	g.openBlock(fmt.Sprintf("stage(%s)", groovyString(stageName)))
 	g.openBlock("when")
 	g.writeln("beforeAgent true")
 
@@ -134,7 +165,23 @@ func (r *JenkinsRenderer) Render(spec PipelineSpec) (map[string]string, error) {
 	g.closeBlock() // close when
 
 	g.openBlock("steps")
-	g.writeln(fmt.Sprintf(`sh "%s"`, fullCmd))
+	if useKubernetes {
+		serverURL := spec.DaggerKubernetesURL
+		if serverURL == "" {
+			serverURL = "https://dagger.cloud"
+		}
+		g.writeln("daggerKubernetes(")
+		g.indent++
+		g.writeln(fmt.Sprintf("serverUrl: '%s',", serverURL))
+		g.writeln("token: env.DAGGER_KUBERNETES_TOKEN,")
+		g.writeln("provisionCli: true,")
+		g.writeln("dynamicStages: true,")
+		g.writeln(fmt.Sprintf(`command: "%s",`, kubeCmd))
+		g.indent--
+		g.writeln(")")
+	} else {
+		g.writeln(fmt.Sprintf(`sh "%s"`, fullCmd))
+	}
 	g.closeBlock() // close steps
 	g.closeBlock() // close stage
 	g.closeBlock() // close stages

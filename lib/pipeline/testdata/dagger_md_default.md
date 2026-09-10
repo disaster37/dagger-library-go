@@ -1,22 +1,24 @@
 # dagger
 
-## Run ci on local
+## CI pipeline
 
 It will run the following steps:
   - Call `ci` function
 
+### 1. Minimal execution (no credentials)
 
 ```bash
-# Default local execution
-dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src '.' 'ci' --ci github --version env:VERSION --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD --git-token env:GIT_TOKEN --git-repo-url env:GIT_REPO_URL --git-branch env:BRANCH export --path .
+dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src '.' 'ci' --version env:VERSION --git-repo-url env:GIT_REPO_URL --git-branch env:BRANCH export --path .
 ```
 
-## Run ci without pushing the helm chart
-
-Same as above, but skip the helm chart push and the git commit/push.
-
+### 2. With credentials
 
 ```bash
-# Dry-run execution
-dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src '.' 'ci' --ci github --version env:VERSION --registry-username env:REGISTRY_USERNAME --registry-password env:REGISTRY_PASSWORD --git-token env:GIT_TOKEN --git-repo-url env:GIT_REPO_URL --git-branch env:BRANCH --dry-run=true export --path .
+dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src '.' 'ci' --version env:VERSION --git-repo-url env:GIT_REPO_URL --git-branch env:BRANCH --registry-username env:SU_USERNAME --registry-password env:SU_PASSWORD export --path .
+```
+
+### 3. Full CI execution
+
+```bash
+dagger call -m 'github.com/disaster37/dagger-library-go/helm@v2' --src '.' 'ci' --version env:VERSION --git-repo-url env:GIT_REPO_URL --git-branch env:BRANCH --registry-username env:SU_USERNAME --registry-password env:SU_PASSWORD --ci github export --path .
 ```

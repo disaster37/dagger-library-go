@@ -76,6 +76,13 @@ func testSpecNoRegistry() PipelineSpec {
 	}
 }
 
+func testSpecJenkinsKubernetes() PipelineSpec {
+	spec := testSpec("jenkins")
+	spec.DaggerKubernetesToken = "DAGGER_CLOUD_TOKEN"
+	spec.DaggerKubernetesURL = "https://dagger.example.com"
+	return spec
+}
+
 func parseCI(s string) ci.CI {
 	switch s {
 	case "github":

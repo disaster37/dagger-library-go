@@ -16,7 +16,11 @@ type PipelineSpec struct {
 	SrcDir          string            // directory to pass as --src for the constructor (default ".")
 	VersionStrategy VersionStrategy
 	TimeoutMinutes  int               // 0 = renderer default (GitHub: none, Jenkins: 10, GitLab: 30)
-	ExtraFiles      map[string]string // additional filename->content emitted alongside
+	ExtraFiles              map[string]string // additional filename->content emitted alongside
+	NoExport                bool              // when true, omit "export --path ." from generated CI commands
+	DaggerKubernetesToken   string            // Jenkins: when set, use daggerKubernetes shared library step
+	DaggerKubernetesURL     string            // Jenkins: dagger kubernetes server URL
+	Description             string            // module description for DAGGER.md
 }
 
 // Triggers control which events cause the pipeline to run.

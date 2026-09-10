@@ -71,3 +71,13 @@ func TestRender_DaggerMd_Default(t *testing.T) {
 	got := RenderDaggerMd(spec)
 	compareOrUpdate(t, "dagger_md_default.md", got)
 }
+
+func TestRender_Jenkins_Kubernetes(t *testing.T) {
+	spec := testSpecJenkinsKubernetes()
+	files, err := Render(spec)
+	if err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+	got := files["Jenkinsfile"]
+	compareOrUpdate(t, "jenkins_kubernetes.groovy", got)
+}
