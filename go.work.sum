@@ -1,3 +1,4 @@
+github.com/disaster37/dagger-library-go/lib/v2 v2.0.19/go.mod h1:RVSCwyE4I/F7Sx/g0pqRNdAEXD+ZnUXSm2DfSRabyGQ=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.48.0/go.mod h1:r0kV5h3qnFPlQnBSrULhlsRfryS2pmewsg+XfMgkVos=

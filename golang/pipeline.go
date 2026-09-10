@@ -33,8 +33,15 @@ func (m *Golang) Ci(
 	// +optional
 	ldflags []string,
 ) (*dagger.Directory, error) {
+
+	// Lint code
 	if _, err := m.Lint(ctx); err != nil {
 		return nil, errors.Wrap(err, "Error when lint")
+	}
+
+	// Vuln check
+	if _, err := m.Vulncheck(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when run Vulncheck")
 	}
 
 	// Test returns a *dagger.File; force DAG evaluation to catch test failures.
@@ -42,7 +49,14 @@ func (m *Golang) Ci(
 		return nil, errors.Wrap(err, "Error when test")
 	}
 
-	dir := m.Build(main, out, os, arch, ldflags)
+	// Format code
+	dir, err := m.Format(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when format code")
+	}
+	m = m.WithSource(dir)
+
+	dir = m.Build(main, out, os, arch, ldflags)
 	return dir, nil
 }
 
@@ -168,7 +182,7 @@ func (m *Golang) GenerateCi(
 				pipeline.PhRegistryUser: registryUserBinding,
 				pipeline.PhRegistryPass: registryPassBinding,
 				pipeline.PhGitToken:     gitTokenBinding,
-				pipeline.PhGitRepoURL:  {Kind: pipeline.BindingExpr, Ref: ""},
+				pipeline.PhGitRepoURL:   {Kind: pipeline.BindingExpr, Ref: ""},
 			},
 		},
 		DaggerKubernetesToken: daggerKubernetesToken,

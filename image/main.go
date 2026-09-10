@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"dagger/image/internal/dagger"
 	"fmt"
 )
@@ -25,6 +26,9 @@ type Image struct {
 
 	// +private
 	BuildContainer *dagger.Container
+
+	// +private
+	BuildArgs []dagger.BuildArg
 }
 
 func New(
@@ -40,6 +44,7 @@ func New(
 ) *Image {
 	image := &Image{
 		BuildContainer: buildContainer,
+		BuildArgs:      make([]dagger.BuildArg, 0),
 	}
 
 	if baseHadolintContainer != nil {
@@ -55,6 +60,26 @@ func New(
 func (m *Image) GetBaseHadolintContainer() *dagger.Container {
 	return dag.Container().
 		From("ghcr.io/hadolint/hadolint:2.12.0")
+}
+
+func (m *Image) WithBuildArg(
+	ctx context.Context,
+
+	// The build ard name
+	// +required
+	name string,
+
+	// The build arg value
+	// +required
+	val string,
+) *Image {
+
+	m.BuildArgs = append(m.BuildArgs, dagger.BuildArg{
+		Name:  name,
+		Value: val,
+	})
+
+	return m
 }
 
 // Build permit to build image from Dockerfile
@@ -87,6 +112,7 @@ func (m *Image) Build(
 		Container: source.DockerBuild(
 			dagger.DirectoryDockerBuildOpts{
 				Dockerfile: dockerfile,
+				BuildArgs:  m.BuildArgs,
 			},
 		),
 	}

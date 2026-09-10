@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	emperror.dev/errors v0.8.1
 	github.com/dagger/otel-go v1.43.0
-	github.com/disaster37/dagger-library-go/lib/v2 v2.0.18
+	github.com/disaster37/dagger-library-go/lib/v2 v2.0.19
 )
 
 require (
