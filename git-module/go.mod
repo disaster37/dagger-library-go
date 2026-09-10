@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	emperror.dev/errors v0.8.1
 	github.com/dagger/otel-go v1.43.0
-	github.com/disaster37/dagger-library-go/lib/v2 v2.0.17
+	github.com/disaster37/dagger-library-go/lib/v2 v2.0.18
 )
 
 require (
@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	github.com/99designs/gqlgen v0.17.89
+	github.com/99designs/gqlgen v0.17.89 // indirect
 	github.com/Khan/genqlient v0.8.1
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dagger/querybuilder v0.0.0-20260402040506-574a5e81cb59
@@ -43,7 +43,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/sync v0.20.0
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect
@@ -59,4 +59,3 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp => go.opente
 replace go.opentelemetry.io/otel/log => go.opentelemetry.io/otel/log v0.16.0
 
 replace go.opentelemetry.io/otel/sdk/log => go.opentelemetry.io/otel/sdk/log v0.16.0
-
