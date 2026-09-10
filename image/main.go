@@ -18,6 +18,8 @@ import (
 	"context"
 	"dagger/image/internal/dagger"
 	"fmt"
+
+	"emperror.dev/errors"
 )
 
 type Image struct {
@@ -70,16 +72,29 @@ func (m *Image) WithBuildArg(
 	name string,
 
 	// The build arg value
-	// +required
-	val string,
-) *Image {
+	// +optional
+	value string,
+
+	// The build arg secret value
+	// +optional
+	secretValue *dagger.Secret,
+) (*Image, error) {
+
+	var err error
+
+	if secretValue != nil {
+		value, err = secretValue.Plaintext(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error when get secret value")
+		}
+	}
 
 	m.BuildArgs = append(m.BuildArgs, dagger.BuildArg{
 		Name:  name,
-		Value: val,
+		Value: value,
 	})
 
-	return m
+	return m, nil
 }
 
 // Build permit to build image from Dockerfile
