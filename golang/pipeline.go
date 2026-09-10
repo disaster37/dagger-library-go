@@ -109,6 +109,10 @@ func (m *Golang) GenerateCi(
 	// Jenkins: dagger kubernetes server URL.
 	// +optional
 	daggerKubernetesURL string,
+
+	// Force overwrite DAGGER.md even if it already exists in source.
+	// +optional
+	forceDaggerMd bool,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -170,11 +174,16 @@ func (m *Golang) GenerateCi(
 		DaggerKubernetesToken: daggerKubernetesToken,
 		DaggerKubernetesURL:   daggerKubernetesURL,
 		Description:           "Go application CI pipeline",
+		DaggerMdExtra:         DaggerMdContent,
 	}
 
 	files, err := pipeline.Render(spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when render CI pipeline")
+	}
+
+	if !forceDaggerMd {
+		delete(files, "DAGGER.md")
 	}
 
 	dir := dag.Directory()

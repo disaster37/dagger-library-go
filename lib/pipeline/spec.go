@@ -21,6 +21,7 @@ type PipelineSpec struct {
 	DaggerKubernetesToken   string            // Jenkins: when set, use daggerKubernetes shared library step
 	DaggerKubernetesURL     string            // Jenkins: dagger kubernetes server URL
 	Description             string            // module description for DAGGER.md
+	DaggerMdExtra           string            // appended to generated DAGGER.md after auto content
 }
 
 // Triggers control which events cause the pipeline to run.

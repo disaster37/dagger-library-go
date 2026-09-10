@@ -118,5 +118,13 @@ func RenderDaggerMd(spec PipelineSpec) string {
 	b.WriteString(level3)
 	b.WriteString("\n```\n")
 
+	if spec.DaggerMdExtra != "" {
+		b.WriteString("\n")
+		b.WriteString(spec.DaggerMdExtra)
+		if !strings.HasSuffix(spec.DaggerMdExtra, "\n") {
+			b.WriteString("\n")
+		}
+	}
+
 	return b.String()
 }

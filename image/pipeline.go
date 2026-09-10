@@ -174,6 +174,10 @@ func (m *Image) GenerateCi(
 	// Jenkins: dagger kubernetes server URL.
 	// +optional
 	daggerKubernetesURL string,
+
+	// Force overwrite DAGGER.md even if it already exists in source.
+	// +optional
+	forceDaggerMd bool,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -244,11 +248,16 @@ func (m *Image) GenerateCi(
 		DaggerKubernetesToken: daggerKubernetesToken,
 		DaggerKubernetesURL:   daggerKubernetesURL,
 		Description:           "Docker image CI pipeline",
+		DaggerMdExtra:         DaggerMdContent,
 	}
 
 	files, err := pipeline.Render(spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when render CI pipeline")
+	}
+
+	if !forceDaggerMd {
+		delete(files, "DAGGER.md")
 	}
 
 	dir := dag.Directory()

@@ -85,6 +85,10 @@ func (m *OperatorSdk) GenerateCi(
 	// Jenkins: dagger kubernetes server URL.
 	// +optional
 	daggerKubernetesURL string,
+
+	// Force overwrite DAGGER.md even if it already exists in source.
+	// +optional
+	forceDaggerMd bool,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -154,11 +158,19 @@ func (m *OperatorSdk) GenerateCi(
 		DaggerKubernetesToken: daggerKubernetesToken,
 		DaggerKubernetesURL:   daggerKubernetesURL,
 		Description:           "Operator SDK CI pipeline",
+		DaggerMdExtra:         DaggerMdContent,
 	}
 
 	files, err := pipeline.Render(spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error when render CI pipeline")
+	}
+
+	// Skip DAGGER.md if it already exists in source and --force-dagger-md is not set
+	if !forceDaggerMd {
+		if _, err := m.Src.File("DAGGER.md").Sync(ctx); err == nil {
+			delete(files, "DAGGER.md")
+		}
 	}
 
 	dir := dag.Directory()

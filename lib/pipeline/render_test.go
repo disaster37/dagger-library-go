@@ -72,6 +72,13 @@ func TestRender_DaggerMd_Default(t *testing.T) {
 	compareOrUpdate(t, "dagger_md_default.md", got)
 }
 
+func TestRender_DaggerMd_WithExtra(t *testing.T) {
+	spec := testSpec("github")
+	spec.DaggerMdExtra = "## Extra section\n\nSome extra content.\n"
+	got := RenderDaggerMd(spec)
+	compareOrUpdate(t, "dagger_md_extra.md", got)
+}
+
 func TestRender_Jenkins_Kubernetes(t *testing.T) {
 	spec := testSpecJenkinsKubernetes()
 	files, err := Render(spec)
