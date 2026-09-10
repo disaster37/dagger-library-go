@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.89
 	github.com/Khan/genqlient v0.8.1
 	github.com/dagger/otel-go v1.43.0
-	github.com/disaster37/dagger-library-go/lib/v2 v2.0.12
+	github.com/disaster37/dagger-library-go/lib/v2 v2.0.17
 	github.com/vektah/gqlparser/v2 v2.5.32
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/sdk v1.43.0
@@ -55,3 +55,4 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp => go.opente
 replace go.opentelemetry.io/otel/log => go.opentelemetry.io/otel/log v0.16.0
 
 replace go.opentelemetry.io/otel/sdk/log => go.opentelemetry.io/otel/sdk/log v0.16.0
+

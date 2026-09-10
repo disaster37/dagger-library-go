@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	emperror.dev/errors v0.8.1
 	github.com/dagger/otel-go v1.43.0
-	github.com/disaster37/dagger-library-go/lib/v2 v2.0.12
+	github.com/disaster37/dagger-library-go/lib/v2 v2.0.17
 )
 
 require (
@@ -59,3 +59,4 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp => go.opente
 replace go.opentelemetry.io/otel/log => go.opentelemetry.io/otel/log v0.16.0
 
 replace go.opentelemetry.io/otel/sdk/log => go.opentelemetry.io/otel/sdk/log v0.16.0
+

@@ -23,8 +23,6 @@ github.com/dagger/querybuilder v0.0.0-20260402040506-574a5e81cb59 h1:g6vfdGRyz6f
 github.com/dagger/querybuilder v0.0.0-20260402040506-574a5e81cb59/go.mod h1:jsdUJeYzcbyK1j/EqMGPrQgNYxl/Zfg06vvM9C/xXxs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/disaster37/dagger-library-go/lib/v2 v2.0.12 h1:ZOWGD7k/R72UOgyJd/MLtf5x6tYw8aHp8pebMevxkbw=
-github.com/disaster37/dagger-library-go/lib/v2 v2.0.12/go.mod h1:EdvGzOlmcfIjcNCZ1uNSAQDnehfK3ZBXP1/xkVP7O9s=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/logr v1.4.4 h1:tG4xh9yMsRCAiodLVTxyrkzSZ9+o0L1Kg/+cPVcbP/8=
 github.com/go-logr/logr v1.4.4/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=

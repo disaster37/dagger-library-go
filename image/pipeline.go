@@ -165,6 +165,15 @@ func (m *Image) GenerateCi(
 	// GitLab: CI/CD variable name for git token.
 	// +optional
 	gitTokenVar string,
+
+	// Jenkins: dagger kubernetes token credential ID.
+	// When set, the Jenkinsfile uses the daggerKubernetes shared library step.
+	// +optional
+	daggerKubernetesToken string,
+
+	// Jenkins: dagger kubernetes server URL.
+	// +optional
+	daggerKubernetesURL string,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -231,6 +240,10 @@ func (m *Image) GenerateCi(
 		},
 		Registry:   registry,
 		Repository: repository,
+		NoExport:   true,
+		DaggerKubernetesToken: daggerKubernetesToken,
+		DaggerKubernetesURL:   daggerKubernetesURL,
+		Description:           "Docker image CI pipeline",
 	}
 
 	files, err := pipeline.Render(spec)

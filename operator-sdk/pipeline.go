@@ -76,6 +76,15 @@ func (m *OperatorSdk) GenerateCi(
 	// GitLab: CI/CD variable name for git token.
 	// +optional
 	gitTokenVar string,
+
+	// Jenkins: dagger kubernetes token credential ID.
+	// When set, the Jenkinsfile uses the daggerKubernetes shared library step.
+	// +optional
+	daggerKubernetesToken string,
+
+	// Jenkins: dagger kubernetes server URL.
+	// +optional
+	daggerKubernetesURL string,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -142,6 +151,9 @@ func (m *OperatorSdk) GenerateCi(
 		},
 		Registry:   registry,
 		Repository: repository,
+		DaggerKubernetesToken: daggerKubernetesToken,
+		DaggerKubernetesURL:   daggerKubernetesURL,
+		Description:           "Operator SDK CI pipeline",
 	}
 
 	files, err := pipeline.Render(spec)

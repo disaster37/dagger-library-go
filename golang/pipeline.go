@@ -100,6 +100,15 @@ func (m *Golang) GenerateCi(
 	// GitLab: CI/CD variable name for git token.
 	// +optional
 	gitTokenVar string,
+
+	// Jenkins: dagger kubernetes token credential ID.
+	// When set, the Jenkinsfile uses the daggerKubernetes shared library step.
+	// +optional
+	daggerKubernetesToken string,
+
+	// Jenkins: dagger kubernetes server URL.
+	// +optional
+	daggerKubernetesURL string,
 ) (*dagger.Directory, error) {
 	var err error
 
@@ -158,6 +167,9 @@ func (m *Golang) GenerateCi(
 				pipeline.PhGitRepoURL:  {Kind: pipeline.BindingExpr, Ref: ""},
 			},
 		},
+		DaggerKubernetesToken: daggerKubernetesToken,
+		DaggerKubernetesURL:   daggerKubernetesURL,
+		Description:           "Go application CI pipeline",
 	}
 
 	files, err := pipeline.Render(spec)
