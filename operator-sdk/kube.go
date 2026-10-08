@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"dagger/operator-sdk/internal/dagger"
+
+	"emperror.dev/errors"
 )
 
 type OperatorSdkKube struct {
@@ -66,10 +68,26 @@ func (h *OperatorSdkKube) Kubeconfig(
 func (h *OperatorSdkKube) KubeCluster(
 	ctx context.Context,
 ) (*dagger.Service, error) {
-	return h.Kube.Server(dagger.K3SServerOpts{
+	service, err := h.Kube.Server(dagger.K3SServerOpts{
 		ClusterCidr: "10.44.0.0/16",
 		ServiceCird: "10.45.0.0/16",
 	}).Start(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when start K3s")
+	}
+
+	// Wait until the k3s API server is ready before the caller (e.g. operator-sdk
+	// olm install) talks to it.
+	kubectl := dag.Container().
+		From("bitnami/kubectl").
+		WithoutEntrypoint().
+		WithFile("/.kube/config", h.Kube.Config(dagger.K3SConfigOpts{}), dagger.ContainerWithFileOpts{Owner: "1001"}).
+		WithUser("1001")
+	if _, err := kubectl.WithExec([]string{"sh", "-c", "n=0; until kubectl get --raw /readyz >/dev/null 2>&1 || [ $n -ge 240 ]; do sleep 1; n=$((n+1)); done; kubectl get --raw /readyz"}).Stdout(ctx); err != nil {
+		return nil, errors.Wrap(err, "Error when wait k3s API server ready")
+	}
+
+	return service, nil
 }
 
 func (h *OperatorSdkKube) KubeContainer() *dagger.Container {

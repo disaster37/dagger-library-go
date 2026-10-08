@@ -63,9 +63,9 @@ func New(
 		}).
 		WithEntrypoint([]string{"entrypoint.sh"}).
 		WithMountedCache("/etc/rancher/k3s", ccache).
+		WithMountedCache("/var/lib/rancher/k3s", dag.CacheVolume("k3s_data_"+name)).
+		WithMountedCache("/var/lib/kubelet", dag.CacheVolume("k3s_kubelet_"+name)).
 		WithMountedTemp("/etc/lib/cni").
-		WithMountedTemp("/var/lib/kubelet").
-		WithMountedTemp("/var/lib/rancher/k3s").
 		WithMountedTemp("/var/log").
 		WithExposedPort(6443)
 	return &K3S{
@@ -124,7 +124,7 @@ func (m *K3S) Config(ctx context.Context,
 		// we need to bust the cache so we don't fetch the same file each time.
 		WithEnvVariable("CACHE", time.Now().String()).
 		WithMountedCache("/cache/k3s", m.ConfigCache).
-		WithExec([]string{"cp", "/cache/k3s/k3s.yaml", "k3s.yaml"}).
+		WithExec([]string{"sh", "-c", "n=0; until [ -f /cache/k3s/k3s.yaml ] || [ $n -ge 180 ]; do sleep 1; n=$((n+1)); done; cp /cache/k3s/k3s.yaml k3s.yaml"}).
 		With(func(c *dagger.Container) *dagger.Container {
 			if local {
 				c = c.WithExec([]string{"sed", "-i", `s/https:.*:6443/https:\/\/localhost:6443/g`, "k3s.yaml"})
